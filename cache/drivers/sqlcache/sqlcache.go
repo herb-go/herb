@@ -1,0 +1,454 @@
+package sqlcache
+
+import (
+	"database/sql"
+	"encoding/json"
+	"time"
+
+	"github.com/herb-go/herb/cache"
+)
+
+var DefaultGCPeriod = 5 * time.Minute
+var tokenMask = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+var defaultGcLimit = int64(100)
+
+type Cache struct {
+	DB           *sql.DB
+	table        string
+	name         string
+	ticker       *time.Ticker
+	quit         chan int
+	gcErrHandler func(err error)
+	gcLimit      int64
+}
+
+func (c *Cache) SetGCErrHandler(f func(err error)) {
+	c.gcErrHandler = f
+	return
+}
+func (c *Cache) start() error {
+	err := c.gc()
+	return err
+}
+func (c *Cache) getVersionTx(tx *sql.Tx) ([]byte, error) {
+	var version []byte
+	stmt, err := tx.Prepare(`Select version from ` + c.table + ` WHERE cache_key="" AND cache_name = ?`)
+	if err != nil {
+		return version, err
+	}
+	defer stmt.Close()
+	row := stmt.QueryRow(c.name)
+	err = row.Scan(&version)
+	if err == sql.ErrNoRows {
+		return []byte{}, nil
+	}
+	return version, err
+}
+func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
+	return nil, cache.ErrSearchKeysNotSupported
+}
+func (c *Cache) gc() error {
+	var keys []string
+
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	version, err := c.getVersionTx(tx)
+	if err != nil {
+		return err
+	}
+
+	stmtExpired, err := tx.Prepare(`Select cache_key FROM ` + c.table + ` Where cache_name = ? AND expired > -1  AND expired < ? limit ?`)
+	if err != nil {
+		return err
+	}
+	defer stmtExpired.Close()
+
+	rows, err := stmtExpired.Query(c.name, time.Now().Unix(), c.gcLimit)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var key string
+		err = rows.Scan(&key)
+		if err != nil {
+			return err
+		}
+		keys = append(keys, key)
+
+	}
+	stmtVersionWrong, err := tx.Prepare(`Select cache_key FROM ` + c.table + ` Where cache_name = ? AND version != ? limit ?`)
+	if err != nil {
+		return err
+	}
+	defer stmtVersionWrong.Close()
+	rows2, err := stmtVersionWrong.Query(c.name, version, c.gcLimit)
+	if err != nil {
+		return err
+	}
+	defer rows2.Close()
+	for rows2.Next() {
+		var key string
+		err = rows.Scan(&key)
+		if err != nil {
+			return err
+		}
+		keys = append(keys, key)
+
+	}
+
+	stmt, err := tx.Prepare(`DELETE FROM ` + c.table + ` Where cache_name=? and cache_key = ?`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, v := range keys {
+		_, err = stmt.Exec(c.name, v)
+		if err != nil {
+			return err
+		}
+	}
+	if err == nil {
+		tx.Commit()
+	}
+	return err
+}
+func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
+	var v int64
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+	version, err := c.getVersionTx(tx)
+	if err != nil {
+		return 0, err
+	}
+	stmt, err := tx.Prepare(`Select cache_value from ` + c.table + ` WHERE ( expired < 0 OR expired > ?) AND cache_name =? AND cache_key = ? AND version=?`)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	r := stmt.QueryRow(time.Now().Unix(), c.name, key, version)
+	var j string
+	err = r.Scan(&j)
+	if err == sql.ErrNoRows {
+		v = 0
+	} else if err != nil {
+		return 0, err
+	} else {
+		err = json.Unmarshal([]byte(j), &v)
+		if err != nil {
+			v = 0
+		}
+	}
+	v = v + increment
+	val, err := json.Marshal(v)
+	if err != nil {
+		return 0, err
+	}
+	var expired int64
+	if ttl < 0 {
+		expired = -1
+	} else {
+		expired = time.Now().Add(ttl).Unix()
+	}
+	stmtset, err := tx.Prepare(`update ` + c.table + ` set
+	 cache_value=?,
+	 version=?,
+	 expired=?
+	 Where cache_name=? 
+	 and cache_key=?
+	 `)
+
+	defer stmtset.Close()
+	row, err := stmtset.Exec(
+		val,
+		version,
+		expired,
+		c.name,
+		key)
+	if err != nil {
+		return 0, err
+	}
+	affected, err := row.RowsAffected()
+	if err != nil {
+		return v, err
+	}
+	if affected == 0 {
+		stmt2, err := tx.Prepare(`insert into ` + c.table + ` (cache_name,cache_key,cache_value,version,expired) values (?,?,?,?,?)`)
+		if err != nil {
+			return v, err
+		}
+		defer stmt2.Close()
+		_, err = stmt2.Exec(c.name, key, string(val), version, expired)
+	}
+	if err != nil {
+		return v, err
+	}
+	tx.Commit()
+	return v, nil
+}
+
+func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
+	return c.Set(key, v, ttl)
+}
+func (c *Cache) GetCounter(key string) (int64, error) {
+	var v int64
+	err := c.Get(key, &v)
+	return v, err
+}
+func (c *Cache) DelCounter(key string) error {
+	return c.DelCounter(key)
+}
+func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	version, err := c.getVersionTx(tx)
+	if err != nil {
+		return err
+	}
+	val, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	var expired int64
+	if ttl < 0 {
+		expired = -1
+	} else {
+		expired = time.Now().Add(ttl).Unix()
+	}
+	stmt, err := tx.Prepare(`update ` + c.table + ` set
+	 cache_value=?,
+	 version=?,
+	 expired=?
+	 Where cache_name=? 
+	 and cache_key=?
+	 `)
+
+	defer stmt.Close()
+	r, err := stmt.Exec(
+		val,
+		version,
+		expired,
+		c.name,
+		key)
+	if err != nil {
+		return err
+	}
+	affected, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		stmt2, err := tx.Prepare(`insert into ` + c.table + ` (cache_name,cache_key,cache_value,version,expired) values (?,?,?,?,?)`)
+		if err != nil {
+			return err
+		}
+		defer stmt2.Close()
+		_, err = stmt2.Exec(c.name, key, string(val), version, expired)
+	}
+	if err != nil {
+		return err
+	}
+	tx.Commit()
+	return err
+}
+func (c *Cache) Get(key string, v interface{}) error {
+
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	version, err := c.getVersionTx(tx)
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare(`Select cache_value from ` + c.table + ` WHERE ( expired < 0 OR expired > ?) AND cache_name =? AND cache_key = ? AND version=?`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	r := stmt.QueryRow(time.Now().Unix(), c.name, key, version)
+	var j string
+	err = r.Scan(&j)
+	if err == sql.ErrNoRows {
+		return cache.ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
+	tx.Commit()
+	err = json.Unmarshal([]byte(j), &v)
+	return err
+}
+func (c *Cache) Flush() error {
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	version, err := c.getVersionTx(tx)
+	if err != nil {
+		return err
+	}
+	newversion, err := cache.NewRandMaskedBytes(tokenMask, 16, version)
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare(`update ` + c.table + ` set
+	 cache_value=?,
+	 version=?,
+	 expired=?
+	 Where cache_name=? and cache_key=""
+	 `)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	r, err := stmt.Exec(
+		"",
+		string(newversion),
+		-1,
+		c.name)
+	if err != nil {
+		return err
+	}
+	affected, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		stmt2, err := tx.Prepare(`insert into ` + c.table + ` (cache_name,cache_value,version,expired,cache_key) 
+		values (?,?,?,?,"")`)
+		if err != nil {
+			return err
+		}
+		defer stmt2.Close()
+		_, err = stmt2.Exec(c.name, string(newversion), newversion, -1)
+
+	}
+	if err != nil {
+		return err
+	}
+	tx.Commit()
+	err = c.gc()
+	if err != nil {
+		return err
+	}
+	return err
+}
+func (c *Cache) Del(key string) error {
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare(`DELETE FROM ` + c.table + ` WHERE cache_name= ? and cache_key = ?`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(c.name, key)
+	if err == nil {
+		tx.Commit()
+	}
+	return err
+}
+func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	b, err := json.Marshal(bytes)
+	if err != nil {
+		return err
+	}
+	return c.Set(key, b, ttl)
+}
+func (c *Cache) GetBytesValue(key string) ([]byte, error) {
+	b := []byte{}
+	err := c.Get(key, &b)
+	if err != nil {
+		return nil, err
+	}
+
+	v := []byte{}
+	err = json.Unmarshal(b, &v)
+	return v, err
+}
+
+func (c *Cache) Close() error {
+	err := c.gc()
+	if err != nil {
+		return nil
+	}
+	close(c.quit)
+	return c.DB.Close()
+}
+
+type Config struct {
+	Driver   string
+	Conn     string
+	Table    string
+	Name     string
+	GCPeriod int64
+	GCLimit  int64
+}
+
+func (_ *Cache) New(config json.RawMessage) (cache.Driver, error) {
+	c := Config{}
+	err := json.Unmarshal(config, &c)
+	if err != nil {
+		return nil, err
+	}
+	cache := Cache{}
+	cache.DB, err = sql.Open(c.Driver, c.Conn)
+	if err != nil {
+		return &cache, err
+	}
+	cache.table = c.Table
+	cache.quit = make(chan int)
+	period := time.Duration(c.GCPeriod)
+	if period == 0 {
+		period = DefaultGCPeriod
+	}
+	cache.ticker = time.NewTicker(period)
+	gcLimit := c.GCLimit
+	if gcLimit == 0 {
+		gcLimit = defaultGcLimit
+	}
+	cache.gcLimit = gcLimit
+	cache.name = c.Name
+	go func() {
+		for {
+			select {
+			case <-cache.ticker.C:
+				err := cache.gc()
+				if err != nil {
+					if cache.gcErrHandler != nil {
+						cache.gcErrHandler(err)
+					}
+				}
+			case <-cache.quit:
+				cache.ticker.Stop()
+				return
+			}
+		}
+
+	}()
+	err = cache.start()
+	if err != nil {
+		return &cache, err
+	}
+	return &cache, nil
+}
+
+func init() {
+	cache.Register("sqlcache", &Cache{})
+}

@@ -1,0 +1,113 @@
+package model
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+type FieldError struct {
+	Field string
+	Msg   string
+}
+type ModelErrors struct {
+	errors   []FieldError
+	messages ModelMessages
+}
+
+func MustValidate(m Model) bool {
+	err := m.Validate()
+	if err != nil {
+		panic(err)
+	}
+	return !m.HasError()
+}
+func MustValidateJSONPost(r *http.Request, m HttpModel) bool {
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&m)
+	err := m.PrepareWithRequest(r)
+	if err != nil {
+		panic(err)
+	}
+	return MustValidate(m)
+
+}
+func MustRenderErrors(w http.ResponseWriter, m Model) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+	bytes, err := json.Marshal(m.Errors())
+	if err != nil {
+		panic(err)
+	}
+	_, err = w.Write(bytes)
+	if err != nil {
+		panic(err)
+	}
+}
+func (model *ModelErrors) SetMessages(m *Messages) {
+	model.messages = m
+}
+func (model *ModelErrors) getMessageText(msg string) string {
+	var msgtext string
+	if model.messages != nil {
+		msgtext = model.messages.GetMessage(msg)
+	} else if DefaultMessages != nil {
+		msgtext = DefaultMessages.GetMessage(msg)
+	} else {
+		msgtext = msg
+	}
+	return msgtext
+}
+func (model *ModelErrors) getMessageTextf(field, msg string) string {
+	msg = model.getMessageText(msg)
+	return fmt.Sprintf("%[2]s"+msg, field, "")
+}
+func (model *ModelErrors) AddPlainError(field string, msg string) {
+	f := FieldError{
+		Field: field,
+		Msg:   msg,
+	}
+	model.errors = append(model.Errors(), f)
+}
+func (model *ModelErrors) AddError(field string, msg string) {
+	model.AddPlainError(field, model.getMessageText(msg))
+}
+func (model *ModelErrors) AddErrorf(field string, msg string) {
+	model.AddPlainError(field, model.getMessageTextf(field, msg))
+}
+func (model *ModelErrors) ValidateField(field string, msg string, validated bool) {
+	if !validated {
+		model.AddError(field, msg)
+	}
+}
+func (model *ModelErrors) ValidateFieldf(field string, msg string, validated bool) {
+	if !validated {
+		model.AddErrorf(field, msg)
+	}
+}
+func (model *ModelErrors) Errors() []FieldError {
+	if model.errors == nil {
+		return []FieldError{}
+	} else {
+		return model.errors
+	}
+}
+func (model *ModelErrors) PrepareWithRequest(*http.Request) error {
+	return nil
+}
+
+func (model *ModelErrors) HasError() bool {
+	return len(model.Errors()) != 0
+}
+
+type Model interface {
+	HasError() bool
+	Errors() []FieldError
+	AddError(field string, msg string)
+	Validate() error
+}
+
+type HttpModel interface {
+	Model
+	PrepareWithRequest(*http.Request) error
+}

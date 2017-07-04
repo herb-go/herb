@@ -1,0 +1,7 @@
+{
+    "NetConfig":{
+        "Net":"tcp",
+        "Addr":":8000"
+    },
+    "Cache":{"Driver":"dummycache"}
+}
