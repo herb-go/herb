@@ -13,9 +13,11 @@ type CookieWriter struct {
 }
 
 func (w *CookieWriter) WriteHeader(status int) {
+	var v *TokenValues
+	var err error
 	if w.written == false {
 		w.written = true
-		v, err := w.store.GetRequestTokenValues(w.r)
+		v, err = w.store.GetRequestTokenValues(w.r)
 		if err != nil {
 			panic(err)
 		}

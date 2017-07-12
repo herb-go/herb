@@ -16,6 +16,7 @@ var DefaultTokenLength = 256
 var DefaultTokenContextName = "token"
 
 const DefaultCookieName = "herb-session"
+const DefaultCookiePath = "/"
 
 var ErrTokenNotValidated = errors.New("Token not validated.")
 var ErrRequestTokenNotFound = errors.New("Request token not found.Did you forget use middleware?")
@@ -38,6 +39,7 @@ func New(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
 		TokenSepartor:    DefaultTokenSepartor,
 		TokenContextName: DefaultTokenContextName,
 		CookieName:       DefaultCookieName,
+		CookiePath:       DefaultCookiePath,
 		TokenLifetime:    TokenLifetime,
 	}
 }
@@ -97,7 +99,7 @@ func (s *Store) NewTokenValues(token string) *TokenValues {
 		data:         map[string][]byte{},
 		cache:        map[string]interface{}{},
 		store:        s,
-		tokenChanged: true,
+		tokenChanged: false,
 	}
 }
 func (s *Store) GetTokenValues(v *TokenValues) error {
