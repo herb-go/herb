@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-type CookieWriter struct {
+type CookieResponseWriter struct {
 	http.ResponseWriter
 	r       *http.Request
 	store   *Store
 	written bool
 }
 
-func (w *CookieWriter) WriteHeader(status int) {
+func (w *CookieResponseWriter) WriteHeader(status int) {
 	var v *TokenValues
 	var err error
 	if w.written == false {
@@ -37,7 +37,7 @@ func (w *CookieWriter) WriteHeader(status int) {
 	}
 	w.ResponseWriter.WriteHeader(status)
 }
-func (w *CookieWriter) Write(data []byte) (int, error) {
+func (w *CookieResponseWriter) Write(data []byte) (int, error) {
 	if w.written == false {
 		w.WriteHeader(http.StatusOK)
 	}

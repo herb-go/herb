@@ -4,6 +4,7 @@ import "errors"
 import "reflect"
 import "github.com/herb-go/herb/cache"
 import "net/http"
+import "sync"
 
 var ErrDataNotFound = errors.New("Data not found")
 var ErrDataTypeWrong = errors.New("Data type wrong")
@@ -12,6 +13,7 @@ var ErrDataTypeNotRegister = errors.New("Data type not register")
 
 type TokenValues struct {
 	data         map[string][]byte
+	ExpiredAt    int64
 	cache        map[string]interface{}
 	token        string
 	oldToken     string
@@ -19,8 +21,24 @@ type TokenValues struct {
 	tokenChanged bool
 	updated      bool
 	store        *Store
+	Mutex        *sync.RWMutex
 }
 
+func newTokenValues(token string, s *Store) *TokenValues {
+
+	return &TokenValues{
+		token:        token,
+		data:         map[string][]byte{},
+		cache:        map[string]interface{}{},
+		store:        s,
+		tokenChanged: false,
+		Mutex:        &sync.RWMutex{},
+	}
+
+}
+func (t *TokenValues) Token() string {
+	return t.token
+}
 func (t *TokenValues) SetToken(newToken string) {
 	t.token = newToken
 	t.tokenChanged = true
@@ -57,10 +75,27 @@ func (t *TokenValues) Load() error {
 	}
 	return nil
 }
+func (t *TokenValues) Save() error {
+	if t.updated && t.token != "" {
+		err := t.store.SetTokenValues(t)
+		if err != nil {
+			return err
+		}
+	}
+	if t.tokenChanged && t.oldToken != "" {
+		err := t.store.DeleteToken(t.oldToken)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 func (t *TokenValues) Marshal() ([]byte, error) {
 	return cache.MarshalMsgpack(t.data)
 }
 func (t *TokenValues) Unmarshal(token string, bytes []byte) error {
+	t.Mutex.Lock()
+	defer t.Mutex.Unlock()
 	t.token = token
 	t.cache = map[string]interface{}{}
 	return cache.UnmarshalMsgpack(bytes, &(t.data))
@@ -81,6 +116,8 @@ func (f *TokenValue) GetTokenValuesData(m *TokenValues, v interface{}) (err erro
 	if err != nil {
 		return
 	}
+	m.Mutex.RLock()
+	defer m.Mutex.RUnlock()
 	key := f.Key
 	typ := reflect.TypeOf(v)
 	if typ.Elem() != f.Type {
@@ -113,6 +150,48 @@ func (f *TokenValue) Get(r *http.Request, v interface{}) error {
 	return f.GetTokenValuesData(m, v)
 }
 
+func (f *TokenValue) RLock(r *http.Request) error {
+	var m, err = f.store.GetRequestTokenValues(r)
+	if err != nil {
+		return err
+	}
+	m.Mutex.RLock()
+	return nil
+}
+
+func (f *TokenValue) RUnlock(r *http.Request) error {
+	var m, err = f.store.GetRequestTokenValues(r)
+	if err != nil {
+		return err
+	}
+	m.Mutex.RUnlock()
+	return nil
+}
+
+func (f *TokenValue) Lock(r *http.Request) error {
+	var m, err = f.store.GetRequestTokenValues(r)
+	if err != nil {
+		return err
+	}
+	m.Mutex.Lock()
+	return nil
+}
+
+func (f *TokenValue) Unlock(r *http.Request) error {
+	var m, err = f.store.GetRequestTokenValues(r)
+	if err != nil {
+		return err
+	}
+	m.Mutex.Unlock()
+	return nil
+}
+func (f *TokenValue) GetToken(r *http.Request) (string, error) {
+	var m, err = f.store.GetRequestTokenValues(r)
+	if err != nil {
+		return "", err
+	}
+	return m.token, nil
+}
 func (f *TokenValue) SetTokenValuesData(m *TokenValues, v interface{}) (err error) {
 	if m.token == "" {
 		err = ErrDataNotFound
@@ -122,11 +201,12 @@ func (f *TokenValue) SetTokenValuesData(m *TokenValues, v interface{}) (err erro
 	if err != nil {
 		return
 	}
-
 	key := f.Key
 	if reflect.TypeOf(v) != f.Type {
 		return ErrDataTypeWrong
 	}
+	m.Mutex.Lock()
+	defer m.Mutex.Unlock()
 	m.cache[key] = v
 	bytes, err := cache.MarshalMsgpack(v)
 	if err != nil {

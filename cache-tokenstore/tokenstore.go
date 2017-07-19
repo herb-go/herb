@@ -27,7 +27,11 @@ func GenerateToken(owner string) (token string, err error) {
 	if err != nil {
 		return
 	}
-	token = owner + DefaultTokenSepartor + string(t)
+	if owner == "" {
+		token = string(t)
+	} else {
+		token = owner + DefaultTokenSepartor + string(t)
+	}
 	return
 }
 
@@ -92,15 +96,10 @@ func (s *Store) GenerateToken(owner string) (token string, err error) {
 func (s *Store) SearchTokensByOwner(owner string) ([]string, error) {
 	return s.Cache.SearchByPrefix(owner + s.TokenSepartor)
 }
-func (s *Store) NewTokenValues(token string) *TokenValues {
-
-	return &TokenValues{
-		token:        token,
-		data:         map[string][]byte{},
-		cache:        map[string]interface{}{},
-		store:        s,
-		tokenChanged: false,
-	}
+func (s *Store) AssignTokenValues(token string) *TokenValues {
+	tv := newTokenValues(token, s)
+	tv.tokenChanged = true
+	return tv
 }
 func (s *Store) GetTokenValues(v *TokenValues) error {
 	token := v.token
@@ -137,7 +136,8 @@ func (s *Store) DeleteToken(token string) error {
 }
 
 func (s *Store) InstallTokenToRequest(r *http.Request, token string) (v *TokenValues, err error) {
-	v = s.NewTokenValues(token)
+	v = newTokenValues(token, s)
+	v.oldToken = token
 	if token == "" && s.AutoGenerate == true {
 		err = v.RegenerateToken("")
 		if err != nil {
@@ -166,32 +166,33 @@ func (s *Store) CookieMiddleware() func(w http.ResponseWriter, r *http.Request, 
 		if err != nil {
 			panic(err)
 		}
-		cw := CookieWriter{
+		cw := CookieResponseWriter{
 			ResponseWriter: w,
 			r:              r,
 			store:          s,
 			written:        false,
 		}
 		next(&cw, r)
-		v, err := s.GetRequestTokenValues(r)
+		err = s.Save(r)
 		if err != nil {
 			panic(err)
 		}
-		if v.updated && v.token != "" {
-			err := v.store.SetTokenValues(v)
-			if err != nil {
-				panic(err)
-			}
+	}
+}
+func (s *Store) HeaderMiddleware(Name string) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		var token = r.Header.Get(Name)
+		_, err := s.InstallTokenToRequest(r, token)
+		if err != nil {
+			panic(err)
 		}
-		if v.tokenChanged && v.oldToken != "" {
-			err = v.store.DeleteToken(v.oldToken)
-			if err != nil {
-				panic(err)
-			}
+		next(w, r)
+		err = s.Save(r)
+		if err != nil {
+			panic(err)
 		}
 	}
 }
-
 func (s *Store) GetRequestTokenValues(r *http.Request) (v *TokenValues, err error) {
 	var ok bool
 	tv := r.Context().Value(s.TokenContextName)
@@ -203,6 +204,14 @@ func (s *Store) GetRequestTokenValues(r *http.Request) (v *TokenValues, err erro
 		return v, nil
 	}
 	return v, ErrRequestTokenNotFound
+}
+func (s *Store) Save(r *http.Request) error {
+	tv, err := s.GetRequestTokenValues(r)
+	if err != nil {
+		return err
+	}
+	err = tv.Save()
+	return err
 }
 func (s *Store) MustGetRequestTokenValues(r *http.Request) (v *TokenValues) {
 	v, err := s.GetRequestTokenValues(r)
@@ -218,8 +227,10 @@ func (s *Store) MustRegenerateToken(r *http.Request, owner string) {
 		panic(err)
 	}
 }
-func (s *Store) LogoutCookieMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	v := s.MustGetRequestTokenValues(r)
-	v.SetToken("")
-	next(w, r)
+func (s *Store) LogoutMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		v := s.MustGetRequestTokenValues(r)
+		v.SetToken("")
+		next(w, r)
+	}
 }
