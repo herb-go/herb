@@ -23,6 +23,10 @@ type TokenValues struct {
 	store        *Store
 	Mutex        *sync.RWMutex
 }
+type tokenValuesData struct {
+	Data      map[string][]byte
+	ExpiredAt int64
+}
 
 func newTokenValues(token string, s *Store) *TokenValues {
 
@@ -91,14 +95,26 @@ func (t *TokenValues) Save() error {
 	return nil
 }
 func (t *TokenValues) Marshal() ([]byte, error) {
-	return cache.MarshalMsgpack(t.data)
+	return cache.MarshalMsgpack(
+		tokenValuesData{
+			Data:      t.data,
+			ExpiredAt: t.ExpiredAt,
+		})
 }
 func (t *TokenValues) Unmarshal(token string, bytes []byte) error {
+	var err error
+	var Data = tokenValuesData{}
 	t.Mutex.Lock()
 	defer t.Mutex.Unlock()
 	t.token = token
 	t.cache = map[string]interface{}{}
-	return cache.UnmarshalMsgpack(bytes, &(t.data))
+	err = cache.UnmarshalMsgpack(bytes, &(Data))
+	if err != nil {
+		return err
+	}
+	t.data = Data.Data
+	t.ExpiredAt = Data.ExpiredAt
+	return nil
 }
 
 type TokenValue struct {
@@ -150,40 +166,19 @@ func (f *TokenValue) Get(r *http.Request, v interface{}) error {
 	return f.GetTokenValuesData(m, v)
 }
 
-func (f *TokenValue) RLock(r *http.Request) error {
+func (f *TokenValue) RwMutex(r *http.Request) (*sync.RWMutex, error) {
 	var m, err = f.store.GetRequestTokenValues(r)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	m.Mutex.RLock()
-	return nil
+	return m.Mutex, nil
 }
-
-func (f *TokenValue) RUnlock(r *http.Request) error {
+func (f *TokenValue) ExpiredAt(r *http.Request) (int64, error) {
 	var m, err = f.store.GetRequestTokenValues(r)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	m.Mutex.RUnlock()
-	return nil
-}
-
-func (f *TokenValue) Lock(r *http.Request) error {
-	var m, err = f.store.GetRequestTokenValues(r)
-	if err != nil {
-		return err
-	}
-	m.Mutex.Lock()
-	return nil
-}
-
-func (f *TokenValue) Unlock(r *http.Request) error {
-	var m, err = f.store.GetRequestTokenValues(r)
-	if err != nil {
-		return err
-	}
-	m.Mutex.Unlock()
-	return nil
+	return m.ExpiredAt, nil
 }
 func (f *TokenValue) GetToken(r *http.Request) (string, error) {
 	var m, err = f.store.GetRequestTokenValues(r)
@@ -192,6 +187,7 @@ func (f *TokenValue) GetToken(r *http.Request) (string, error) {
 	}
 	return m.token, nil
 }
+
 func (f *TokenValue) SetTokenValuesData(m *TokenValues, v interface{}) (err error) {
 	if m.token == "" {
 		err = ErrDataNotFound

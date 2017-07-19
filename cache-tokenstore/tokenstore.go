@@ -116,6 +116,9 @@ func (s *Store) GetTokenValues(v *TokenValues) error {
 		v.token = token
 		v.store = s
 	}
+	if v.ExpiredAt > 0 && v.ExpiredAt < time.Now().Unix() {
+		return cache.ErrNotFound
+	}
 	return err
 }
 
@@ -123,6 +126,11 @@ func (s *Store) SetTokenValues(v *TokenValues) error {
 	token := v.token
 	if token == "" {
 		return cache.ErrKeyUnavailable
+	}
+	if s.TokenLifetime >= 0 {
+		v.ExpiredAt = time.Now().Add(s.TokenLifetime).Unix()
+	} else {
+		v.ExpiredAt = -1
 	}
 	bytes, err := v.Marshal()
 	if err != nil {
