@@ -5,6 +5,7 @@ import "reflect"
 import "github.com/herb-go/herb/cache"
 import "net/http"
 import "sync"
+import "time"
 
 var ErrDataNotFound = errors.New("Data not found")
 var ErrDataTypeWrong = errors.New("Data type wrong")
@@ -12,31 +13,38 @@ var ErrNilPoint = errors.New("Data point to nil")
 var ErrDataTypeNotRegister = errors.New("Data type not register")
 
 type TokenValues struct {
-	data         map[string][]byte
-	ExpiredAt    int64
-	cache        map[string]interface{}
-	token        string
-	oldToken     string
-	loaded       bool
-	tokenChanged bool
-	updated      bool
-	store        *Store
-	Mutex        *sync.RWMutex
+	data           map[string][]byte
+	ExpiredAt      int64
+	CreatedTime    int64
+	LastActiveTime int64
+	cache          map[string]interface{}
+	token          string
+	oldToken       string
+	loaded         bool
+	tokenChanged   bool
+	updated        bool
+	store          *Store
+	Mutex          *sync.RWMutex
 }
 type tokenValuesData struct {
-	Data      map[string][]byte
-	ExpiredAt int64
+	Data           map[string][]byte
+	CreatedTime    int64
+	LastActiveTime int64
+	ExpiredAt      int64
 }
 
 func newTokenValues(token string, s *Store) *TokenValues {
-
+	t := time.Now().Unix()
 	return &TokenValues{
-		token:        token,
-		data:         map[string][]byte{},
-		cache:        map[string]interface{}{},
-		store:        s,
-		tokenChanged: false,
-		Mutex:        &sync.RWMutex{},
+		token:          token,
+		data:           map[string][]byte{},
+		cache:          map[string]interface{}{},
+		store:          s,
+		tokenChanged:   false,
+		Mutex:          &sync.RWMutex{},
+		CreatedTime:    t,
+		LastActiveTime: t,
+		ExpiredAt:      -1,
 	}
 
 }
@@ -80,6 +88,11 @@ func (t *TokenValues) Load() error {
 	return nil
 }
 func (t *TokenValues) Save() error {
+	nextUpdateTime := time.Unix(t.LastActiveTime, 0).Add(t.store.UpdateActiveInterval)
+	if nextUpdateTime.Before(time.Now()) {
+		t.LastActiveTime = time.Now().Unix()
+		t.updated = true
+	}
 	if t.updated && t.token != "" {
 		err := t.store.SetTokenValues(t)
 		if err != nil {
@@ -97,8 +110,10 @@ func (t *TokenValues) Save() error {
 func (t *TokenValues) Marshal() ([]byte, error) {
 	return cache.MarshalMsgpack(
 		tokenValuesData{
-			Data:      t.data,
-			ExpiredAt: t.ExpiredAt,
+			Data:           t.data,
+			ExpiredAt:      t.ExpiredAt,
+			CreatedTime:    t.CreatedTime,
+			LastActiveTime: t.LastActiveTime,
 		})
 }
 func (t *TokenValues) Unmarshal(token string, bytes []byte) error {
@@ -114,6 +129,8 @@ func (t *TokenValues) Unmarshal(token string, bytes []byte) error {
 	}
 	t.data = Data.Data
 	t.ExpiredAt = Data.ExpiredAt
+	t.CreatedTime = Data.CreatedTime
+	t.LastActiveTime = Data.LastActiveTime
 	return nil
 }
 

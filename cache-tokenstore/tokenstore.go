@@ -14,6 +14,8 @@ import (
 var DefaultTokenSepartor = "-"
 var DefaultTokenLength = 256
 var DefaultTokenContextName = "token"
+var DefaultUpdateActiveInterval = 5 * time.Minute
+var DefaultTokenMaxLifetime = 365 * 24 * time.Hour
 
 const DefaultCookieName = "herb-session"
 const DefaultCookiePath = "/"
@@ -37,14 +39,16 @@ func GenerateToken(owner string) (token string, err error) {
 
 func New(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
 	return &Store{
-		Values:           map[string]TokenValue{},
-		Cache:            Cache,
-		TokenLength:      DefaultTokenLength,
-		TokenSepartor:    DefaultTokenSepartor,
-		TokenContextName: DefaultTokenContextName,
-		CookieName:       DefaultCookieName,
-		CookiePath:       DefaultCookiePath,
-		TokenLifetime:    TokenLifetime,
+		Values:               map[string]TokenValue{},
+		Cache:                Cache,
+		TokenLength:          DefaultTokenLength,
+		TokenSepartor:        DefaultTokenSepartor,
+		TokenContextName:     DefaultTokenContextName,
+		CookieName:           DefaultCookieName,
+		CookiePath:           DefaultCookiePath,
+		TokenLifetime:        TokenLifetime,
+		UpdateActiveInterval: DefaultUpdateActiveInterval,
+		TokenMaxLifetime:     DefaultTokenMaxLifetime,
 	}
 }
 func NewWithContextName(Cache *cache.Cache, TokenLifetime time.Duration, ContenxtName string) *Store {
@@ -54,15 +58,17 @@ func NewWithContextName(Cache *cache.Cache, TokenLifetime time.Duration, Contenx
 }
 
 type Store struct {
-	Values           map[string]TokenValue
-	Cache            *cache.Cache
-	TokenLength      int
-	TokenSepartor    string
-	TokenLifetime    time.Duration
-	TokenContextName string
-	CookieName       string
-	CookiePath       string
-	AutoGenerate     bool
+	Values               map[string]TokenValue
+	Cache                *cache.Cache
+	TokenLength          int
+	TokenSepartor        string
+	TokenLifetime        time.Duration
+	TokenMaxLifetime     time.Duration
+	TokenContextName     string
+	CookieName           string
+	CookiePath           string
+	AutoGenerate         bool
+	UpdateActiveInterval time.Duration
 }
 
 func (s *Store) RegisterField(Key string, v interface{}) (*TokenValue, error) {
@@ -98,6 +104,9 @@ func (s *Store) SearchTokensByOwner(owner string) ([]string, error) {
 }
 func (s *Store) AssignTokenValues(token string) *TokenValues {
 	tv := newTokenValues(token, s)
+	t := time.Now().Unix()
+	tv.CreatedTime = t
+	tv.LastActiveTime = t
 	tv.tokenChanged = true
 	return tv
 }
@@ -116,7 +125,7 @@ func (s *Store) GetTokenValues(v *TokenValues) error {
 		v.token = token
 		v.store = s
 	}
-	if v.ExpiredAt > 0 && v.ExpiredAt < time.Now().Unix() {
+	if s.TokenMaxLifetime > 0 && time.Unix(v.CreatedTime, 0).Add(s.TokenMaxLifetime).Before(time.Now()) {
 		return cache.ErrNotFound
 	}
 	return err
