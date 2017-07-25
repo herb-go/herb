@@ -104,9 +104,6 @@ func (s *Store) SearchTokensByOwner(owner string) ([]string, error) {
 }
 func (s *Store) AssignTokenValues(token string) *TokenValues {
 	tv := newTokenValues(token, s)
-	t := time.Now().Unix()
-	tv.CreatedTime = t
-	tv.LastActiveTime = t
 	tv.tokenChanged = true
 	return tv
 }
@@ -125,7 +122,7 @@ func (s *Store) GetTokenValues(v *TokenValues) error {
 		v.token = token
 		v.store = s
 	}
-	if s.TokenMaxLifetime > 0 && time.Unix(v.CreatedTime, 0).Add(s.TokenMaxLifetime).Before(time.Now()) {
+	if s.TokenMaxLifetime > 0 && time.Unix(v.CreatedTime, 0).Add(s.TokenMaxLifetime).After(time.Now()) {
 		return cache.ErrNotFound
 	}
 	return err
