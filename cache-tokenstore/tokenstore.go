@@ -122,7 +122,7 @@ func (s *Store) GetTokenValues(v *TokenValues) error {
 		v.token = token
 		v.store = s
 	}
-	if s.TokenMaxLifetime > 0 && time.Unix(v.CreatedTime, 0).Add(s.TokenMaxLifetime).After(time.Now()) {
+	if s.TokenMaxLifetime > 0 && time.Unix(v.CreatedTime, 0).Add(s.TokenMaxLifetime).Before(time.Now()) {
 		return cache.ErrNotFound
 	}
 	return err
