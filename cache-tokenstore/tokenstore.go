@@ -39,7 +39,7 @@ func GenerateToken(owner string) (token string, err error) {
 
 func New(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
 	return &Store{
-		Values:               map[string]TokenValue{},
+		Fields:               map[string]TokenField{},
 		Cache:                Cache,
 		TokenLength:          DefaultTokenLength,
 		TokenSepartor:        DefaultTokenSepartor,
@@ -58,7 +58,7 @@ func NewWithContextName(Cache *cache.Cache, TokenLifetime time.Duration, Contenx
 }
 
 type Store struct {
-	Values               map[string]TokenValue
+	Fields               map[string]TokenField
 	Cache                *cache.Cache
 	TokenLength          int
 	TokenSepartor        string
@@ -71,20 +71,20 @@ type Store struct {
 	UpdateActiveInterval time.Duration
 }
 
-func (s *Store) RegisterField(Key string, v interface{}) (*TokenValue, error) {
+func (s *Store) RegisterField(Key string, v interface{}) (*TokenField, error) {
 	tp := reflect.TypeOf(v)
 	if tp.Kind() != reflect.Ptr {
 		return nil, ErrMustRegisterPtr
 	}
-	tv := TokenValue{
+	tv := TokenField{
 		Key:   Key,
 		Type:  tp.Elem(),
 		store: s,
 	}
-	s.Values[Key] = tv
+	s.Fields[Key] = tv
 	return &tv, nil
 }
-func (s *Store) MustRegisterField(Key string, v interface{}) *TokenValue {
+func (s *Store) MustRegisterField(Key string, v interface{}) *TokenField {
 	tv, err := s.RegisterField(Key, v)
 	if err != nil {
 		panic(err)
@@ -102,12 +102,12 @@ func (s *Store) GenerateToken(owner string) (token string, err error) {
 func (s *Store) SearchTokensByOwner(owner string) ([]string, error) {
 	return s.Cache.SearchByPrefix(owner + s.TokenSepartor)
 }
-func (s *Store) AssignTokenValues(token string) *TokenValues {
-	tv := newTokenValues(token, s)
+func (s *Store) Assign(token string) *TokenData {
+	tv := newTokenData(token, s)
 	tv.tokenChanged = true
 	return tv
 }
-func (s *Store) GetTokenValues(v *TokenValues) error {
+func (s *Store) GetTokenData(v *TokenData) error {
 	token := v.token
 	if token == "" {
 		return cache.ErrKeyUnavailable
@@ -128,17 +128,17 @@ func (s *Store) GetTokenValues(v *TokenValues) error {
 	return err
 }
 
-func (s *Store) SetTokenValues(v *TokenValues) error {
-	token := v.token
+func (s *Store) SetTokenData(td *TokenData) error {
+	token := td.token
 	if token == "" {
 		return cache.ErrKeyUnavailable
 	}
 	if s.TokenLifetime >= 0 {
-		v.ExpiredAt = time.Now().Add(s.TokenLifetime).Unix()
+		td.ExpiredAt = time.Now().Add(s.TokenLifetime).Unix()
 	} else {
-		v.ExpiredAt = -1
+		td.ExpiredAt = -1
 	}
-	bytes, err := v.Marshal()
+	bytes, err := td.Marshal()
 	if err != nil {
 		return err
 	}
@@ -149,17 +149,17 @@ func (s *Store) DeleteToken(token string) error {
 	return s.Cache.Del(token)
 }
 
-func (s *Store) InstallTokenToRequest(r *http.Request, token string) (v *TokenValues, err error) {
-	v = newTokenValues(token, s)
-	v.oldToken = token
+func (s *Store) InstallTokenToRequest(r *http.Request, token string) (td *TokenData, err error) {
+	td = newTokenData(token, s)
+	td.oldToken = token
 	if token == "" && s.AutoGenerate == true {
-		err = v.RegenerateToken("")
+		err = td.RegenerateToken("")
 		if err != nil {
 			return
 		}
 	}
 
-	ctx := context.WithValue(r.Context(), s.TokenContextName, v)
+	ctx := context.WithValue(r.Context(), s.TokenContextName, td)
 	*r = *r.WithContext(ctx)
 	return
 }
@@ -207,43 +207,44 @@ func (s *Store) HeaderMiddleware(Name string) func(w http.ResponseWriter, r *htt
 		}
 	}
 }
-func (s *Store) GetRequestTokenValues(r *http.Request) (v *TokenValues, err error) {
+func (s *Store) GetRequestTokenData(r *http.Request) (td *TokenData, err error) {
 	var ok bool
 	tv := r.Context().Value(s.TokenContextName)
 	if tv != nil {
-		v, ok = tv.(*TokenValues)
+		td, ok = tv.(*TokenData)
 		if ok == false {
-			return v, ErrDataTypeWrong
+			return td, ErrDataTypeWrong
 		}
-		return v, nil
+		return td, nil
 	}
-	return v, ErrRequestTokenNotFound
+	return td, ErrRequestTokenNotFound
 }
 func (s *Store) Save(r *http.Request) error {
-	tv, err := s.GetRequestTokenValues(r)
+	tv, err := s.GetRequestTokenData(r)
 	if err != nil {
 		return err
 	}
 	err = tv.Save()
 	return err
 }
-func (s *Store) MustGetRequestTokenValues(r *http.Request) (v *TokenValues) {
-	v, err := s.GetRequestTokenValues(r)
+func (s *Store) MustGetRequestTokenData(r *http.Request) (v *TokenData) {
+	v, err := s.GetRequestTokenData(r)
 	if err != nil {
 		panic(err)
 	}
 	return v
 }
-func (s *Store) MustRegenerateToken(r *http.Request, owner string) {
-	v := s.MustGetRequestTokenValues(r)
+func (s *Store) MustRegenerateToken(r *http.Request, owner string) *TokenData {
+	v := s.MustGetRequestTokenData(r)
 	err := v.RegenerateToken(owner)
 	if err != nil {
 		panic(err)
 	}
+	return v
 }
 func (s *Store) LogoutMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		v := s.MustGetRequestTokenValues(r)
+		v := s.MustGetRequestTokenData(r)
 		v.SetToken("")
 		next(w, r)
 	}

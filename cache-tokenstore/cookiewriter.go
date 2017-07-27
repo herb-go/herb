@@ -13,18 +13,18 @@ type CookieResponseWriter struct {
 }
 
 func (w *CookieResponseWriter) WriteHeader(status int) {
-	var v *TokenValues
+	var td *TokenData
 	var err error
 	if w.written == false {
 		w.written = true
-		v, err = w.store.GetRequestTokenValues(w.r)
+		td, err = w.store.GetRequestTokenData(w.r)
 		if err != nil {
 			panic(err)
 		}
-		if v.tokenChanged {
+		if td.tokenChanged {
 			cookie := &http.Cookie{
 				Name:     w.store.CookieName,
-				Value:    v.token,
+				Value:    td.token,
 				Path:     w.store.CookiePath,
 				Secure:   false,
 				HttpOnly: true,
