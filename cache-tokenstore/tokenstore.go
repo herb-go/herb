@@ -102,12 +102,12 @@ func (s *Store) GenerateToken(owner string) (token string, err error) {
 func (s *Store) SearchTokensByOwner(owner string) ([]string, error) {
 	return s.Cache.SearchByPrefix(owner + s.TokenSepartor)
 }
-func (s *Store) Assign(token string) *TokenData {
-	tv := newTokenData(token, s)
+func (s *Store) GenerateTokenData(token string) *TokenData {
+	tv := NewTokenData(token, s)
 	tv.tokenChanged = true
 	return tv
 }
-func (s *Store) GetTokenData(v *TokenData) error {
+func (s *Store) loadTokenData(v *TokenData) error {
 	token := v.token
 	if token == "" {
 		return cache.ErrKeyUnavailable
@@ -128,7 +128,7 @@ func (s *Store) GetTokenData(v *TokenData) error {
 	return err
 }
 
-func (s *Store) SetTokenData(td *TokenData) error {
+func (s *Store) saveTokenData(td *TokenData) error {
 	token := td.token
 	if token == "" {
 		return cache.ErrKeyUnavailable
@@ -148,10 +148,13 @@ func (s *Store) DeleteToken(token string) error {
 
 	return s.Cache.Del(token)
 }
-
-func (s *Store) InstallTokenToRequest(r *http.Request, token string) (td *TokenData, err error) {
-	td = newTokenData(token, s)
+func (s *Store) GetTokenData(token string) (td *TokenData) {
+	td = NewTokenData(token, s)
 	td.oldToken = token
+	return
+}
+func (s *Store) InstallTokenToRequest(r *http.Request, token string) (td *TokenData, err error) {
+	td = s.GetTokenData(token)
 	if token == "" && s.AutoGenerate == true {
 		err = td.RegenerateToken("")
 		if err != nil {

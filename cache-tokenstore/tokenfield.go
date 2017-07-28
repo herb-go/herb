@@ -51,7 +51,7 @@ func (f *TokenField) LoadFrom(m *TokenData, v interface{}) (err error) {
 }
 func (f *TokenField) GetTokenData(token string, v interface{}) (err error) {
 	var td *TokenData
-	td = f.store.Assign(token)
+	td = f.store.GetTokenData(token)
 	return f.LoadFrom(td, v)
 }
 func (f *TokenField) Get(r *http.Request, v interface{}) error {

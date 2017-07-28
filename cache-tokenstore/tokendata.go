@@ -31,7 +31,7 @@ type tokenCachedData struct {
 	ExpiredAt      int64
 }
 
-func newTokenData(token string, s *Store) *TokenData {
+func NewTokenData(token string, s *Store) *TokenData {
 	t := time.Now().Unix()
 	return &TokenData{
 		token:          token,
@@ -72,7 +72,7 @@ func (t *TokenData) Load() error {
 	if t.loaded {
 		return nil
 	}
-	err := t.store.GetTokenData(t)
+	err := t.store.loadTokenData(t)
 	if err == cache.ErrNotFound {
 		if t.tokenChanged == false {
 			return ErrDataNotFound
@@ -85,8 +85,9 @@ func (t *TokenData) Load() error {
 	}
 	return nil
 }
-func (t *TokenData) Delete() {
+func (t *TokenData) DeleteAndSave() error {
 	t.SetToken("")
+	return t.Save()
 }
 func (t *TokenData) Save() error {
 	nextUpdateTime := time.Unix(t.LastActiveTime, 0).Add(t.store.UpdateActiveInterval)
@@ -95,7 +96,7 @@ func (t *TokenData) Save() error {
 		t.updated = true
 	}
 	if t.updated && t.token != "" {
-		err := t.store.SetTokenData(t)
+		err := t.store.saveTokenData(t)
 		if err != nil {
 			return err
 		}
