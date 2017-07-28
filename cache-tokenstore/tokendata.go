@@ -85,6 +85,9 @@ func (t *TokenData) Load() error {
 	}
 	return nil
 }
+func (t *TokenData) Delete() {
+	t.SetToken("")
+}
 func (t *TokenData) Save() error {
 	nextUpdateTime := time.Unix(t.LastActiveTime, 0).Add(t.store.UpdateActiveInterval)
 	if nextUpdateTime.Before(time.Now()) {
