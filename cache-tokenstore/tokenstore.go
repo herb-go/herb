@@ -24,16 +24,13 @@ var ErrTokenNotValidated = errors.New("Token not validated.")
 var ErrRequestTokenNotFound = errors.New("Request token not found.Did you forget use middleware?")
 var ErrMustRegisterPtr = errors.New("Must register struct pointer.")
 
-func GenerateToken(owner string) (token string, err error) {
-	t, err := cache.RandMaskedBytes(cache.TokenMask, DefaultTokenLength)
+func DefaultTokenGenerater(s *Store, owner string) (token string, err error) {
+	t, err := cache.RandMaskedBytes(cache.TokenMask, s.TokenLength)
 	if err != nil {
 		return
 	}
-	if owner == "" {
-		token = string(t)
-	} else {
-		token = owner + DefaultTokenSepartor + string(t)
-	}
+
+	token = owner + s.TokenSepartor + string(t)
 	return
 }
 
@@ -49,6 +46,7 @@ func New(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
 		TokenLifetime:        TokenLifetime,
 		UpdateActiveInterval: DefaultUpdateActiveInterval,
 		TokenMaxLifetime:     DefaultTokenMaxLifetime,
+		TokenGenerater:       DefaultTokenGenerater,
 	}
 }
 func NewWithContextName(Cache *cache.Cache, TokenLifetime time.Duration, ContenxtName string) *Store {
@@ -62,6 +60,7 @@ type Store struct {
 	Cache                *cache.Cache
 	TokenLength          int
 	TokenSepartor        string
+	TokenGenerater       func(s *Store, owner string) (token string, err error)
 	TokenLifetime        time.Duration
 	TokenMaxLifetime     time.Duration
 	TokenContextName     string
@@ -92,16 +91,12 @@ func (s *Store) MustRegisterField(Key string, v interface{}) *TokenField {
 	return tv
 }
 func (s *Store) GenerateToken(owner string) (token string, err error) {
-	t, err := cache.RandMaskedBytes(cache.TokenMask, DefaultTokenLength)
-	if err != nil {
-		return
-	}
-	token = owner + s.TokenSepartor + string(t)
-	return
+	return s.TokenGenerater(s, owner)
 }
-func (s *Store) SearchTokensByOwner(owner string) ([]string, error) {
-	return s.Cache.SearchByPrefix(owner + s.TokenSepartor)
-}
+
+// func (s *Store) SearchTokensByOwner(owner string) ([]string, error) {
+// 	return s.Cache.SearchByPrefix(owner + s.TokenSepartor)
+// }
 func (s *Store) GenerateTokenData(token string) *TokenData {
 	tv := NewTokenData(token, s)
 	tv.tokenChanged = true
