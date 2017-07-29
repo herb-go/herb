@@ -45,7 +45,7 @@ var gcLua = `
 `
 
 const modeSet = 0
-const modeUpdate = 0
+const modeUpdate = 1
 
 type Cache struct {
 	Pool           *redis.Pool
