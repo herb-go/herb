@@ -8,6 +8,9 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
+const modeSet = 0
+const modeUpdate = 1
+
 type Config []cache.Config
 type Cache struct {
 	SubCaches []*cache.Cache
@@ -74,6 +77,14 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	}
 	return c.SetBytesValue(key, bytes, ttl)
 }
+func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
+	var bytes []byte
+	bytes, err := cache.MarshalMsgpack(v)
+	if err != nil {
+		return err
+	}
+	return c.UpdateBytesValue(key, bytes, ttl)
+}
 func (c *Cache) Get(key string, v interface{}) error {
 	bytes, err := c.GetBytesValue(key)
 	if err != nil {
@@ -81,8 +92,9 @@ func (c *Cache) Get(key string, v interface{}) error {
 	}
 	return cache.UnmarshalMsgpack(bytes, &v)
 }
-func (c *Cache) setBytesCaches(key string, caches []*cache.Cache, bytes []byte, expired int64) error {
+func (c *Cache) setBytesCaches(key string, caches []*cache.Cache, bytes []byte, expired int64, mode int) error {
 	var finalErr error
+	var err error
 	var t time.Duration
 	if expired < 0 {
 		t = -1
@@ -108,7 +120,11 @@ func (c *Cache) setBytesCaches(key string, caches []*cache.Cache, bytes []byte, 
 				}
 			}
 		}
-		err := v.SetBytesValue(key, bytes, ttl)
+		if mode == modeSet {
+			err = v.SetBytesValue(key, bytes, ttl)
+		} else {
+			err = v.UpdateBytesValue(key, bytes, ttl)
+		}
 		if err != nil && err != cache.ErrNotCacheable && err != cache.ErrEntryTooLarge {
 			finalErr = err
 		}
@@ -120,11 +136,22 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 	var err error
 	var e entry
 	expired := e.Set(bytes, ttl)
-	c.SubCaches[len(c.SubCaches)-1].SetBytesValue(key, []byte(e), ttl)
+	err = c.SubCaches[len(c.SubCaches)-1].SetBytesValue(key, []byte(e), ttl)
 	if err != cache.ErrNotCacheable && err != cache.ErrEntryTooLarge && err != nil {
 		return err
 	}
-	err = c.setBytesCaches(key, c.SubCaches[0:len(c.SubCaches)-1], []byte(e), expired)
+	err = c.setBytesCaches(key, c.SubCaches[0:len(c.SubCaches)-1], []byte(e), expired, modeSet)
+	return err
+}
+func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	var err error
+	var e entry
+	expired := e.Set(bytes, ttl)
+	err = c.SubCaches[len(c.SubCaches)-1].UpdateBytesValue(key, []byte(e), ttl)
+	if err != cache.ErrNotCacheable && err != cache.ErrEntryTooLarge && err != nil {
+		return err
+	}
+	err = c.setBytesCaches(key, c.SubCaches[0:len(c.SubCaches)-1], []byte(e), expired, modeUpdate)
 	return err
 }
 func (c *Cache) GetBytesValue(key string) ([]byte, error) {
@@ -149,7 +176,7 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	if err != nil {
 		return buf, err
 	}
-	c.setBytesCaches(key, expiredCache, []byte(e), expired)
+	c.setBytesCaches(key, expiredCache, []byte(e), expired, modeSet)
 	return buf, nil
 }
 func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {

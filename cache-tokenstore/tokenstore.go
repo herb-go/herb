@@ -124,6 +124,7 @@ func (s *Store) loadTokenData(v *TokenData) error {
 }
 
 func (s *Store) saveTokenData(td *TokenData) error {
+	var err error
 	token := td.token
 	if token == "" {
 		return cache.ErrKeyUnavailable
@@ -137,7 +138,12 @@ func (s *Store) saveTokenData(td *TokenData) error {
 	if err != nil {
 		return err
 	}
-	return s.Cache.SetBytesValue(token, bytes, s.TokenLifetime)
+	if td.oldToken == td.token {
+		err = s.Cache.UpdateBytesValue(token, bytes, s.TokenLifetime)
+	} else {
+		err = s.Cache.SetBytesValue(token, bytes, s.TokenLifetime)
+	}
+	return err
 }
 func (s *Store) DeleteToken(token string) error {
 

@@ -15,7 +15,7 @@ import (
 type Cache struct {
 	freecache    *freecache.Cache
 	gcErrHandler func(err error)
-	incrLock     sync.Mutex
+	lock         sync.Mutex
 }
 
 func (c *Cache) SetGCErrHandler(f func(err error)) {
@@ -24,6 +24,19 @@ func (c *Cache) SetGCErrHandler(f func(err error)) {
 }
 func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	err := c.freecache.Set([]byte(key), bytes, int(ttl/time.Second))
+	if err == freecache.ErrLargeEntry {
+		return cache.ErrEntryTooLarge
+	}
+	return err
+}
+func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	_, err := c.freecache.Get([]byte(key))
+	if err == freecache.ErrNotFound {
+		return nil
+	}
+	err = c.freecache.Set([]byte(key), bytes, int(ttl/time.Second))
 	if err == freecache.ErrLargeEntry {
 		return cache.ErrEntryTooLarge
 	}
@@ -43,6 +56,13 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 		return err
 	}
 	return c.SetBytesValue(key, bytes, ttl)
+}
+func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
+	bytes, err := cache.MarshalMsgpack(&v)
+	if err != nil {
+		return err
+	}
+	return c.UpdateBytesValue(key, bytes, ttl)
 }
 func (c *Cache) Get(key string, v interface{}) error {
 	bytes, err := c.GetBytesValue(key)
@@ -67,8 +87,8 @@ func (c *Cache) Del(key string) error {
 func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
 	var v int64
 	var err error
-	c.incrLock.Lock()
-	defer c.incrLock.Unlock()
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	bytes, err := c.freecache.Get([]byte(key))
 	if err == freecache.ErrNotFound || bytes == nil || len(bytes) != 8 {
 		v = 0

@@ -44,6 +44,9 @@ var gcLua = `
 	if r[1]=="0" then redis.call("HDEL",KEYS[1],k) end
 `
 
+const modeSet = 0
+const modeUpdate = 0
+
 type Cache struct {
 	Pool           *redis.Pool
 	ticker         *time.Ticker
@@ -173,6 +176,13 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	}
 	return c.SetBytesValue(key, bytes, ttl)
 }
+func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
+	bytes, err := cache.MarshalMsgpack(&v)
+	if err != nil {
+		return err
+	}
+	return c.UpdateBytesValue(key, bytes, ttl)
+}
 func (c *Cache) setVersion(newVersion string) {
 	c.versionLock.Lock()
 	c.version = newVersion
@@ -247,7 +257,7 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 	_, err = redis.Scan(values, &v)
 	return v, err
 }
-func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
+func (c *Cache) doSet(key string, bytes []byte, ttl time.Duration, mode int) error {
 	var err error
 	var version string
 	conn := c.Pool.Get()
@@ -263,9 +273,19 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 		return err
 	}
 	if ttl < 0 {
-		_, err = conn.Do("SET", k, bytes)
+		if mode == modeUpdate {
+			_, err = conn.Do("SET", k, bytes, "XX")
+		} else {
+			_, err = conn.Do("SET", k, bytes)
+		}
 	} else {
-		_, err = conn.Do("SETEX", k, int64(ttl/time.Second), bytes)
+		if mode == modeUpdate {
+			_, err = conn.Do("SET", k, bytes, "EX", int64(ttl/time.Second), "XX")
+
+		} else {
+			_, err = conn.Do("SET", k, bytes, "EX", int64(ttl/time.Second))
+
+		}
 	}
 	if err != nil {
 		return err
@@ -289,6 +309,12 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 		return c.SetBytesValue(key, bytes, ttl)
 	}
 	return nil
+}
+func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	return c.doSet(key, bytes, ttl, modeSet)
+}
+func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	return c.doSet(key, bytes, ttl, modeUpdate)
 }
 func (c *Cache) Get(key string, v interface{}) error {
 	bytes, err := c.GetBytesValue(key)

@@ -32,8 +32,10 @@ type Config struct {
 type Driver interface {
 	New(cacheConfig json.RawMessage) (Driver, error)
 	Set(key string, v interface{}, ttl time.Duration) error
+	Update(key string, v interface{}, ttl time.Duration) error
 	Get(key string, v interface{}) error
 	SetBytesValue(key string, bytes []byte, ttl time.Duration) error
+	UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error
 	GetBytesValue(key string) ([]byte, error)
 	Del(key string) error
 	SearchByPrefix(prefix string) ([]string, error)
@@ -132,6 +134,15 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	}
 	return c.Driver.Set(c.getKey(key), v, ttl)
 }
+func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
+	if key == "" {
+		return ErrNotFound
+	}
+	if ttl == DefualtTTL {
+		ttl = c.TTL
+	}
+	return c.Driver.Update(c.getKey(key), v, ttl)
+}
 func (c *Cache) Get(key string, v interface{}) error {
 	if key == "" {
 		return ErrNotFound
@@ -151,6 +162,16 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 	}
 
 	return c.Driver.SetBytesValue(c.getKey(key), bytes, ttl)
+}
+func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	if key == "" {
+		return ErrNotFound
+	}
+	if ttl == DefualtTTL {
+		ttl = c.TTL
+	}
+
+	return c.Driver.UpdateBytesValue(c.getKey(key), bytes, ttl)
 }
 func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	if key == "" {

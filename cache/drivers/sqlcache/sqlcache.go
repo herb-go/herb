@@ -8,6 +8,9 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
+const modelSet = 0
+const modelUpdate = 1
+
 var DefaultGCPeriod = 5 * time.Minute
 var tokenMask = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 var defaultGcLimit = int64(100)
@@ -207,6 +210,12 @@ func (c *Cache) DelCounter(key string) error {
 	return c.DelCounter(key)
 }
 func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
+	return c.doSet(key, v, ttl, modelSet)
+}
+func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
+	return c.doSet(key, v, ttl, modelUpdate)
+}
+func (c *Cache) doSet(key string, v interface{}, ttl time.Duration, mode int) error {
 	tx, err := c.DB.Begin()
 	if err != nil {
 		return err
@@ -248,7 +257,7 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	if err != nil {
 		return err
 	}
-	if affected == 0 {
+	if affected == 0 && mode != modelUpdate {
 		stmt2, err := tx.Prepare(`insert into ` + c.table + ` (cache_name,cache_key,cache_value,version,expired) values (?,?,?,?,?)`)
 		if err != nil {
 			return err
@@ -370,6 +379,13 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 		return err
 	}
 	return c.Set(key, b, ttl)
+}
+func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	b, err := json.Marshal(bytes)
+	if err != nil {
+		return err
+	}
+	return c.Update(key, b, ttl)
 }
 func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	b := []byte{}

@@ -17,10 +17,16 @@ func (c *DummyCache) SearchByPrefix(prefix string) ([]string, error) {
 func (c *DummyCache) Set(key string, v interface{}, ttl time.Duration) error {
 	return nil
 }
+func (c *DummyCache) Update(key string, v interface{}, ttl time.Duration) error {
+	return nil
+}
 func (c *DummyCache) Get(key string, v interface{}) error {
 	return ErrNotFound
 }
 func (c *DummyCache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	return nil
+}
+func (c *DummyCache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	return nil
 }
 func (c *DummyCache) GetBytesValue(key string) ([]byte, error) {

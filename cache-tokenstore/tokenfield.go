@@ -118,3 +118,34 @@ func (f *TokenField) Set(r *http.Request, v interface{}) error {
 	err = f.SaveTo(m, v)
 	return err
 }
+
+func (f *TokenField) MustGenerate(r *http.Request, owner string, v interface{}) (td *TokenData) {
+	var err error
+	td, err = f.store.GetRequestTokenData(r)
+	if err != nil {
+		panic(err)
+	}
+	err = td.RegenerateToken(owner)
+	if err != nil {
+		panic(err)
+	}
+	err = f.SaveTo(td, v)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func (f *TokenField) MustGenerateTokenData(owner string, v interface{}) (td *TokenData) {
+	var err error
+	td = f.store.GenerateTokenData(owner)
+	err = f.SaveTo(td, v)
+	if err != nil {
+		panic(err)
+	}
+	err = td.Save()
+	if err != nil {
+		panic(err)
+	}
+	return
+}
