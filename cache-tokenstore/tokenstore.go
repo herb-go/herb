@@ -69,20 +69,20 @@ func (s *Store) RegisterField(Key string, v interface{}) (*TokenField, error) {
 	if tp.Kind() != reflect.Ptr {
 		return nil, ErrMustRegisterPtr
 	}
-	tv := TokenField{
+	tf := TokenField{
 		Key:   Key,
 		Type:  tp.Elem(),
 		store: s,
 	}
-	s.Fields[Key] = tv
-	return &tv, nil
+	s.Fields[Key] = tf
+	return &tf, nil
 }
 func (s *Store) MustRegisterField(Key string, v interface{}) *TokenField {
-	tv, err := s.RegisterField(Key, v)
+	tf, err := s.RegisterField(Key, v)
 	if err != nil {
 		panic(err)
 	}
-	return tv
+	return tf
 }
 func (s *Store) GenerateToken(owner string) (token string, err error) {
 	return s.TokenGenerater(s, owner)
@@ -92,9 +92,9 @@ func (s *Store) GenerateToken(owner string) (token string, err error) {
 // 	return s.Cache.SearchByPrefix(owner + s.TokenSepartor)
 // }
 func (s *Store) GenerateTokenData(token string) *TokenData {
-	tv := NewTokenData(token, s)
-	tv.tokenChanged = true
-	return tv
+	td := NewTokenData(token, s)
+	td.tokenChanged = true
+	return td
 }
 func (s *Store) loadTokenData(v *TokenData) error {
 	token := v.token
@@ -207,9 +207,9 @@ func (s *Store) HeaderMiddleware(Name string) func(w http.ResponseWriter, r *htt
 }
 func (s *Store) GetRequestTokenData(r *http.Request) (td *TokenData, err error) {
 	var ok bool
-	tv := r.Context().Value(s.TokenContextName)
-	if tv != nil {
-		td, ok = tv.(*TokenData)
+	t := r.Context().Value(s.TokenContextName)
+	if t != nil {
+		td, ok = t.(*TokenData)
 		if ok == false {
 			return td, ErrDataTypeWrong
 		}
@@ -218,11 +218,11 @@ func (s *Store) GetRequestTokenData(r *http.Request) (td *TokenData, err error) 
 	return td, ErrRequestTokenNotFound
 }
 func (s *Store) Save(r *http.Request) error {
-	tv, err := s.GetRequestTokenData(r)
+	td, err := s.GetRequestTokenData(r)
 	if err != nil {
 		return err
 	}
-	err = tv.Save()
+	err = td.Save()
 	return err
 }
 func (s *Store) MustGetRequestTokenData(r *http.Request) (v *TokenData) {

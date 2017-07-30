@@ -63,33 +63,33 @@ func (f *TokenField) Get(r *http.Request, v interface{}) error {
 }
 
 func (f *TokenField) RwMutex(r *http.Request) (*sync.RWMutex, error) {
-	var m, err = f.store.GetRequestTokenData(r)
+	var td, err = f.store.GetRequestTokenData(r)
 	if err != nil {
 		return nil, err
 	}
-	return m.Mutex, nil
+	return td.Mutex, nil
 }
 func (f *TokenField) ExpiredAt(r *http.Request) (int64, error) {
-	var m, err = f.store.GetRequestTokenData(r)
+	var td, err = f.store.GetRequestTokenData(r)
 	if err != nil {
 		return 0, err
 	}
-	return m.ExpiredAt, nil
+	return td.ExpiredAt, nil
 }
 func (f *TokenField) GetToken(r *http.Request) (string, error) {
-	var m, err = f.store.GetRequestTokenData(r)
+	var td, err = f.store.GetRequestTokenData(r)
 	if err != nil {
 		return "", err
 	}
-	return m.token, nil
+	return td.token, nil
 }
 
-func (f *TokenField) SaveTo(m *TokenData, v interface{}) (err error) {
-	if m.token == "" {
+func (f *TokenField) SaveTo(td *TokenData, v interface{}) (err error) {
+	if td.token == "" {
 		err = ErrDataNotFound
 		return
 	}
-	err = m.Load()
+	err = td.Load()
 	if err != nil {
 		return
 	}
@@ -97,25 +97,25 @@ func (f *TokenField) SaveTo(m *TokenData, v interface{}) (err error) {
 	if reflect.TypeOf(v) != f.Type {
 		return ErrDataTypeWrong
 	}
-	m.Mutex.Lock()
-	defer m.Mutex.Unlock()
-	m.cache[key] = v
+	td.Mutex.Lock()
+	defer td.Mutex.Unlock()
+	td.cache[key] = v
 	bytes, err := cache.MarshalMsgpack(v)
 	if err != nil {
 		return
 	}
-	m.data[key] = bytes
+	td.data[key] = bytes
 	err = nil
-	m.updated = true
+	td.updated = true
 	return
 }
 
 func (f *TokenField) Set(r *http.Request, v interface{}) error {
-	var m, err = f.store.GetRequestTokenData(r)
+	var td, err = f.store.GetRequestTokenData(r)
 	if err != nil {
 		return err
 	}
-	err = f.SaveTo(m, v)
+	err = f.SaveTo(td, v)
 	return err
 }
 
