@@ -32,7 +32,7 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	_, err := c.freecache.Get([]byte(key))
+	_, err := c.freecache.TTL([]byte(key))
 	if err == freecache.ErrNotFound {
 		return nil
 	}

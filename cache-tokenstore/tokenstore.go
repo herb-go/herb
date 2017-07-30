@@ -11,8 +11,6 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-var DefaultTokenSepartor = "-"
-var DefaultTokenLength = 256
 var DefaultTokenContextName = "token"
 var DefaultUpdateActiveInterval = 5 * time.Minute
 var DefaultTokenMaxLifetime = 365 * 24 * time.Hour
@@ -25,12 +23,12 @@ var ErrRequestTokenNotFound = errors.New("Request token not found.Did you forget
 var ErrMustRegisterPtr = errors.New("Must register struct pointer.")
 
 func DefaultTokenGenerater(s *Store, owner string) (token string, err error) {
-	t, err := cache.RandMaskedBytes(cache.TokenMask, s.TokenLength)
+	t, err := cache.RandMaskedBytes(cache.TokenMask, 256)
 	if err != nil {
 		return
 	}
 
-	token = owner + s.TokenSepartor + string(t)
+	token = owner + "-" + string(t)
 	return
 }
 
@@ -38,8 +36,6 @@ func New(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
 	return &Store{
 		Fields:               map[string]TokenField{},
 		Cache:                Cache,
-		TokenLength:          DefaultTokenLength,
-		TokenSepartor:        DefaultTokenSepartor,
 		TokenContextName:     DefaultTokenContextName,
 		CookieName:           DefaultCookieName,
 		CookiePath:           DefaultCookiePath,
@@ -58,8 +54,6 @@ func NewWithContextName(Cache *cache.Cache, TokenLifetime time.Duration, Contenx
 type Store struct {
 	Fields               map[string]TokenField
 	Cache                *cache.Cache
-	TokenLength          int
-	TokenSepartor        string
 	TokenGenerater       func(s *Store, owner string) (token string, err error)
 	TokenLifetime        time.Duration
 	TokenMaxLifetime     time.Duration
