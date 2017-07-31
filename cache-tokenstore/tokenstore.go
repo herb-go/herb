@@ -14,7 +14,10 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-var defaultTokenContextName = "token"
+//ContextKey string type used in Context key
+type ContextKey string
+
+var defaultTokenContextName = ContextKey("token")
 
 var defaultUpdateActiveInterval = 5 * time.Minute
 
@@ -69,7 +72,7 @@ type Store struct {
 	TokenGenerater       func(s *Store, owner string) (token string, err error) //Token name generate func
 	TokenLifetime        time.Duration                                          //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
 	TokenMaxLifetime     time.Duration                                          //Token max life time.Token can't live more than TokenMaxLifetime if TokenMaxLifetime if greater than 0.
-	TokenContextName     string                                                 //Name in request context store the token  data.Default value is "token".
+	TokenContextName     ContextKey                                             //Name in request context store the token  data.Default value is "token".
 	CookieName           string                                                 //Cookie name used in CookieMiddleware.Default value is "herb-session".
 	CookiePath           string                                                 //Cookie path used in cookieMiddleware.Default value is "/".
 	AutoGenerate         bool                                                   //Whether auto generate token when guset visit.Default value is false.
@@ -89,7 +92,7 @@ func (s *Store) RegisterField(Key string, v interface{}) (*TokenField, error) {
 	tf := TokenField{
 		Key:   Key,
 		Type:  tp.Elem(),
-		store: s,
+		Store: s,
 	}
 	s.Fields[Key] = tf
 	return &tf, nil

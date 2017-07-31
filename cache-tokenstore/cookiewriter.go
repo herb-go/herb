@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+//CookieResponseWriter ResponseWriter that update cookie if token changed.
 type CookieResponseWriter struct {
 	http.ResponseWriter
 	r       *http.Request
@@ -12,6 +13,7 @@ type CookieResponseWriter struct {
 	written bool
 }
 
+//WriteHeader Worked as Response Writer WriteHeader.
 func (w *CookieResponseWriter) WriteHeader(status int) {
 	var td *TokenData
 	var err error
@@ -37,6 +39,8 @@ func (w *CookieResponseWriter) WriteHeader(status int) {
 	}
 	w.ResponseWriter.WriteHeader(status)
 }
+
+//WriteHeader Worked as Response Writer Write.
 func (w *CookieResponseWriter) Write(data []byte) (int, error) {
 	if w.written == false {
 		w.WriteHeader(http.StatusOK)
