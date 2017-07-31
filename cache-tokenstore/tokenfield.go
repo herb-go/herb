@@ -119,7 +119,7 @@ func (f *TokenField) Set(r *http.Request, v interface{}) error {
 	return err
 }
 
-func (f *TokenField) MustGenerate(r *http.Request, owner string, v interface{}) (td *TokenData) {
+func (f *TokenField) MustLogin(r *http.Request, owner string, v interface{}) (td *TokenData) {
 	var err error
 	td, err = f.store.GetRequestTokenData(r)
 	if err != nil {
@@ -136,7 +136,7 @@ func (f *TokenField) MustGenerate(r *http.Request, owner string, v interface{}) 
 	return
 }
 
-func (f *TokenField) MustGenerateTokenData(owner string, v interface{}) (td *TokenData) {
+func (f *TokenField) MustLoginTokenData(owner string, v interface{}) (td *TokenData) {
 	var err error
 	td = f.store.GenerateTokenData(owner)
 	err = f.SaveTo(td, v)
