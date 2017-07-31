@@ -80,7 +80,7 @@ func (f *TokenField) RwMutex(r *http.Request) (*sync.RWMutex, error) {
 	return td.Mutex, nil
 }
 
-//ExpiredAt return the timestamp when token will expired at.
+//ExpiredAt return the timestamp when token will expired at and any error rasied.
 func (f *TokenField) ExpiredAt(r *http.Request) (int64, error) {
 	var td, err = f.Store.GetRequestTokenData(r)
 	if err != nil {
