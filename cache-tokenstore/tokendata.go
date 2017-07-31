@@ -90,10 +90,12 @@ func (t *TokenData) DeleteAndSave() error {
 	return t.Save()
 }
 func (t *TokenData) Save() error {
-	nextUpdateTime := time.Unix(t.LastActiveTime, 0).Add(t.store.UpdateActiveInterval)
-	if nextUpdateTime.Before(time.Now()) {
-		t.LastActiveTime = time.Now().Unix()
-		t.updated = true
+	if t.store.UpdateActiveInterval > 0 {
+		nextUpdateTime := time.Unix(t.LastActiveTime, 0).Add(t.store.UpdateActiveInterval)
+		if nextUpdateTime.Before(time.Now()) {
+			t.LastActiveTime = time.Now().Unix()
+			t.updated = true
+		}
 	}
 	if t.updated && t.token != "" {
 		err := t.store.saveTokenData(t)
