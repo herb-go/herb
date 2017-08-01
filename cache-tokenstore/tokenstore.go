@@ -81,8 +81,8 @@ type Store struct {
 
 //RegisterField registe filed to store.
 //registered field can be used directly with request to load or save the token value.
-//Key filed name.
-//v the empty data struct pointer.
+//Parameter Key filed name.
+//Parameter v should be pointer to empty data model which data filled in.
 //Return a new Token field and error.
 func (s *Store) RegisterField(Key string, v interface{}) (*TokenField, error) {
 	tp := reflect.TypeOf(v)
@@ -100,8 +100,8 @@ func (s *Store) RegisterField(Key string, v interface{}) (*TokenField, error) {
 
 //MustRegisterField registe filed to store.
 //registered field can be used directly with request to load or save the token value.
-//Key filed name.
-//v the empty data struct pointer.
+//Parameter Key filed name.
+//Parameter v should be pointer to empty data model which data filled in.
 //Return a new Token field.
 //Panic if any error raised.
 func (s *Store) MustRegisterField(Key string, v interface{}) *TokenField {

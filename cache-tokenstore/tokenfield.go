@@ -16,6 +16,7 @@ type TokenField struct {
 }
 
 //LoadFrom load data model from given token data.
+//Parameter v should be pointer to empty data model which data filled in.
 //Return any error raised.
 func (f *TokenField) LoadFrom(td *TokenData, v interface{}) (err error) {
 	if td.token == "" {
@@ -54,6 +55,7 @@ func (f *TokenField) LoadFrom(td *TokenData, v interface{}) (err error) {
 }
 
 //GetFromToken get data model from given token
+//Parameter v should be pointer to empty data model which data filled in.
 //Return any error raised.
 func (f *TokenField) GetFromToken(token string, v interface{}) (err error) {
 	var td *TokenData
@@ -62,6 +64,7 @@ func (f *TokenField) GetFromToken(token string, v interface{}) (err error) {
 }
 
 //Get get data model form request.
+//Parameter v should be pointer to empty data model which data filled in.
 //Return any error raised.
 func (f *TokenField) Get(r *http.Request, v interface{}) error {
 	var m, err = f.Store.GetRequestTokenData(r)
