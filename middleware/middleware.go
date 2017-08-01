@@ -1,3 +1,5 @@
+//Package middleware provide a app interface to use middleware easily.
+//All middleware is func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc).
 package middleware
 
 import "net/http"
