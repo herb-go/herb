@@ -52,12 +52,12 @@ type Driver interface {
 	SetBytesValue(key string, bytes []byte, ttl time.Duration) error           //Set bytes data to cache by given key.
 	UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error        //Update bytes data to cache by given key only if the cache exist.
 	GetBytesValue(key string) ([]byte, error)                                  //Get bytes data from cache by given key.
-	Del(key string) error                                                      //Delete data in cache by given name.
+	Del(key string) error                                                      //Delete data in cache by given key.
 	SearchByPrefix(prefix string) ([]string, error)                            //Search All key start with given prefix.
 	IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) //Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
 	SetCounter(key string, v int64, ttl time.Duration) error                   //Set int val in cache by given key.Count cache and data cache are in two independent namespace.
 	GetCounter(key string) (int64, error)                                      //Get int val from cache by given key.Count cache and data cache are in two independent namespace.
-	DelCounter(key string) error                                               //Delete int val in cache by given name.Count cache and data cache are in two independent namespace.
+	DelCounter(key string) error                                               //Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
 	SetGCErrHandler(f func(err error))                                         //Set callback to handler error raised when gc.
 	Close() error                                                              //Close cache.
 	Flush() error                                                              //Delete all data in cache.
@@ -161,7 +161,7 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	return c.Driver.Set(c.getKey(key), v, ttl)
 }
 
-//Update data model to cache by given key only if the cache exist.
+//Update Update data model to cache by given key only if the cache exist.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
@@ -174,7 +174,7 @@ func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
 	return c.Driver.Update(c.getKey(key), v, ttl)
 }
 
-//Get data model from cache by given key.
+//Get Get data model from cache by given key.
 //Parameter v should be pointer to empty data model which data filled in.
 //Return any error raised.
 func (c *Cache) Get(key string, v interface{}) error {

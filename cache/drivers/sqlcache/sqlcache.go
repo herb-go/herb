@@ -1,3 +1,6 @@
+//Package sqlcache provides cache driver uses sqlite or mysql to store cache data.
+//Using database/sql as driver.
+//You should create data table with sql file in "sql" folder first.
 package sqlcache
 
 import (
@@ -11,10 +14,11 @@ import (
 const modelSet = 0
 const modelUpdate = 1
 
-var DefaultGCPeriod = 5 * time.Minute
+var defaultGCPeriod = 5 * time.Minute
 var tokenMask = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 var defaultGcLimit = int64(100)
 
+//Cache The sql cache Driver.
 type Cache struct {
 	DB           *sql.DB
 	table        string
@@ -25,6 +29,7 @@ type Cache struct {
 	gcLimit      int64
 }
 
+//SetGCErrHandler Set callback to handler error raised when gc.
 func (c *Cache) SetGCErrHandler(f func(err error)) {
 	c.gcErrHandler = f
 	return
@@ -47,6 +52,9 @@ func (c *Cache) getVersionTx(tx *sql.Tx) ([]byte, error) {
 	}
 	return version, err
 }
+
+//SearchByPrefix Search All key start with given prefix.
+//Return All matched key and any error raised.
 func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
 	return nil, cache.ErrSearchKeysNotSupported
 }
@@ -121,6 +129,9 @@ func (c *Cache) gc() error {
 	}
 	return err
 }
+
+//IncrCounter Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
+//Return int data value and any error raised.
 func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
 	var v int64
 	tx, err := c.DB.Begin()
@@ -198,20 +209,34 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 	return v, nil
 }
 
+//SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
+//Return any error raised.
 func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 	return c.Set(key, v, ttl)
 }
+
+//GetCounter Get int val from cache by given key.Count cache and data cache are in two independent namespace.
+//Return int data value and any error raised.
 func (c *Cache) GetCounter(key string) (int64, error) {
 	var v int64
 	err := c.Get(key, &v)
 	return v, err
 }
+
+//DelCounter Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
+//Return any error raised.
 func (c *Cache) DelCounter(key string) error {
 	return c.DelCounter(key)
 }
+
+//Set Set data model to cache by given key.
+//Return any error raised.
 func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	return c.doSet(key, v, ttl, modelSet)
 }
+
+//Update Update data model to cache by given key only if the cache exist.
+//Return any error raised.
 func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
 	return c.doSet(key, v, ttl, modelUpdate)
 }
@@ -271,6 +296,10 @@ func (c *Cache) doSet(key string, v interface{}, ttl time.Duration, mode int) er
 	tx.Commit()
 	return err
 }
+
+//Get Get data model from cache by given key.
+//Parameter v should be pointer to empty data model which data filled in.
+//Return any error raised.
 func (c *Cache) Get(key string, v interface{}) error {
 
 	tx, err := c.DB.Begin()
@@ -300,6 +329,9 @@ func (c *Cache) Get(key string, v interface{}) error {
 	err = json.Unmarshal([]byte(j), &v)
 	return err
 }
+
+//Flush Delete all data in cache.
+//Return any error if raised
 func (c *Cache) Flush() error {
 	tx, err := c.DB.Begin()
 	if err != nil {
@@ -356,6 +388,9 @@ func (c *Cache) Flush() error {
 	}
 	return err
 }
+
+//Del Delete data in cache by given key.
+//Return any error raised.
 func (c *Cache) Del(key string) error {
 	tx, err := c.DB.Begin()
 	if err != nil {
@@ -373,6 +408,9 @@ func (c *Cache) Del(key string) error {
 	}
 	return err
 }
+
+//SetBytesValue Set bytes data to cache by given key.
+//Return any error raised.
 func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	b, err := json.Marshal(bytes)
 	if err != nil {
@@ -380,6 +418,9 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 	}
 	return c.Set(key, b, ttl)
 }
+
+//UpdateBytesValue Update bytes data to cache by given key only if the cache exist.
+//Return any error raised.
 func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	b, err := json.Marshal(bytes)
 	if err != nil {
@@ -387,6 +428,9 @@ func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) er
 	}
 	return c.Update(key, b, ttl)
 }
+
+//GetBytesValue Get bytes data from cache by given key.
+//Return data bytes and any error raised.
 func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	b := []byte{}
 	err := c.Get(key, &b)
@@ -399,6 +443,8 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	return v, err
 }
 
+//Close Close cache.
+//Return any error if raised
 func (c *Cache) Close() error {
 	err := c.gc()
 	if err != nil {
@@ -408,39 +454,42 @@ func (c *Cache) Close() error {
 	return c.DB.Close()
 }
 
+//Config Cache driver config.
 type Config struct {
-	Driver   string
-	Conn     string
-	Table    string
-	Name     string
-	GCPeriod int64
-	GCLimit  int64
+	Driver   string //Registered sql driver.
+	Conn     string //Conn string of database.``
+	Table    string //Database table name.
+	Name     string //Database cache name.
+	GCPeriod int64  //Period of gc.Default value is 5 minute.
+	GCLimit  int64  ////Max delete limit in every gc call.Default value is 100.
 }
 
-func (_ *Cache) New(config json.RawMessage) (cache.Driver, error) {
-	c := Config{}
+//New Create new cache driver with given json bytes.
+//Return new driver and any error raised.
+func (c *Cache) New(config json.RawMessage) (cache.Driver, error) {
+	cf := Config{}
 	err := json.Unmarshal(config, &c)
 	if err != nil {
 		return nil, err
 	}
 	cache := Cache{}
-	cache.DB, err = sql.Open(c.Driver, c.Conn)
+	cache.DB, err = sql.Open(cf.Driver, cf.Conn)
 	if err != nil {
 		return &cache, err
 	}
-	cache.table = c.Table
+	cache.table = cf.Table
 	cache.quit = make(chan int)
-	period := time.Duration(c.GCPeriod)
+	period := time.Duration(cf.GCPeriod)
 	if period == 0 {
-		period = DefaultGCPeriod
+		period = defaultGCPeriod
 	}
 	cache.ticker = time.NewTicker(period)
-	gcLimit := c.GCLimit
+	gcLimit := cf.GCLimit
 	if gcLimit == 0 {
 		gcLimit = defaultGcLimit
 	}
 	cache.gcLimit = gcLimit
-	cache.name = c.Name
+	cache.name = cf.Name
 	go func() {
 		for {
 			select {

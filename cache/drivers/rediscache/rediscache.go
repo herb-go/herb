@@ -1,3 +1,5 @@
+//Package rediscache provides cache driver uses redis to store cache data.
+//Using github.com/garyburd/redigo/redis as driver.
 package rediscache
 
 import (
@@ -11,7 +13,7 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-var DefaultGCPeriod = 30 * time.Second
+var defaultGCPeriod = 30 * time.Second
 var defaultGcLimit = int64(100)
 var defaultMaxIdle = 200
 var defaultMaxAlive = 200
@@ -47,8 +49,9 @@ var gcLua = `
 const modeSet = 0
 const modeUpdate = 1
 
+//Cache The redis cache Driver.
 type Cache struct {
-	Pool           *redis.Pool
+	Pool           *redis.Pool //Redis pool.
 	ticker         *time.Ticker
 	name           string
 	quit           chan int
@@ -63,22 +66,24 @@ type Cache struct {
 	connectTimeout time.Duration
 	readTimeout    time.Duration
 	writeTimeout   time.Duration
-	Separtor       string
-}
-type Config struct {
-	Network     string
-	Address     string
-	Password    string
-	Name        string
-	Db          int
-	MaxIdle     int
-	MaxAlive    int
-	IdleTimeout int
-	GCPeriod    int64
-	GCLimit     int64
+	Separtor       string //Separtor in redis key.
 }
 
-func (c *Cache) Dial() (redis.Conn, error) {
+//Config Cache driver config.
+type Config struct {
+	Network     string //Network string of redis conn.
+	Address     string //Redis server address.
+	Name        string ////Redis server username.
+	Password    string //Redis server password.
+	Db          int    //Redis server database id.
+	MaxIdle     int    //Max idle conn in redis pool.
+	MaxAlive    int    //Max Alive conn in redis pool.
+	IdleTimeout int    //Idel comm time.
+	GCPeriod    int64  //Period of gc.Default value is 30 second.
+	GCLimit     int64  //Max delete limit in every gc call.Default value is 100.
+}
+
+func (c *Cache) dial() (redis.Conn, error) {
 	conn, err := redis.DialTimeout(c.network, c.address, c.connectTimeout, c.readTimeout, c.writeTimeout)
 	if err != nil {
 		return nil, err
@@ -111,6 +116,9 @@ func (c *Cache) getKey(key string) string {
 	defer c.versionLock.Unlock()
 	return c.name + c.Separtor + c.Separtor + c.version + c.Separtor + key
 }
+
+//SearchByPrefix Search All key start with given prefix.
+//Return All matched key and any error raised.
 func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
 	return nil, cache.ErrSearchKeysNotSupported
 }
@@ -132,6 +140,9 @@ func (c *Cache) getVersionFromConn(conn redis.Conn) (string, error) {
 	}
 	return version, nil
 }
+
+//Flush Delete all data in cache.
+//Return any error if raised
 func (c *Cache) Flush() error {
 	conn := c.Pool.Get()
 	defer conn.Close()
@@ -159,9 +170,15 @@ func (c *Cache) gc() error {
 	_, err = conn.Do("EVAL", gcLua, 4, vsk, c.name, c.Separtor, c.gcLimit)
 	return err
 }
+
+//Close Close cache.
+//Return any error if raised
 func (c *Cache) Close() error {
 	return c.Pool.Close()
 }
+
+//Del Delete data in cache by given key.
+//Return any error raised.
 func (c *Cache) Del(key string) error {
 	k := c.getKey(key)
 	conn := c.Pool.Get()
@@ -169,6 +186,9 @@ func (c *Cache) Del(key string) error {
 	_, err := conn.Do("DEL", k)
 	return err
 }
+
+//Set Set data model to cache by given key.
+//Return any error raised.
 func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	bytes, err := cache.MarshalMsgpack(&v)
 	if err != nil {
@@ -176,6 +196,9 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	}
 	return c.SetBytesValue(key, bytes, ttl)
 }
+
+//Update Update data model to cache by given key only if the cache exist.
+//Return any error raised.
 func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
 	bytes, err := cache.MarshalMsgpack(&v)
 	if err != nil {
@@ -189,10 +212,16 @@ func (c *Cache) setVersion(newVersion string) {
 	c.versionLock.Unlock()
 
 }
+
+//SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
+//Return any error raised.
 func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 	val := strconv.FormatInt(v, 10)
 	return c.SetBytesValue(key, []byte(val), ttl)
 }
+
+//GetCounter Get int val from cache by given key.Count cache and data cache are in two independent namespace.
+//Return int data value and any error raised.
 func (c *Cache) GetCounter(key string) (int64, error) {
 	var v int64
 	bytes, err := c.GetBytesValue(key)
@@ -201,6 +230,9 @@ func (c *Cache) GetCounter(key string) (int64, error) {
 	}
 	return strconv.ParseInt(string(bytes), 10, 64)
 }
+
+//DelCounter Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
+//Return any error raised.
 func (c *Cache) DelCounter(key string) error {
 	k := c.getKey(key)
 	conn := c.Pool.Get()
@@ -208,6 +240,9 @@ func (c *Cache) DelCounter(key string) error {
 	_, err := conn.Do("DEL", k)
 	return err
 }
+
+//IncrCounter Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
+//Return int data value and any error raised.
 func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
 	var err error
 	var version string
@@ -310,12 +345,22 @@ func (c *Cache) doSet(key string, bytes []byte, ttl time.Duration, mode int) err
 	}
 	return nil
 }
+
+//SetBytesValue Set bytes data to cache by given key.
+//Return any error raised.
 func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	return c.doSet(key, bytes, ttl, modeSet)
 }
+
+//UpdateBytesValue Update bytes data to cache by given key only if the cache exist.
+//Return any error raised.
 func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	return c.doSet(key, bytes, ttl, modeUpdate)
 }
+
+//Get Get data model from cache by given key.
+//Parameter v should be pointer to empty data model which data filled in.
+//Return any error raised.
 func (c *Cache) Get(key string, v interface{}) error {
 	bytes, err := c.GetBytesValue(key)
 	if err != nil {
@@ -323,6 +368,9 @@ func (c *Cache) Get(key string, v interface{}) error {
 	}
 	return cache.UnmarshalMsgpack(bytes, &v)
 }
+
+//GetBytesValue Get bytes data from cache by given key.
+//Return data bytes and any error raised.
 func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	var bytes []byte
 	var version string
@@ -354,10 +402,15 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	}
 	return bytes, err
 }
+
+//SetGCErrHandler Set callback to handler error raised when gc.
 func (c *Cache) SetGCErrHandler(f func(err error)) {
 	c.gcErrHandler = f
 	return
 }
+
+//New Create new cache driver with given json bytes.
+//Return new driver and any error raised.
 func (_ *Cache) New(config json.RawMessage) (cache.Driver, error) {
 	c := Config{}
 	err := json.Unmarshal(config, &c)
@@ -378,7 +431,7 @@ func (_ *Cache) New(config json.RawMessage) (cache.Driver, error) {
 	if maxIdle == 0 {
 		maxIdle = defaultMaxIdle
 	}
-	cache.Pool = redis.NewPool(cache.Dial, maxIdle)
+	cache.Pool = redis.NewPool(cache.dial, maxIdle)
 	cache.Pool.MaxActive = c.MaxAlive
 	if cache.Pool.MaxActive == 0 {
 		cache.Pool.MaxActive = defaultMaxAlive
@@ -391,7 +444,7 @@ func (_ *Cache) New(config json.RawMessage) (cache.Driver, error) {
 	cache.quit = make(chan int)
 	period := time.Duration(c.GCPeriod)
 	if period == 0 {
-		period = DefaultGCPeriod
+		period = defaultGCPeriod
 	}
 	cache.ticker = time.NewTicker(period)
 	gcLimit := c.GCLimit

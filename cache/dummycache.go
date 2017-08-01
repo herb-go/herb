@@ -28,13 +28,14 @@ func (c *DummyCache) Set(key string, v interface{}, ttl time.Duration) error {
 	return nil
 }
 
-//Update data model to cache by given key only if the cache exist.
+//Update Update data model to cache by given key only if the cache exist.
 //Return any error raised.
 func (c *DummyCache) Update(key string, v interface{}, ttl time.Duration) error {
 	return nil
 }
 
-//Get data model from cache by given key.
+//Get Get data model from cache by given key.
+//Parameter v should be pointer to empty data model which data filled in.
 //Return any error raised.
 func (c *DummyCache) Get(key string, v interface{}) error {
 	return ErrNotFound
@@ -58,7 +59,7 @@ func (c *DummyCache) GetBytesValue(key string) ([]byte, error) {
 	return nil, ErrNotFound
 }
 
-//Del Delete data in cache by given name.
+//Del Delete data in cache by given key.
 //Return any error raised.
 func (c *DummyCache) Del(key string) error {
 	return nil
@@ -99,7 +100,7 @@ func (c *DummyCache) GetCounter(key string) (int64, error) {
 	return 0, ErrNotFound
 }
 
-//DelCounter Delete int val in cache by given name.Count cache and data cache are in two independent namespace.
+//DelCounter Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return any error raised.
 func (c *DummyCache) DelCounter(key string) error {
 	return nil
