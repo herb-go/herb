@@ -70,7 +70,7 @@ func TestNameConflict(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = c.Get(testKey, &resultDataModel)
-	if err == nil {
+	if err == nil && testDataModel == resultDataModel {
 		t.Fatal(err)
 	}
 	resultDataBytes, err = c.GetBytesValue(testKey)

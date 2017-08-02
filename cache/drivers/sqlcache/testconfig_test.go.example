@@ -1,0 +1,10 @@
+//please rename this file to testconfig_test.go
+package sqlcache
+
+
+var testConfig = `{
+                    "Driver":"mysql",
+                    "Conn":"username:oass@/dbname",
+                    "Table":"cache",
+                    "Name":""
+                }`

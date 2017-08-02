@@ -1,15 +1,19 @@
-package freecache
+package sqlcache
 
-import "testing"
-import "github.com/herb-go/herb/cache"
-import "encoding/json"
-import "bytes"
-import "time"
+import (
+	"testing"
+
+	"github.com/herb-go/herb/cache"
+
+	"bytes"
+	"encoding/json"
+	"time"
+)
+import _ "github.com/go-sql-driver/mysql"
 
 func newTestCache(ttl int64) *cache.Cache {
-	config := json.RawMessage("{\"Size\": 10000000}")
 	c := cache.New()
-	err := c.Open("freecache", config, ttl)
+	err := c.Open("sqlcache", json.RawMessage(testConfig), ttl)
 	if err != nil {
 		panic(err)
 	}
@@ -19,6 +23,7 @@ func newTestCache(ttl int64) *cache.Cache {
 	}
 	return c
 }
+
 func TestNameConflict(t *testing.T) {
 	var err error
 	defaultTTL := int64(1)

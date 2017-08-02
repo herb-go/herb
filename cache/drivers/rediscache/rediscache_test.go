@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"time"
-
 )
 
 func newTestCache(ttl int64) *cache.Cache {
@@ -69,7 +68,7 @@ func TestNameConflict(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = c.Get(testKey, &resultDataModel)
-	if err == nil {
+	if err == nil && testDataModel == resultDataModel {
 		t.Fatal(err)
 	}
 	resultDataBytes, err = c.GetBytesValue(testKey)

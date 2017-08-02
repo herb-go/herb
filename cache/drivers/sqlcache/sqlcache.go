@@ -104,7 +104,7 @@ func (c *Cache) gc() error {
 	defer rows2.Close()
 	for rows2.Next() {
 		var key string
-		err = rows.Scan(&key)
+		err = rows2.Scan(&key)
 		if err != nil {
 			return err
 		}
@@ -468,7 +468,7 @@ type Config struct {
 //Return new driver and any error raised.
 func (c *Cache) New(config json.RawMessage) (cache.Driver, error) {
 	cf := Config{}
-	err := json.Unmarshal(config, &c)
+	err := json.Unmarshal(config, &cf)
 	if err != nil {
 		return nil, err
 	}
