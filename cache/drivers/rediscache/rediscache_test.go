@@ -1,4 +1,4 @@
-package cachegroup
+package rediscache
 
 import (
 	"testing"
@@ -9,12 +9,11 @@ import (
 	"encoding/json"
 	"time"
 
-	_ "github.com/herb-go/herb/cache/drivers/freecache"
 )
 
 func newTestCache(ttl int64) *cache.Cache {
 	c := cache.New()
-	err := c.Open("cachegroup", json.RawMessage(testConfig), ttl)
+	err := c.Open("rediscache", json.RawMessage(testConfig), ttl)
 	if err != nil {
 		panic(err)
 	}

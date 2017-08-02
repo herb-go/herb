@@ -259,7 +259,7 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 	if err != nil {
 		return 0, err
 	}
-	_, err = conn.Do("INCR", k)
+	_, err = conn.Do("INCRBY", k, increment)
 	if err != nil {
 		return v, err
 	}
