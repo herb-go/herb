@@ -85,7 +85,7 @@ func (c *DummyCache) Flush() error {
 //IncrCounter Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return int data value and any error raised.
 func (c *DummyCache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
-	return 0, ErrNotFound
+	return 0, nil
 }
 
 //SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.

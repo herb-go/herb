@@ -71,14 +71,14 @@ func (c *Cache) New(bytes json.RawMessage) (cache.Driver, error) {
 		return nil, err
 	}
 	cc := Cache{}
-	c.SubCaches = make([]*cache.Cache, len(config))
+	cc.SubCaches = make([]*cache.Cache, len(config))
 	for k, v := range config {
 		subcache := cache.New()
 		err := subcache.OpenConfig(v)
 		if err != nil {
 			return &cc, err
 		}
-		c.SubCaches[k] = subcache
+		cc.SubCaches[k] = subcache
 	}
 	return &cc, nil
 }

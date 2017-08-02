@@ -166,7 +166,7 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 //Return any error raised.
 func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
 	if key == "" {
-		return ErrNotFound
+		return ErrKeyUnavailable
 	}
 	if ttl == DefualtTTL {
 		ttl = c.TTL
@@ -179,7 +179,7 @@ func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
 //Return any error raised.
 func (c *Cache) Get(key string, v interface{}) error {
 	if key == "" {
-		return ErrNotFound
+		return ErrKeyUnavailable
 	}
 	return c.Driver.Get(c.getKey(key), &v)
 }
@@ -210,7 +210,7 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 //Return any error raised.
 func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	if key == "" {
-		return ErrNotFound
+		return ErrKeyUnavailable
 	}
 	if ttl == DefualtTTL {
 		ttl = c.TTL
@@ -223,7 +223,7 @@ func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) er
 //Return data bytes and any error raised.
 func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	if key == "" {
-		return nil, ErrNotFound
+		return nil, ErrKeyUnavailable
 	}
 	return c.Driver.GetBytesValue(c.getKey(key))
 }
@@ -276,7 +276,7 @@ func (c *Cache) SearchCounterByPrefix(prefix string) ([]string, error) {
 //Return int data value and any error raised.
 func (c *Cache) GetCounter(key string) (int64, error) {
 	if key == "" {
-		return 0, ErrNotFound
+		return 0, ErrKeyUnavailable
 	}
 	return c.Driver.GetCounter(c.getIntKey(key))
 }
@@ -295,7 +295,7 @@ func (c *Cache) DelCounter(key string) error {
 //Return any error raised.
 func (c *Cache) Load(key string, v interface{}, ttl time.Duration, closure func(v interface{}) error) error {
 	if key == "" {
-		return ErrNotFound
+		return ErrKeyUnavailable
 	}
 	err := c.Get(key, &v)
 	if err == ErrNotFound {
