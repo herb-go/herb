@@ -29,19 +29,23 @@ func (f *TokenField) LoadFrom(td *TokenData, v interface{}) (err error) {
 	}
 	td.Mutex.RLock()
 	defer td.Mutex.RUnlock()
-	key := f.Key
-	typ := reflect.TypeOf(v)
-	if typ.Elem() != f.Type {
-		return ErrDataTypeWrong
+	t := reflect.TypeOf(v)
+	if t.Kind() != reflect.Ptr {
+		return ErrNilPointer
 	}
-	if reflect.ValueOf(v).IsNil() {
-		return ErrNilPoint
+	key := f.Key
+	if v == nil || reflect.ValueOf(v).IsNil() {
+		return ErrNilPointer
+	}
+	typ := reflect.ValueOf(v).Elem().Type()
+	if typ != f.Type {
+		return ErrDataTypeWrong
 	}
 	c, ok := td.cache[key]
 	if ok == true {
 		dst := reflect.ValueOf(v).Elem()
-		src := reflect.ValueOf(c).Elem()
-		dst.Set(src)
+		dst.Set(c)
+		return
 	}
 	data, ok := td.data[key]
 	if ok == false {
@@ -49,7 +53,7 @@ func (f *TokenField) LoadFrom(td *TokenData, v interface{}) (err error) {
 	}
 	err = cache.UnmarshalMsgpack(data, v)
 	if err == nil {
-		td.cache[key] = v
+		td.cache[key] = reflect.ValueOf(v).Elem()
 	}
 	return
 }
@@ -67,11 +71,11 @@ func (f *TokenField) GetFromToken(token string, v interface{}) (err error) {
 //Parameter v should be pointer to empty data model which data filled in.
 //Return any error raised.
 func (f *TokenField) Get(r *http.Request, v interface{}) error {
-	var m, err = f.Store.GetRequestTokenData(r)
+	var td, err = f.Store.GetRequestTokenData(r)
 	if err != nil {
 		return err
 	}
-	return f.LoadFrom(m, v)
+	return f.LoadFrom(td, v)
 }
 
 //RwMutex return the RwMutex of request token data and any error if raised.
@@ -118,7 +122,7 @@ func (f *TokenField) SaveTo(td *TokenData, v interface{}) (err error) {
 	}
 	td.Mutex.Lock()
 	defer td.Mutex.Unlock()
-	td.cache[key] = v
+	td.cache[key] = reflect.ValueOf(v)
 	bytes, err := cache.MarshalMsgpack(v)
 	if err != nil {
 		return

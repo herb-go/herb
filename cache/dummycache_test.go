@@ -18,7 +18,7 @@ func TestDummyCache(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err = c.SearchByPrefix(testKey)
-	if err != ErrSearchKeysNotSupported {
+	if err != ErrFeatureNotSupported {
 		t.Errorf("Search by prefeix error %s", err)
 	}
 	err = c.Set(testKey, testData, testTTL)

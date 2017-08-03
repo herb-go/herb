@@ -4,14 +4,15 @@ import "errors"
 import "github.com/herb-go/herb/cache"
 import "sync"
 import "time"
+import "reflect"
 
 var (
 	//ErrDataNotFound rasied when token data not found.
 	ErrDataNotFound = errors.New("Data not found")
 	//ErrDataTypeWrong rasied when the given model type is different form registered model type.
 	ErrDataTypeWrong = errors.New("Data type wrong")
-	//ErrNilPoint raised when data point to nil.
-	ErrNilPoint = errors.New("Data point to nil")
+	//ErrNilPointer raised when data point to nil.
+	ErrNilPointer = errors.New("Data point to nil")
 )
 
 //Token data in every request.
@@ -20,7 +21,7 @@ type TokenData struct {
 	ExpiredAt      int64 //Timestamp when the token expired.
 	CreatedTime    int64 //Timestamp when the token created.
 	LastActiveTime int64 //Timestamp when the token Last Active.
-	cache          map[string]interface{}
+	cache          map[string]reflect.Value
 	token          string
 	oldToken       string
 	loaded         bool
@@ -45,7 +46,7 @@ func NewTokenData(token string, s *Store) *TokenData {
 	return &TokenData{
 		token:          token,
 		data:           map[string][]byte{},
-		cache:          map[string]interface{}{},
+		cache:          map[string]reflect.Value{},
 		store:          s,
 		tokenChanged:   false,
 		Mutex:          &sync.RWMutex{},
@@ -76,7 +77,7 @@ func (t *TokenData) RegenerateToken(owner string) error {
 		return err
 	}
 	t.data = map[string][]byte{}
-	t.cache = map[string]interface{}{}
+	t.cache = map[string]reflect.Value{}
 	t.SetToken(token)
 	return nil
 }
@@ -101,6 +102,7 @@ func (t *TokenData) Load() error {
 	if err != nil {
 		return err
 	}
+	t.loaded = true
 	return nil
 }
 
@@ -157,7 +159,7 @@ func (t *TokenData) Unmarshal(token string, bytes []byte) error {
 	t.Mutex.Lock()
 	defer t.Mutex.Unlock()
 	t.token = token
-	t.cache = map[string]interface{}{}
+	t.cache = map[string]reflect.Value{}
 	err = cache.UnmarshalMsgpack(bytes, &(Data))
 	if err != nil {
 		return err

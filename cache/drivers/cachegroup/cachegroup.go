@@ -25,7 +25,7 @@ type entry []byte
 //SearchByPrefix Search All key start with given prefix.
 //Return All matched key and any error raised.
 func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
-	return nil, cache.ErrSearchKeysNotSupported
+	return nil, cache.ErrFeatureNotSupported
 }
 
 //IncrCounter Increase int val in cache by given key.Count cache and data cache are in two independent namespace.

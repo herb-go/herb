@@ -21,8 +21,8 @@ var (
 	ErrKeyTooLarge = errors.New("Key too large to cache")
 	//ErrKeyUnavailable raised when the key is not available.For example,empty key.
 	ErrKeyUnavailable = errors.New("Key Unavailable")
-	//ErrSearchKeysNotSupported raised when search keys by prefix called on unsupported driver.
-	ErrSearchKeysNotSupported = errors.New("Search Keys by Prefix is not supported")
+	//ErrFeatureNotSupported raised when calling feature on unsupported driver.
+	ErrFeatureNotSupported = errors.New("Feature is not supported")
 )
 
 //DefualtTTL means use cache default ttl setting.

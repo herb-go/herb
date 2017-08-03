@@ -171,7 +171,7 @@ func (c *Cache) DelCounter(key string) error {
 //SearchByPrefix Search All key start with given prefix.
 //Return All matched key and any error raised.
 func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
-	return nil, cache.ErrSearchKeysNotSupported
+	return nil, cache.ErrFeatureNotSupported
 }
 
 //Config Cache driver config.

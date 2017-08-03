@@ -85,13 +85,17 @@ type Store struct {
 //Parameter v should be pointer to empty data model which data filled in.
 //Return a new Token field and error.
 func (s *Store) RegisterField(Key string, v interface{}) (*TokenField, error) {
-	tp := reflect.TypeOf(v)
-	if tp.Kind() != reflect.Ptr {
+	if v == nil {
+		return nil, ErrNilPointer
+	}
+	t := reflect.TypeOf(v)
+	if t.Kind() != reflect.Ptr {
 		return nil, ErrMustRegistePtr
 	}
+	tp := reflect.ValueOf(v).Elem().Type()
 	tf := TokenField{
 		Key:   Key,
-		Type:  tp.Elem(),
+		Type:  tp,
 		Store: s,
 	}
 	s.Fields[Key] = tf

@@ -196,11 +196,11 @@ func TestSearchByPrefix(t *testing.T) {
 	c := newTestCache(defaultTTL)
 	defer c.Close()
 	_, err := c.SearchByPrefix(testPrefix)
-	if err != cache.ErrSearchKeysNotSupported {
+	if err != cache.ErrFeatureNotSupported {
 		t.Fatal(err)
 	}
 	_, err = c.SearchCounterByPrefix(testPrefix2)
-	if err != cache.ErrSearchKeysNotSupported {
+	if err != cache.ErrFeatureNotSupported {
 		t.Fatal(err)
 	}
 }

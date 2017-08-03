@@ -19,7 +19,7 @@ func (c *DummyCache) New(cacheConfig json.RawMessage) (Driver, error) {
 //SearchByPrefix Search All key start with given prefix.
 //Return All matched key and any error raised.
 func (c *DummyCache) SearchByPrefix(prefix string) ([]string, error) {
-	return nil, ErrSearchKeysNotSupported
+	return nil, ErrFeatureNotSupported
 }
 
 //Set Set data model to cache by given key.
