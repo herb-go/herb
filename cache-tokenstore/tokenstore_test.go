@@ -1,6 +1,7 @@
 package tokenstore
 
 import (
+	"bytes"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -33,6 +34,25 @@ func TestField(t *testing.T) {
 	model := "123456"
 	var result string
 	testKey := "testkey"
+	type modelStruct struct {
+		data string
+	}
+	structModel := modelStruct{
+		data: "test",
+	}
+	var resutStruct = modelStruct{}
+	var testStructKey = "teststructkey"
+	var modelInt = 123456
+	var resultInt int
+	var testIntKey = "testintkey"
+	var modelBytes = []byte("testbytes")
+	var resultBytes []byte
+	var testBytesKey = "testbyteskey"
+	var modelMap = map[string]string{
+		"test": "test",
+	}
+	var resultMap map[string]string
+	var testMapKey = "testmapkey"
 	testOwner := "testowner"
 	_, err = s.RegisterField(testKey, model)
 	if err != ErrMustRegistePtr {
@@ -68,6 +88,68 @@ func TestField(t *testing.T) {
 	}
 	if result != model {
 		t.Errorf("Field GetFromToken error")
+	}
+	fieldStruct, err := s.RegisterField(testIntKey, &modelStruct{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldStruct.SaveTo(td, structModel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldStruct.LoadFrom(td, &resutStruct)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resutStruct.data != structModel.data {
+		t.Errorf("field Struct error %s", resutStruct.data)
+	}
+
+	fieldInt, err := s.RegisterField(testStructKey, &resultInt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldInt.SaveTo(td, modelInt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldInt.LoadFrom(td, &resultInt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultInt != modelInt {
+		t.Errorf("field int error %d", resultInt)
+	}
+	fieldBytes, err := s.RegisterField(testBytesKey, &resultBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldBytes.SaveTo(td, modelBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldBytes.LoadFrom(td, &resultBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Compare(resultBytes, modelBytes) != 0 {
+		t.Errorf("field Bytes error %s", string(resultBytes))
+	}
+
+	fieldMap, err := s.RegisterField(testMapKey, &resultMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldMap.SaveTo(td, modelMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldMap.LoadFrom(td, &resultMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(resultMap, modelMap) {
+		t.Error("field Maps error")
 	}
 }
 
