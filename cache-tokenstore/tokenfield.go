@@ -12,7 +12,7 @@ import (
 type TokenField struct {
 	Key   string       //Token field name.
 	Type  reflect.Type //Registered token struct type.
-	Store *Store       //Token store which this field belongs to.
+	Store Store        //Token store which this field belongs to.
 }
 
 //LoadFrom load data model from given token data.

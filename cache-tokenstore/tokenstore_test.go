@@ -13,7 +13,7 @@ import (
 	_ "github.com/herb-go/herb/cache/drivers/freecache"
 )
 
-func getStore(ttl time.Duration) *Store {
+func getStore(ttl time.Duration) Store {
 	c := cache.New()
 	err := c.OpenJSON([]byte(testCache))
 	if err != nil {
@@ -30,7 +30,7 @@ func getStore(ttl time.Duration) *Store {
 func TestField(t *testing.T) {
 	var err error
 	s := getStore(-1)
-	defer s.Cache.Close()
+	defer s.Close()
 	model := "123456"
 	var result string
 	testKey := "testkey"
@@ -156,7 +156,7 @@ func TestField(t *testing.T) {
 func TestFieldInRequest(t *testing.T) {
 	var err error
 	s := getStore(-1)
-	defer s.Cache.Close()
+	defer s.Close()
 	model := "123456"
 	modelAfterSet := "set"
 	var result string
@@ -263,5 +263,42 @@ func TestFieldInRequest(t *testing.T) {
 	}
 	if rep.StatusCode != 200 {
 		t.Errorf("HeaderMiddle status error %d", rep.StatusCode)
+	}
+}
+
+func TestTokenDataMarshal(t *testing.T) {
+	var err error
+	testOwner := "testowner"
+	model := "123456"
+	var result string
+	testKey := "testkey"
+	testKey2 := "testkey2"
+	testToken := "testtoken"
+	s := getStore(-1)
+	defer s.Close()
+	field, err := s.RegisterField(testKey, &model)
+	if err != nil {
+		panic(err)
+	}
+	td := s.GenerateTokenData(testOwner)
+	err = field.SaveTo(td, model)
+	if err != nil {
+		panic(err)
+	}
+	bytes, err := td.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	td2 := NewTokenData(testToken, s)
+	err = td2.Unmarshal(testKey2, bytes)
+	if err != nil {
+		panic(err)
+	}
+	err = field.LoadFrom(td2, &result)
+	if err != nil {
+		panic(err)
+	}
+	if result != model {
+		t.Errorf("Tokendata Unmarshal err %s", result)
 	}
 }

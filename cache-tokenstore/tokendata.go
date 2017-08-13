@@ -15,7 +15,7 @@ var (
 	ErrNilPointer = errors.New("Data point to nil")
 )
 
-//Token data in every request.
+//TokenData Token data in every request.
 type TokenData struct {
 	data           map[string][]byte
 	ExpiredAt      int64 //Timestamp when the token expired.
@@ -27,7 +27,7 @@ type TokenData struct {
 	loaded         bool
 	tokenChanged   bool
 	updated        bool
-	store          *Store
+	store          Store
 	Mutex          *sync.RWMutex //Read write mutex.
 }
 type tokenCachedData struct {
@@ -41,7 +41,7 @@ type tokenCachedData struct {
 //token the token name.
 //s the store which token data belongs to.
 //return new TokenData.
-func NewTokenData(token string, s *Store) *TokenData {
+func NewTokenData(token string, s Store) *TokenData {
 	t := time.Now().Unix()
 	return &TokenData{
 		token:          token,
@@ -92,7 +92,7 @@ func (t *TokenData) Load() error {
 	if t.loaded {
 		return nil
 	}
-	err := t.store.loadTokenData(t)
+	err := t.store.LoadTokenData(t)
 	if err == cache.ErrNotFound {
 		if t.tokenChanged == false {
 			return ErrDataNotFound
@@ -102,7 +102,6 @@ func (t *TokenData) Load() error {
 	if err != nil {
 		return err
 	}
-	t.loaded = true
 	return nil
 }
 
@@ -116,27 +115,7 @@ func (t *TokenData) DeleteAndSave() error {
 //Won't do anything if token data not changed.
 //You should call Save manually in your token binding func or non http request usage.
 func (t *TokenData) Save() error {
-	if t.store.UpdateActiveInterval > 0 {
-		nextUpdateTime := time.Unix(t.LastActiveTime, 0).Add(t.store.UpdateActiveInterval)
-		if nextUpdateTime.Before(time.Now()) {
-			t.LastActiveTime = time.Now().Unix()
-			t.updated = true
-		}
-	}
-	if t.updated && t.token != "" {
-		err := t.store.saveTokenData(t)
-		if err != nil {
-			return err
-		}
-		t.updated = false
-	}
-	if t.tokenChanged && t.oldToken != "" {
-		err := t.store.DeleteToken(t.oldToken)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return t.store.SaveTokenData(t)
 }
 
 //Marshal convert TokenData to bytes.
@@ -168,5 +147,6 @@ func (t *TokenData) Unmarshal(token string, bytes []byte) error {
 	t.ExpiredAt = Data.ExpiredAt
 	t.CreatedTime = Data.CreatedTime
 	t.LastActiveTime = Data.LastActiveTime
+	t.loaded = true
 	return nil
 }

@@ -8,7 +8,7 @@ import (
 type cookieResponseWriter struct {
 	http.ResponseWriter
 	r       *http.Request
-	store   *Store
+	store   *CacheStore
 	written bool
 }
 
