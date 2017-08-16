@@ -162,7 +162,7 @@ func (s *CacheStore) SaveTokenData(t *TokenData) error {
 		}
 	}
 	if t.updated && t.token != "" {
-		err := s.saveTokenData(t)
+		err := s.save(t)
 		if err != nil {
 			return err
 		}
@@ -174,9 +174,10 @@ func (s *CacheStore) SaveTokenData(t *TokenData) error {
 			return err
 		}
 	}
+	t.oldToken = t.token
 	return nil
 }
-func (s *CacheStore) saveTokenData(td *TokenData) error {
+func (s *CacheStore) save(td *TokenData) error {
 	var err error
 	token := td.token
 	if token == "" {
@@ -296,16 +297,6 @@ func (s *CacheStore) GetRequestTokenData(r *http.Request) (td *TokenData, err er
 	return td, ErrRequestTokenNotFound
 }
 
-//MustGetRequestTokenData get stored  token data from request.
-//Panic if any error raised.
-func (s *CacheStore) MustGetRequestTokenData(r *http.Request) (v *TokenData) {
-	v, err := s.GetRequestTokenData(r)
-	if err != nil {
-		panic(err)
-	}
-	return v
-}
-
 //Save save the request token data.
 func (s *CacheStore) SaveRequestTokenData(r *http.Request) error {
 	td, err := s.GetRequestTokenData(r)
@@ -316,21 +307,10 @@ func (s *CacheStore) SaveRequestTokenData(r *http.Request) error {
 	return err
 }
 
-//MustRegenerateToken Regenerate the token name and data with give owner,and save to request.
-//Panic if any error raised.
-func (s *CacheStore) MustRegenerateToken(r *http.Request, owner string) *TokenData {
-	v := s.MustGetRequestTokenData(r)
-	err := v.RegenerateToken(owner)
-	if err != nil {
-		panic(err)
-	}
-	return v
-}
-
 //LogoutMiddleware return a middleware clear the token in request.
 func (s *CacheStore) LogoutMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		v := s.MustGetRequestTokenData(r)
+		v := MustGetRequestTokenData(s, r)
 		v.SetToken("")
 		next(w, r)
 	}

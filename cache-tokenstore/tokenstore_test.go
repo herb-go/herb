@@ -301,4 +301,64 @@ func TestTokenDataMarshal(t *testing.T) {
 	if result != model {
 		t.Errorf("Tokendata Unmarshal err %s", result)
 	}
+
+}
+func TestTokenData(t *testing.T) {
+	var err error
+	s := getStore(-1)
+	defer s.Close()
+	testOwner := "testowner"
+	model := "123456"
+	var result string
+	testKey := "testkey"
+	field, err := s.RegisterField(testKey, &model)
+	if err != nil {
+		panic(err)
+	}
+	td := s.GenerateTokenData(testOwner)
+	err = field.SaveTo(td, model)
+	if err != nil {
+		panic(err)
+	}
+	testToken := td.Token()
+	td2 := NewTokenData(testToken, s)
+	err = td2.Load()
+	if err != ErrDataNotFound {
+		t.Fatal(err)
+	}
+	err = field.LoadFrom(td2, &result)
+	if err != ErrDataNotFound {
+		t.Fatal(err)
+	}
+	err = td.Save()
+	if err != nil {
+		panic(err)
+	}
+
+	td3 := NewTokenData(testToken, s)
+	err = td3.Load()
+	if err != nil {
+		panic(err)
+	}
+	result = ""
+	err = field.LoadFrom(td3, &result)
+	if err != nil {
+		panic(err)
+	}
+	if result != model {
+		t.Errorf("Tokendata save/load error %s", result)
+	}
+	err = td.DeleteAndSave()
+	if err != nil {
+		panic(err)
+	}
+	td4 := NewTokenData(testToken, s)
+	err = td4.Load()
+	if err != ErrDataNotFound {
+		t.Fatal(err)
+	}
+	err = field.LoadFrom(td4, &result)
+	if err != ErrDataNotFound {
+		t.Fatal(err)
+	}
 }
