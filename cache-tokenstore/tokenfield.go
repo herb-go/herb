@@ -20,7 +20,7 @@ type TokenField struct {
 //Return any error raised.
 func (f *TokenField) LoadFrom(td *TokenData, v interface{}) (err error) {
 	if td.token == "" {
-		err = ErrDataNotFound
+		err = ErrTokenNotValidated
 		return
 	}
 	err = td.Load()

@@ -1,6 +1,18 @@
 package tokenstore
 
-import "net/http"
+import (
+	"errors"
+	"net/http"
+)
+
+var (
+	//ErrTokenNotValidated raised when the given token is not validated(for example: token is empty string)
+	ErrTokenNotValidated = errors.New("Token not validated")
+	//ErrRequestTokenNotFound raised when token is not found in context.You should use cookiemiddle or headermiddle or your our function to install the token.
+	ErrRequestTokenNotFound = errors.New("Request token not found.Did you forget use middleware?")
+	//ErrMustRegistePtr raised when the registerd interface is not a poioter to struct.
+	ErrMustRegistePtr = errors.New("Must registe struct pointer")
+)
 
 //MustRegenerateToken Regenerate the token name and data with give owner,and save to request.
 //Panic if any error raised.

@@ -27,6 +27,21 @@ func getStore(ttl time.Duration) Store {
 	return s
 }
 
+func getTimeoutStore(ttl time.Duration, UpdateActiveInterval time.Duration) Store {
+	c := cache.New()
+	err := c.OpenJSON([]byte(testCache))
+	if err != nil {
+		panic(err)
+	}
+	err = c.Flush()
+	if err != nil {
+		panic(err)
+	}
+	s := New(c, ttl)
+	s.UpdateActiveInterval = UpdateActiveInterval
+	return s
+}
+
 func TestField(t *testing.T) {
 	var err error
 	s := getStore(-1)
@@ -360,5 +375,111 @@ func TestTokenData(t *testing.T) {
 	err = field.LoadFrom(td4, &result)
 	if err != ErrDataNotFound {
 		t.Fatal(err)
+	}
+}
+
+func TestTimeout(t *testing.T) {
+	sforever := getTimeoutStore(-1, -1)
+	s3second := getTimeoutStore(3*time.Second, -1)
+	s3secondwithAutoRefresh := getTimeoutStore(3*time.Second, 1*time.Second)
+	testOwner := "testowner"
+	model := "123456"
+	var result string
+	testKey := "testkey"
+	fieldForever, err := sforever.RegisterField(testKey, &model)
+	if err != nil {
+		panic(err)
+	}
+	tdForever := sforever.GenerateTokenData(testOwner)
+	tkeyForever := tdForever.Token()
+	err = fieldForever.SaveTo(tdForever, model)
+	if err != nil {
+		panic(err)
+	}
+	field3second, err := s3second.RegisterField(testKey, &model)
+	if err != nil {
+		panic(err)
+	}
+	td3second := s3second.GenerateTokenData(testOwner)
+	tkey3second := td3second.Token()
+	err = field3second.SaveTo(td3second, model)
+	if err != nil {
+		panic(err)
+	}
+	field3secondwithAutoRefresh, err := s3secondwithAutoRefresh.RegisterField(testKey, &model)
+	if err != nil {
+		panic(err)
+	}
+	td3secondwithAutoRefresh := s3secondwithAutoRefresh.GenerateTokenData(testOwner)
+	tkey3secondwithAutoRefresh := td3secondwithAutoRefresh.Token()
+	err = field3secondwithAutoRefresh.SaveTo(td3secondwithAutoRefresh, model)
+	if err != nil {
+		panic(err)
+	}
+	tdForever.Save()
+	td3second.Save()
+	td3secondwithAutoRefresh.Save()
+	time.Sleep(2 * time.Second)
+	tdForever = sforever.GetTokenData(tkeyForever)
+	td3second = s3second.GetTokenData(tkey3second)
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(tkey3secondwithAutoRefresh)
+	result = ""
+	err = fieldForever.LoadFrom(tdForever, &result)
+	if result != model {
+		t.Errorf("Timeout error %s", result)
+	}
+	result = ""
+	err = field3second.LoadFrom(td3second, &result)
+	if result != model {
+		t.Errorf("Timeout error %s", result)
+	}
+	result = ""
+	err = field3secondwithAutoRefresh.LoadFrom(td3secondwithAutoRefresh, &result)
+	if result != model {
+		t.Errorf("Timeout error %s", result)
+	}
+	tdForever.Save()
+	td3second.Save()
+	td3secondwithAutoRefresh.Save()
+	time.Sleep(2 * time.Second)
+	tdForever = sforever.GetTokenData(tkeyForever)
+	td3second = s3second.GetTokenData(tkey3second)
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(tkey3secondwithAutoRefresh)
+	result = ""
+	err = fieldForever.LoadFrom(tdForever, &result)
+	if result != model {
+		t.Errorf("Timeout error %s", result)
+	}
+	result = ""
+	err = field3second.LoadFrom(td3second, &result)
+	if err != ErrDataNotFound {
+		t.Errorf("Timeout error %s", err)
+	}
+	result = ""
+	err = field3secondwithAutoRefresh.LoadFrom(td3secondwithAutoRefresh, &result)
+	if result != model {
+		t.Errorf("Timeout error %s", result)
+	}
+	tdForever.Save()
+	td3second.Save()
+	td3secondwithAutoRefresh.Save()
+	time.Sleep(4 * time.Second)
+	tdForever = sforever.GetTokenData(tkeyForever)
+	td3second = s3second.GetTokenData(tkey3second)
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(tkey3secondwithAutoRefresh)
+	result = ""
+	err = fieldForever.LoadFrom(tdForever, &result)
+	if result != model {
+		t.Errorf("Timeout error %s", result)
+	}
+	result = ""
+	err = field3second.LoadFrom(td3second, &result)
+	if err != ErrDataNotFound {
+		t.Errorf("Timeout error %s", err)
+	}
+	result = ""
+	err = field3secondwithAutoRefresh.LoadFrom(td3secondwithAutoRefresh, &result)
+	if err != ErrDataNotFound {
+		t.Errorf("Timeout error %s", err)
 	}
 }
