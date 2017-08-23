@@ -259,17 +259,70 @@ func TestFieldInRequest(t *testing.T) {
 	actionCookieLogin := func(w http.ResponseWriter, r *http.Request) {
 		s.CookieMiddleware()(w, r, actionLogin)
 	}
+	actionLogout := func(w http.ResponseWriter, r *http.Request) {
+		s.LogoutMiddleware()(w, r, func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("ok"))
+		})
+	}
+	actionCookieLogout := func(w http.ResponseWriter, r *http.Request) {
+		s.CookieMiddleware()(w, r, actionLogout)
+	}
+	actionHeaderLogout := func(w http.ResponseWriter, r *http.Request) {
+		s.HeaderMiddleware(testHeaderName)(w, r, actionLogout)
+	}
+	actionLoginStatus := func(w http.ResponseWriter, r *http.Request) {
+		t, err := field.Store.GetRequestTokenData(r)
+		if err != ErrDataNotFound && err != nil {
+			panic(err)
+		}
+		if err == ErrDataNotFound || t.token == "" {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+
+		}
+		result = ""
+		err = field.Get(r, &result)
+		if err != ErrDataNotFound && err != nil {
+			panic(err)
+		}
+		if err == ErrDataNotFound || result == "" {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+		w.Write([]byte("ok"))
+	}
+	actionCookieLoginStatus := func(w http.ResponseWriter, r *http.Request) {
+		s.CookieMiddleware()(w, r, actionLoginStatus)
+	}
+	actionHeaderLoginStatus := func(w http.ResponseWriter, r *http.Request) {
+		s.HeaderMiddleware(testHeaderName)(w, r, actionLoginStatus)
+	}
 	mux.HandleFunc("/login", actionHeaderLogin)
 	mux.HandleFunc("/cookie/login", actionCookieLogin)
 	mux.HandleFunc("/test", actionHeaderTest)
 	mux.HandleFunc("/cookie/test", actionCookieTest)
+	mux.HandleFunc("/logout", actionHeaderLogout)
+	mux.HandleFunc("/cookie/logout", actionCookieLogout)
+	mux.HandleFunc("/loginstatus", actionHeaderLoginStatus)
+	mux.HandleFunc("/cookie/loginstatus", actionCookieLoginStatus)
 	hs := httptest.NewServer(mux)
 	c := &http.Client{}
+	LoginStatusRequest, err := http.NewRequest("POST", hs.URL+"/loginstatus", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err := c.Do(LoginStatusRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.StatusCode != http.StatusUnauthorized {
+		t.Errorf("Status code error %d", rep.StatusCode)
+	}
 	LoginRequest, err := http.NewRequest("POST", hs.URL+"/login", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	rep, err := c.Do(LoginRequest)
+	rep, err = c.Do(LoginRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -278,21 +331,70 @@ func TestFieldInRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	token = string(body)
+	LoginStatusRequest, err = http.NewRequest("POST", hs.URL+"/loginstatus", nil)
+	LoginStatusRequest.Header.Set(testHeaderName, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(LoginStatusRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.StatusCode != http.StatusOK {
+		t.Errorf("Status code error %d", rep.StatusCode)
+	}
 	TestRequest, err := http.NewRequest("POST", hs.URL+"/test", nil)
 	TestRequest.Header.Set(testHeaderName, token)
 	rep, err = c.Do(TestRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if rep.StatusCode != 200 {
+	if rep.StatusCode != http.StatusOK {
 		t.Errorf("HeaderMiddle status error %d", rep.StatusCode)
 	}
+	LogoutRequest, err := http.NewRequest("POST", hs.URL+"/logout", nil)
+	LogoutRequest.Header.Set(testHeaderName, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(LogoutRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	LoginStatusRequest, err = http.NewRequest("POST", hs.URL+"/loginstatus", nil)
+	LoginStatusRequest.Header.Set(testHeaderName, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(LoginStatusRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.StatusCode != http.StatusUnauthorized {
+		t.Errorf("Status code error %d", rep.StatusCode)
+	}
+
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	c = &http.Client{
 		Jar: jar,
+	}
+
+	LoginStatusRequest, err = http.NewRequest("POST", hs.URL+"/cookie/loginstatus", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(LoginStatusRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.StatusCode != http.StatusUnauthorized {
+		t.Errorf("Status code error %d", rep.StatusCode)
 	}
 	LoginRequest, err = http.NewRequest("POST", hs.URL+"/cookie/login", nil)
 	if err != nil {
@@ -307,6 +409,17 @@ func TestFieldInRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	token = string(body)
+	LoginStatusRequest, err = http.NewRequest("POST", hs.URL+"/cookie/loginstatus", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(LoginStatusRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.StatusCode != http.StatusOK {
+		t.Errorf("Status code error %d", rep.StatusCode)
+	}
 	TestRequest, err = http.NewRequest("POST", hs.URL+"/cookie/test", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -314,6 +427,28 @@ func TestFieldInRequest(t *testing.T) {
 	rep, err = c.Do(TestRequest)
 	if err != nil {
 		t.Fatal(err)
+	}
+	LogoutRequest, err = http.NewRequest("POST", hs.URL+"/cookie/logout", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(LogoutRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	LoginStatusRequest, err = http.NewRequest("POST", hs.URL+"/cookie/loginstatus", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(LoginStatusRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.StatusCode != http.StatusUnauthorized {
+		t.Errorf("Status code error %d", rep.StatusCode)
 	}
 }
 
