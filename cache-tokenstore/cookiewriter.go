@@ -29,8 +29,12 @@ func (w *cookieResponseWriter) WriteHeader(status int) {
 				Secure:   false,
 				HttpOnly: true,
 			}
-			if w.store.TokenLifetime >= 0 {
-				cookie.Expires = time.Now().Add(w.store.TokenLifetime)
+			if td.token != "" {
+				if w.store.TokenLifetime >= 0 {
+					cookie.Expires = time.Now().Add(w.store.TokenLifetime)
+				}
+			} else {
+				cookie.Expires = time.Unix(0, 0)
 			}
 			http.SetCookie(w, cookie)
 		}

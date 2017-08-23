@@ -27,12 +27,15 @@ type TokenData struct {
 	loaded         bool
 	tokenChanged   bool
 	updated        bool
+	notFound       bool
 	store          Store
+	Nonce          []byte
 	Mutex          *sync.RWMutex //Read write mutex.
 }
 type tokenCachedData struct {
 	Data           map[string][]byte
 	CreatedTime    int64
+	Nonce          []byte
 	LastActiveTime int64
 	ExpiredAt      int64
 }
@@ -58,8 +61,18 @@ func NewTokenData(token string, s Store) *TokenData {
 }
 
 //Token return the toke name.
-func (t *TokenData) Token() string {
-	return t.token
+//Return any error raised.
+func (t *TokenData) Token() (string, error) {
+	return t.store.GetTokenDataToken(t)
+}
+
+//MustToken return the toke name.
+func (t *TokenData) MustToken() string {
+	token, err := t.store.GetTokenDataToken(t)
+	if err != nil {
+		panic(err)
+	}
+	return token
 }
 
 //SetToken update token name
@@ -78,6 +91,8 @@ func (t *TokenData) RegenerateToken(owner string) error {
 	}
 	t.data = map[string][]byte{}
 	t.cache = map[string]reflect.Value{}
+	t.updated = false
+	t.notFound = false
 	t.SetToken(token)
 	return nil
 }
@@ -90,10 +105,13 @@ func (t *TokenData) Load() error {
 		return ErrTokenNotValidated
 	}
 	if t.loaded {
+		if t.notFound {
+			return ErrDataNotFound
+		}
 		return nil
 	}
 	err := t.store.LoadTokenData(t)
-	if err == cache.ErrNotFound {
+	if err == ErrDataNotFound {
 		if t.tokenChanged == false {
 			return ErrDataNotFound
 		}
@@ -126,6 +144,7 @@ func (t *TokenData) Marshal() ([]byte, error) {
 			Data:           t.data,
 			ExpiredAt:      t.ExpiredAt,
 			CreatedTime:    t.CreatedTime,
+			Nonce:          t.Nonce,
 			LastActiveTime: t.LastActiveTime,
 		})
 }

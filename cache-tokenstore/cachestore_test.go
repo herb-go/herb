@@ -97,7 +97,7 @@ func TestField(t *testing.T) {
 		t.Fatal(err)
 	}
 	result = ""
-	err = field.GetFromToken(td.Token(), &result)
+	err = field.GetFromToken(td.MustToken(), &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,7 +200,7 @@ func TestFieldInRequest(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if token != td.Token() {
+			if token != td.MustToken() {
 				t.Errorf("field.Store.GetRequestTokenData error %s", token)
 			}
 			tk, err := field.GetToken(r)
@@ -211,7 +211,7 @@ func TestFieldInRequest(t *testing.T) {
 				t.Errorf("Field GetToken error %s", tk)
 			}
 			result = ""
-			err = field.GetFromToken(td.Token(), &result)
+			err = field.GetFromToken(td.MustToken(), &result)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -250,7 +250,7 @@ func TestFieldInRequest(t *testing.T) {
 	actionLogin := func(w http.ResponseWriter, r *http.Request) {
 		s.HeaderMiddleware(testHeaderName)(w, r, func(w http.ResponseWriter, r *http.Request) {
 			td := field.MustLogin(r, testOwner, model)
-			w.Write([]byte(td.Token()))
+			w.Write([]byte(td.MustToken()))
 		})
 	}
 	mux.HandleFunc("/login", actionLogin)
@@ -295,7 +295,10 @@ func TestTokenDataMarshal(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	td := s.GenerateTokenData(testOwner)
+	td, err := s.GenerateTokenData(testOwner)
+	if err != nil {
+		panic(err)
+	}
 	err = field.SaveTo(td, model)
 	if err != nil {
 		panic(err)
@@ -330,12 +333,15 @@ func TestTokenData(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	td := s.GenerateTokenData(testOwner)
+	td, err := s.GenerateTokenData(testOwner)
+	if err != nil {
+		panic(err)
+	}
 	err = field.SaveTo(td, model)
 	if err != nil {
 		panic(err)
 	}
-	testToken := td.Token()
+	testToken := td.MustToken()
 	td2 := NewTokenData(testToken, s)
 	err = td2.Load()
 	if err != ErrDataNotFound {
@@ -390,8 +396,14 @@ func TestTimeout(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	tdForever := sforever.GenerateTokenData(testOwner)
-	tkeyForever := tdForever.Token()
+	tdForeverKey, err := sforever.GenerateToken(testOwner)
+	if err != nil {
+		panic(err)
+	}
+	tdForever, err := sforever.GenerateTokenData(tdForeverKey)
+	if err != nil {
+		panic(err)
+	}
 	err = fieldForever.SaveTo(tdForever, model)
 	if err != nil {
 		panic(err)
@@ -400,8 +412,14 @@ func TestTimeout(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	td3second := s3second.GenerateTokenData(testOwner)
-	tkey3second := td3second.Token()
+	td3secondKey, err := s3second.GenerateToken(testOwner)
+	if err != nil {
+		panic(err)
+	}
+	td3second, err := s3second.GenerateTokenData(td3secondKey)
+	if err != nil {
+		panic(err)
+	}
 	err = field3second.SaveTo(td3second, model)
 	if err != nil {
 		panic(err)
@@ -410,8 +428,14 @@ func TestTimeout(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	td3secondwithAutoRefresh := s3secondwithAutoRefresh.GenerateTokenData(testOwner)
-	tkey3secondwithAutoRefresh := td3secondwithAutoRefresh.Token()
+	td3secondwithAutoRefreshKey, err := s3secondwithAutoRefresh.GenerateToken(testOwner)
+	if err != nil {
+		panic(err)
+	}
+	td3secondwithAutoRefresh, err := s3secondwithAutoRefresh.GenerateTokenData(td3secondwithAutoRefreshKey)
+	if err != nil {
+		panic(err)
+	}
 	err = field3secondwithAutoRefresh.SaveTo(td3secondwithAutoRefresh, model)
 	if err != nil {
 		panic(err)
@@ -420,9 +444,18 @@ func TestTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(2 * time.Second)
-	tdForever = sforever.GetTokenData(tkeyForever)
-	td3second = s3second.GetTokenData(tkey3second)
-	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(tkey3secondwithAutoRefresh)
+	tdForever, err = sforever.GetTokenData(tdForever.MustToken())
+	if err != nil {
+		panic(err)
+	}
+	td3second, err = s3second.GetTokenData(td3second.MustToken())
+	if err != nil {
+		panic(err)
+	}
+	td3secondwithAutoRefresh, err = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
+	if err != nil {
+		panic(err)
+	}
 	result = ""
 	err = fieldForever.LoadFrom(tdForever, &result)
 	if result != model {
@@ -442,9 +475,18 @@ func TestTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(2 * time.Second)
-	tdForever = sforever.GetTokenData(tkeyForever)
-	td3second = s3second.GetTokenData(tkey3second)
-	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(tkey3secondwithAutoRefresh)
+	tdForever, err = sforever.GetTokenData(tdForever.MustToken())
+	if err != nil {
+		panic(err)
+	}
+	td3second, err = s3second.GetTokenData(td3second.MustToken())
+	if err != nil {
+		panic(err)
+	}
+	td3secondwithAutoRefresh, err = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
+	if err != nil {
+		panic(err)
+	}
 	result = ""
 	err = fieldForever.LoadFrom(tdForever, &result)
 	if result != model {
@@ -464,9 +506,18 @@ func TestTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(4 * time.Second)
-	tdForever = sforever.GetTokenData(tkeyForever)
-	td3second = s3second.GetTokenData(tkey3second)
-	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(tkey3secondwithAutoRefresh)
+	tdForever, err = sforever.GetTokenData(tdForever.MustToken())
+	if err != nil {
+		panic(err)
+	}
+	td3second, err = s3second.GetTokenData(td3second.MustToken())
+	if err != nil {
+		panic(err)
+	}
+	td3secondwithAutoRefresh, err = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
+	if err != nil {
+		panic(err)
+	}
 	result = ""
 	err = fieldForever.LoadFrom(tdForever, &result)
 	if result != model {

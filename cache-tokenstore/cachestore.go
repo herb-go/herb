@@ -12,11 +12,6 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-//ContextKey string type used in Context key
-type ContextKey string
-
-var defaultTokenContextName = ContextKey("token")
-
 var defaultUpdateActiveInterval = 5 * time.Minute
 
 var defaultTokenMaxLifetime = 365 * 24 * time.Hour
@@ -95,20 +90,6 @@ func (s *CacheStore) RegisterField(Key string, v interface{}) (*TokenField, erro
 	return &tf, nil
 }
 
-//MustRegisterField registe filed to store.
-//registered field can be used directly with request to load or save the token value.
-//Parameter Key filed name.
-//Parameter v should be pointer to empty data model which data filled in.
-//Return a new Token field.
-//Panic if any error raised.
-func (s *CacheStore) MustRegisterField(Key string, v interface{}) *TokenField {
-	tf, err := s.RegisterField(Key, v)
-	if err != nil {
-		panic(err)
-	}
-	return tf
-}
-
 //GenerateToken generate new token name with given owner.
 //Return the new token name and error.
 func (s *CacheStore) GenerateToken(owner string) (token string, err error) {
@@ -117,10 +98,10 @@ func (s *CacheStore) GenerateToken(owner string) (token string, err error) {
 
 //GenerateTokenData generate new token data with given token.
 //Return a new TokenData.
-func (s *CacheStore) GenerateTokenData(token string) *TokenData {
-	td := NewTokenData(token, s)
+func (s *CacheStore) GenerateTokenData(token string) (td *TokenData, err error) {
+	td = NewTokenData(token, s)
 	td.tokenChanged = true
-	return td
+	return td, nil
 }
 func (s *CacheStore) LoadTokenData(v *TokenData) error {
 	token := v.token
@@ -129,16 +110,23 @@ func (s *CacheStore) LoadTokenData(v *TokenData) error {
 	}
 
 	bytes, err := s.Cache.GetBytesValue(token)
+	if err == cache.ErrNotFound {
+		err = ErrDataNotFound
+	}
 	if err != nil {
 		return err
 	}
+
 	err = v.Unmarshal(token, bytes)
 	if err == nil {
 		v.token = token
 		v.store = s
 	}
+	if v.ExpiredAt > 0 && v.ExpiredAt < time.Now().Unix() {
+		return ErrDataNotFound
+	}
 	if s.TokenMaxLifetime > 0 && time.Unix(v.CreatedTime, 0).Add(s.TokenMaxLifetime).Before(time.Now()) {
-		return cache.ErrNotFound
+		return ErrDataNotFound
 	}
 	return err
 }
@@ -172,6 +160,12 @@ func (s *CacheStore) save(td *TokenData) error {
 	if token == "" {
 		return cache.ErrKeyUnavailable
 	}
+	if td.ExpiredAt > 0 && td.ExpiredAt < time.Now().Unix() {
+		return nil
+	}
+	if s.TokenMaxLifetime > 0 && time.Unix(td.CreatedTime, 0).Add(s.TokenMaxLifetime).Before(time.Now()) {
+		return nil
+	}
 	if s.TokenLifetime >= 0 {
 		td.ExpiredAt = time.Now().Add(s.TokenLifetime).Unix()
 	} else {
@@ -198,10 +192,14 @@ func (s *CacheStore) DeleteToken(token string) error {
 
 //GetTokenData get the token data with give name .
 //Return the TokenData
-func (s *CacheStore) GetTokenData(token string) (td *TokenData) {
+func (s *CacheStore) GetTokenData(token string) (td *TokenData, err error) {
 	td = NewTokenData(token, s)
 	td.oldToken = token
+	err = nil
 	return
+}
+func (s *CacheStore) GetTokenDataToken(td *TokenData) (token string, err error) {
+	return td.token, nil
 }
 
 //InstallTokenToRequest install the give token to request.
@@ -209,7 +207,10 @@ func (s *CacheStore) GetTokenData(token string) (td *TokenData) {
 //You should use this func when use your own token binding func instead of CookieMiddleware or HeaderMiddleware
 //Return the loaded TokenData and any error raised.
 func (s *CacheStore) InstallTokenToRequest(r *http.Request, token string) (td *TokenData, err error) {
-	td = s.GetTokenData(token)
+	td, err = s.GetTokenData(token)
+	if err != nil {
+		return
+	}
 	if token == "" && s.AutoGenerate == true {
 		err = td.RegenerateToken("")
 		if err != nil {
@@ -286,7 +287,7 @@ func (s *CacheStore) GetRequestTokenData(r *http.Request) (td *TokenData, err er
 	return td, ErrRequestTokenNotFound
 }
 
-//Save save the request token data.
+//SaveRequestTokenData save the request token data.
 func (s *CacheStore) SaveRequestTokenData(r *http.Request) error {
 	td, err := s.GetRequestTokenData(r)
 	if err != nil {

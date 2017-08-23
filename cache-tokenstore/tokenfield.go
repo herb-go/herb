@@ -63,7 +63,10 @@ func (f *TokenField) LoadFrom(td *TokenData, v interface{}) (err error) {
 //Return any error raised.
 func (f *TokenField) GetFromToken(token string, v interface{}) (err error) {
 	var td *TokenData
-	td = f.Store.GetTokenData(token)
+	td, err = f.Store.GetTokenData(token)
+	if err != nil {
+		return err
+	}
 	return f.LoadFrom(td, v)
 }
 
@@ -106,13 +109,13 @@ func (f *TokenField) GetToken(r *http.Request) (string, error) {
 }
 
 //SaveTo save datamodel to given token data.
-//Return any error is raised.
+//Return any error  raised.
 func (f *TokenField) SaveTo(td *TokenData, v interface{}) (err error) {
-	if td.token == "" {
-		err = ErrDataNotFound
-		return
-	}
 	err = td.Load()
+	if err == ErrDataNotFound {
+		td = NewTokenData(td.token, f.Store)
+		err = nil
+	}
 	if err != nil {
 		return
 	}
@@ -171,7 +174,10 @@ func (f *TokenField) MustLogin(r *http.Request, owner string, v interface{}) (td
 //Panic is any error raised.
 func (f *TokenField) MustLoginTokenData(owner string, v interface{}) (td *TokenData) {
 	var err error
-	td = f.Store.GenerateTokenData(owner)
+	td, err = f.Store.GenerateTokenData(owner)
+	if err != nil {
+		panic(err)
+	}
 	err = f.SaveTo(td, v)
 	if err != nil {
 		panic(err)
