@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"reflect"
 	"testing"
@@ -191,70 +192,77 @@ func TestFieldInRequest(t *testing.T) {
 	}
 	var mux = http.NewServeMux()
 	actionTest := func(w http.ResponseWriter, r *http.Request) {
-		s.HeaderMiddleware(testHeaderName)(w, r, func(w http.ResponseWriter, r *http.Request) {
-			field.Get(r, &result)
-			if result != model {
-				t.Errorf("Field get error %s", result)
-			}
-			td, err := field.Store.GetRequestTokenData(r)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if token != td.MustToken() {
-				t.Errorf("field.Store.GetRequestTokenData error %s", token)
-			}
-			tk, err := field.GetToken(r)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if tk != token {
-				t.Errorf("Field GetToken error %s", tk)
-			}
-			result = ""
-			err = field.GetFromToken(td.MustToken(), &result)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if result != model {
-				t.Errorf("Field GetFromToken error %s", tk)
-			}
-			ex, err := field.ExpiredAt(r)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if ex > 0 {
-				t.Errorf("Field ExpiredAt error %d", ex)
-			}
-			mutex, err := field.RwMutex(r)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if mutex != td.Mutex {
-				t.Errorf("Field mutex error")
-			}
-			err = field.Set(r, modelAfterSet)
-			if err != nil {
-				t.Fatal(err)
-			}
-			result = ""
-			err = field.Get(r, &result)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if result != modelAfterSet {
-				t.Errorf("field.Set error %s", result)
-			}
-			w.Write([]byte("ok"))
-		})
+		field.Get(r, &result)
+		if result != model {
+			t.Errorf("Field get error %s", result)
+		}
+		td, err := field.Store.GetRequestTokenData(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tk, err := field.GetToken(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if tk != token {
+			t.Errorf("Field GetToken error %s", tk)
+		}
+		result = ""
+		err = field.GetFromToken(td.MustToken(), &result)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result != model {
+			t.Errorf("Field GetFromToken error %s", tk)
+		}
+		ex, err := field.ExpiredAt(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ex > 0 {
+			t.Errorf("Field ExpiredAt error %d", ex)
+		}
+		mutex, err := field.RwMutex(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if mutex != td.Mutex {
+			t.Errorf("Field mutex error")
+		}
+		err = field.Set(r, modelAfterSet)
+		if err != nil {
+			t.Fatal(err)
+		}
+		result = ""
+		err = field.Get(r, &result)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result != modelAfterSet {
+			t.Errorf("field.Set error %s", result)
+		}
+		w.Write([]byte("ok"))
+	}
+	actionHeaderTest := func(w http.ResponseWriter, r *http.Request) {
+		s.HeaderMiddleware(testHeaderName)(w, r, actionTest)
+	}
+	actionCookieTest := func(w http.ResponseWriter, r *http.Request) {
+		s.CookieMiddleware()(w, r, actionTest)
 	}
 	actionLogin := func(w http.ResponseWriter, r *http.Request) {
-		s.HeaderMiddleware(testHeaderName)(w, r, func(w http.ResponseWriter, r *http.Request) {
-			td := field.MustLogin(r, testOwner, model)
-			w.Write([]byte(td.MustToken()))
-		})
+		td := field.MustLogin(r, testOwner, model)
+		w.Write([]byte(td.MustToken()))
 	}
-	mux.HandleFunc("/login", actionLogin)
-	mux.HandleFunc("/test", actionTest)
+	actionHeaderLogin := func(w http.ResponseWriter, r *http.Request) {
+		s.HeaderMiddleware(testHeaderName)(w, r, actionLogin)
+	}
+	actionCookieLogin := func(w http.ResponseWriter, r *http.Request) {
+		s.CookieMiddleware()(w, r, actionLogin)
+	}
+	mux.HandleFunc("/login", actionHeaderLogin)
+	mux.HandleFunc("/cookie/login", actionCookieLogin)
+	mux.HandleFunc("/test", actionHeaderTest)
+	mux.HandleFunc("/cookie/test", actionCookieTest)
 	hs := httptest.NewServer(mux)
 	c := &http.Client{}
 	LoginRequest, err := http.NewRequest("POST", hs.URL+"/login", nil)
@@ -278,6 +286,34 @@ func TestFieldInRequest(t *testing.T) {
 	}
 	if rep.StatusCode != 200 {
 		t.Errorf("HeaderMiddle status error %d", rep.StatusCode)
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c = &http.Client{
+		Jar: jar,
+	}
+	LoginRequest, err = http.NewRequest("POST", hs.URL+"/cookie/login", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(LoginRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err = ioutil.ReadAll(rep.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	token = string(body)
+	TestRequest, err = http.NewRequest("POST", hs.URL+"/cookie/test", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(TestRequest)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 

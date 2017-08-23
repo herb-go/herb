@@ -3,6 +3,7 @@ package tokenstore
 import (
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"reflect"
 	"testing"
@@ -99,6 +100,9 @@ func TestClientStoreFieldInRequest(t *testing.T) {
 	actionHeaderTest := func(w http.ResponseWriter, r *http.Request) {
 		s.HeaderMiddleware(testHeaderName)(w, r, actionTest)
 	}
+	actionCookieTest := func(w http.ResponseWriter, r *http.Request) {
+		s.CookieMiddleware()(w, r, actionTest)
+	}
 	actionLogin := func(w http.ResponseWriter, r *http.Request) {
 		td := field.MustLogin(r, testOwner, model)
 		w.Write([]byte(td.MustToken()))
@@ -106,8 +110,13 @@ func TestClientStoreFieldInRequest(t *testing.T) {
 	actionHeaderLogin := func(w http.ResponseWriter, r *http.Request) {
 		s.HeaderMiddleware(testHeaderName)(w, r, actionLogin)
 	}
+	actionCookieLogin := func(w http.ResponseWriter, r *http.Request) {
+		s.CookieMiddleware()(w, r, actionLogin)
+	}
 	mux.HandleFunc("/login", actionHeaderLogin)
+	mux.HandleFunc("/cookie/login", actionCookieLogin)
 	mux.HandleFunc("/test", actionHeaderTest)
+	mux.HandleFunc("/cookie/test", actionCookieTest)
 	hs := httptest.NewServer(mux)
 	c := &http.Client{}
 	LoginRequest, err := http.NewRequest("POST", hs.URL+"/login", nil)
@@ -131,6 +140,34 @@ func TestClientStoreFieldInRequest(t *testing.T) {
 	}
 	if rep.StatusCode != 200 {
 		t.Errorf("HeaderMiddle status error %d", rep.StatusCode)
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c = &http.Client{
+		Jar: jar,
+	}
+	LoginRequest, err = http.NewRequest("POST", hs.URL+"/cookie/login", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(LoginRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err = ioutil.ReadAll(rep.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	token = string(body)
+	TestRequest, err = http.NewRequest("POST", hs.URL+"/cookie/test", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(TestRequest)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
