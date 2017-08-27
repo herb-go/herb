@@ -30,7 +30,7 @@ func defaultTokenGenerater(s *CacheStore, prefix string) (token string, err erro
 	return
 }
 
-//New create a new token store with given cache and token lifetime.
+//New New create a new token store with given cache and token lifetime.
 //Cache is the cache which dates stored in.
 //TokenLifeTime is the token initial expired tome.
 //Return a new token store.
@@ -67,6 +67,11 @@ type CacheStore struct {
 func (s *CacheStore) Close() error {
 	return s.Cache.Close()
 }
+
+//SearchByPrefix Search all token with given prefix.
+//return all tokens start with the prefix.
+//ErrFeatureNotSupported will raised if store dont support this feature.
+//Return all tokens and any error if raised.
 func (s *CacheStore) SearchByPrefix(prefix string) (Tokens []string, err error) {
 	return nil, ErrFeatureNotSupported
 }
@@ -101,7 +106,7 @@ func (s *CacheStore) GenerateToken(prefix string) (token string, err error) {
 }
 
 //GenerateTokenData generate new token data with given token.
-//Return a new TokenData.
+//Return a new TokenData and error.
 func (s *CacheStore) GenerateTokenData(token string) (td *TokenData, err error) {
 	td = NewTokenData(token, s)
 	td.tokenChanged = true
@@ -200,7 +205,7 @@ func (s *CacheStore) DeleteToken(token string) error {
 	return s.Cache.Del(token)
 }
 
-//GetTokenData get the token data with give name .
+//GetTokenData get the token data with give token .
 //Return the TokenData
 func (s *CacheStore) GetTokenData(token string) (td *TokenData) {
 	td = NewTokenData(token, s)
@@ -209,6 +214,7 @@ func (s *CacheStore) GetTokenData(token string) (td *TokenData) {
 }
 
 //GetTokenDataToken Get the token string from token data.
+//Return token and any error raised.
 func (s *CacheStore) GetTokenDataToken(td *TokenData) (token string, err error) {
 	return td.token, nil
 }

@@ -46,19 +46,26 @@ func AESTokenUnmarshaler(s *ClientStore, v *TokenData) (err error) {
 	return nil
 }
 
+//ClientStore ClientStore is the stuct store token data in Client side.
 type ClientStore struct {
-	Fields               map[string]TokenField //All registered field
-	TokenLifetime        time.Duration         //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
-	TokenMaxLifetime     time.Duration         //Token max life time.Token can't live more than TokenMaxLifetime if TokenMaxLifetime if greater than 0.
-	TokenContextName     ContextKey            //Name in request context store the token  data.Default value is "token".
-	CookieName           string                //Cookie name used in CookieMiddleware.Default value is "herb-session".
-	CookiePath           string                //Cookie path used in cookieMiddleware.Default value is "/".
-	AutoGenerate         bool                  //Whether auto generate token when guset visit.Default value is false.
-	Key                  []byte                //Crypt key
-	UpdateActiveInterval time.Duration         //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
-	TokenMarshaler       func(*ClientStore, *TokenData) error
-	TokenUnmarshaler     func(*ClientStore, *TokenData) error
+	Fields               map[string]TokenField                //All registered field
+	TokenLifetime        time.Duration                        //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
+	TokenMaxLifetime     time.Duration                        //Token max life time.Token can't live more than TokenMaxLifetime if TokenMaxLifetime if greater than 0.
+	TokenContextName     ContextKey                           //Name in request context store the token  data.Default value is "token".
+	CookieName           string                               //Cookie name used in CookieMiddleware.Default value is "herb-session".
+	CookiePath           string                               //Cookie path used in cookieMiddleware.Default value is "/".
+	AutoGenerate         bool                                 //Whether auto generate token when guset visit.Default value is false.
+	Key                  []byte                               //Crypt key
+	UpdateActiveInterval time.Duration                        //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
+	TokenMarshaler       func(*ClientStore, *TokenData) error //Marshler data to tokendata.token
+	TokenUnmarshaler     func(*ClientStore, *TokenData) error //Unmarshler data from tokendata.token
 }
+
+//New New create a new client side token store with given key and token lifetime.
+//Key the key used to encrpty data
+//TokenLifeTime is the token initial expired tome.
+//Return a new token store.
+//All other property of the store can be set after creation.
 
 func NewClientStore(key []byte, TokenLifetime time.Duration) *ClientStore {
 	return &ClientStore{
@@ -74,14 +81,22 @@ func NewClientStore(key []byte, TokenLifetime time.Duration) *ClientStore {
 	}
 }
 
+//GetTokenData get the token data with give token .
+//Return the TokenData
 func (s *ClientStore) GetTokenData(token string) (td *TokenData) {
 	td = NewTokenData(token, s)
 	return
 }
+
+//GetTokenDataToken Get the token string from token data.
+//Return token and any error raised.
 func (s *ClientStore) GetTokenDataToken(td *TokenData) (token string, err error) {
 	err = td.Save()
 	return td.token, err
 }
+
+//GetRequestTokenData get stored  token data from request.
+//Return the stoed token data and any error raised.
 func (s *ClientStore) GetRequestTokenData(r *http.Request) (td *TokenData, err error) {
 	var ok bool
 	t := r.Context().Value(s.TokenContextName)
@@ -94,18 +109,32 @@ func (s *ClientStore) GetRequestTokenData(r *http.Request) (td *TokenData, err e
 	}
 	return td, ErrRequestTokenNotFound
 }
+
+//GenerateToken generate new token name with given prefix.
+//Return the new token name and error.
 func (s *ClientStore) GenerateToken(prefix string) (token string, err error) {
 	return clientStoreNewToken, nil
 
 }
+
+//GenerateTokenData generate new token data with given token.
+//Return a new TokenData and error.
 func (s *ClientStore) GenerateTokenData(token string) (td *TokenData, err error) {
 	td = NewTokenData(token, s)
 	td.tokenChanged = true
 	return td, nil
 }
+
+//SearchByPrefix Search all token with given prefix.
+//return all tokens start with the prefix.
+//ErrFeatureNotSupported will raised if store dont support this feature.
+//Return all tokens and any error if raised.
 func (s *ClientStore) SearchByPrefix(prefix string) (Tokens []string, err error) {
 	return nil, ErrFeatureNotSupported
 }
+
+//LoadTokenData Load TokenData form the TokenData.token.
+//Return any error if raised
 func (s *ClientStore) LoadTokenData(v *TokenData) (err error) {
 	if v.token == clientStoreNewToken {
 		return
@@ -124,6 +153,9 @@ func (s *ClientStore) LoadTokenData(v *TokenData) (err error) {
 	v.notFound = false
 	return
 }
+
+//SaveTokenData Save tokendata if necessary.
+//Return any error raised.
 func (s *ClientStore) SaveTokenData(t *TokenData) (err error) {
 	t.Load()
 	if t.token == clientStoreNewToken {
@@ -166,6 +198,12 @@ func (s *ClientStore) save(td *TokenData) (err error) {
 	td.tokenChanged = true
 	return
 }
+
+//RegisterField registe filed to store.
+//registered field can be used directly with request to load or save the token value.
+//Parameter Key filed name.
+//Parameter v should be pointer to empty data model which data filled in.
+//Return a new Token field and error.
 func (s *ClientStore) RegisterField(Key string, v interface{}) (*TokenField, error) {
 	if v == nil {
 		return nil, ErrNilPointer
@@ -183,6 +221,11 @@ func (s *ClientStore) RegisterField(Key string, v interface{}) (*TokenField, err
 	s.Fields[Key] = tf
 	return &tf, nil
 }
+
+//InstallTokenToRequest install the give token to request.
+//Tokendata will be stored in request context which named by TokenContextName of store.
+//You should use this func when use your own token binding func instead of CookieMiddleware or HeaderMiddleware
+//Return the loaded TokenData and any error raised.
 func (s *ClientStore) InstallTokenToRequest(r *http.Request, token string) (td *TokenData, err error) {
 	td = s.GetTokenData(token)
 	if err != nil {
@@ -237,6 +280,9 @@ func (s *ClientStore) SaveRequestTokenData(r *http.Request) error {
 	err = td.Save()
 	return err
 }
+
+//HeaderMiddleware return a Middleware which install the token which special by Header with given name.
+//this middleware will save token after request finished if the token changed.
 func (s *ClientStore) HeaderMiddleware(Name string) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		var token = r.Header.Get(Name)
@@ -251,6 +297,8 @@ func (s *ClientStore) HeaderMiddleware(Name string) func(w http.ResponseWriter, 
 		}
 	}
 }
+
+//LogoutMiddleware return a middleware clear the token in request.
 func (s *ClientStore) LogoutMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		v := MustGetRequestTokenData(s, r)
@@ -258,6 +306,8 @@ func (s *ClientStore) LogoutMiddleware() func(w http.ResponseWriter, r *http.Req
 		next(w, r)
 	}
 }
+
+//Close Close cachestore and return any error if raised
 func (s *ClientStore) Close() error {
 	return nil
 }
