@@ -103,7 +103,9 @@ func (s *ClientStore) GenerateTokenData(token string) (td *TokenData, err error)
 	td.tokenChanged = true
 	return td, nil
 }
-
+func (s *ClientStore) SearchByPrefix(prefix string) (Tokens []string, err error) {
+	return nil, ErrFeatureNotSupported
+}
 func (s *ClientStore) LoadTokenData(v *TokenData) (err error) {
 	if v.token == clientStoreNewToken {
 		return
@@ -216,7 +218,7 @@ func (s *ClientStore) CookieMiddleware() func(w http.ResponseWriter, r *http.Req
 		if err != nil {
 			panic(err)
 		}
-		cw := ClientStoreResponseWriter{
+		cw := clientStoreResponseWriter{
 			ResponseWriter: w,
 			r:              r,
 			store:          s,
@@ -259,4 +261,3 @@ func (s *ClientStore) LogoutMiddleware() func(w http.ResponseWriter, r *http.Req
 func (s *ClientStore) Close() error {
 	return nil
 }
-

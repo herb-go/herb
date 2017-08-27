@@ -56,6 +56,7 @@ func MustRegisterField(s Store, Key string, v interface{}) *TokenField {
 	return tf
 }
 
+//Store Basic token storce interface
 type Store interface {
 	GetTokenData(token string) (td *TokenData)
 	GetTokenDataToken(td *TokenData) (token string, err error)
@@ -69,5 +70,6 @@ type Store interface {
 	CookieMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
 	HeaderMiddleware(Name string) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
 	LogoutMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
+	SearchByPrefix(prefix string) (Tokens []string, err error)
 	Close() error
 }

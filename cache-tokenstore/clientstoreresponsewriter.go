@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-type ClientStoreResponseWriter struct {
+type clientStoreResponseWriter struct {
 	http.ResponseWriter
 	r       *http.Request
 	store   *ClientStore
 	written bool
 }
 
-func (w *ClientStoreResponseWriter) WriteHeader(status int) {
+func (w *clientStoreResponseWriter) WriteHeader(status int) {
 	var td *TokenData
 	var err error
 	if w.written == false {
@@ -42,7 +42,7 @@ func (w *ClientStoreResponseWriter) WriteHeader(status int) {
 	w.ResponseWriter.WriteHeader(status)
 }
 
-func (w *ClientStoreResponseWriter) Write(data []byte) (int, error) {
+func (w *clientStoreResponseWriter) Write(data []byte) (int, error) {
 	if w.written == false {
 		w.WriteHeader(http.StatusOK)
 	}
