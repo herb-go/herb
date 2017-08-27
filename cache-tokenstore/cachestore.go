@@ -20,13 +20,13 @@ var (
 	defaultCookiePath = "/"
 )
 
-func defaultTokenGenerater(s *CacheStore, owner string) (token string, err error) {
+func defaultTokenGenerater(s *CacheStore, prefix string) (token string, err error) {
 	t, err := cache.RandMaskedBytes(cache.TokenMask, 256)
 	if err != nil {
 		return
 	}
 
-	token = owner + "-" + string(t)
+	token = prefix + "-" + string(t)
 	return
 }
 
@@ -53,7 +53,7 @@ func New(Cache *cache.Cache, TokenLifetime time.Duration) *CacheStore {
 type CacheStore struct {
 	Fields               map[string]TokenField                                       //All registered field
 	Cache                *cache.Cache                                                //Cache which stores token data
-	TokenGenerater       func(s *CacheStore, owner string) (token string, err error) //Token name generate func
+	TokenGenerater       func(s *CacheStore, prefix string) (token string, err error) //Token name generate func
 	TokenLifetime        time.Duration                                               //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
 	TokenMaxLifetime     time.Duration                                               //Token max life time.Token can't live more than TokenMaxLifetime if TokenMaxLifetime if greater than 0.
 	TokenContextName     ContextKey                                                  //Name in request context store the token  data.Default value is "token".
@@ -91,10 +91,10 @@ func (s *CacheStore) RegisterField(Key string, v interface{}) (*TokenField, erro
 	return &tf, nil
 }
 
-//GenerateToken generate new token name with given owner.
+//GenerateToken generate new token name with given prefix.
 //Return the new token name and error.
-func (s *CacheStore) GenerateToken(owner string) (token string, err error) {
-	return s.TokenGenerater(s, owner)
+func (s *CacheStore) GenerateToken(prefix string) (token string, err error) {
+	return s.TokenGenerater(s, prefix)
 }
 
 //GenerateTokenData generate new token data with given token.

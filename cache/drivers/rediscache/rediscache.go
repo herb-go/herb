@@ -22,7 +22,7 @@ var defualtConnectTimeout = 10 * time.Second
 var defualtReadTimeout = 2 * time.Second
 var defualtWriteTimeout = 2 * time.Second
 var defaultSepartor = string(0)
-var tokenMask = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+var tokenMask = cache.TokenMask
 var tokenLength = 64
 var flushLua = `
 	if redis.call("HEXISTS",KEYS[2],KEYS[3])==1 then return 0 end

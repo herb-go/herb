@@ -94,7 +94,7 @@ func (s *ClientStore) GetRequestTokenData(r *http.Request) (td *TokenData, err e
 	}
 	return td, ErrRequestTokenNotFound
 }
-func (s *ClientStore) GenerateToken(owner string) (token string, err error) {
+func (s *ClientStore) GenerateToken(prefix string) (token string, err error) {
 	return clientStoreNewToken, nil
 
 }

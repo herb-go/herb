@@ -15,7 +15,7 @@ const modelSet = 0
 const modelUpdate = 1
 
 var defaultGCPeriod = 5 * time.Minute
-var tokenMask = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+var tokenMask = cache.TokenMask
 var defaultGcLimit = int64(100)
 
 //Cache The sql cache Driver.

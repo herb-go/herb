@@ -4,6 +4,7 @@ package csrf
 import (
 	"context"
 	"crypto/rand"
+	"encoding/base64"
 	"net/http"
 )
 
@@ -11,7 +12,6 @@ import (
 type ContextKey string
 
 var defaultTokenlength = 64
-var defaultTokenMask = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 var defaultCookieName = "herb-csrf-token"
 var defaultCookiePath = "/"
 var defaultHeaderName = "X-CSRF-TOKEN"
@@ -19,20 +19,6 @@ var defaultFormField = "X-CSRF-TOKEN"
 var defaultFailStatus = http.StatusBadRequest
 var defaultRequestContextKey = ContextKey("herb-csrf-token")
 
-func randMaskedBytes(mask []byte, length int) ([]byte, error) {
-	token := make([]byte, length)
-	masked := make([]byte, length)
-	_, err := rand.Read(token)
-	if err != nil {
-		return masked, err
-	}
-	l := len(mask)
-	for k, v := range token {
-		index := int(v) % l
-		masked[k] = mask[index]
-	}
-	return masked, nil
-}
 func (csrf *Csrf) fail(w http.ResponseWriter) {
 	http.Error(w, http.StatusText(csrf.FailStatus), csrf.FailStatus)
 }
@@ -136,18 +122,18 @@ func (csrf *Csrf) SetCsrfTokenMiddleware(w http.ResponseWriter, r *http.Request,
 	next(w, r)
 }
 func (csrf *Csrf) generateToken() (string, error) {
-	token, err := randMaskedBytes(csrf.TokenMask, csrf.Tokenlength)
+	bytes := make([]byte, csrf.Tokenlength)
+	_, err := rand.Read(bytes)
 	if err != nil {
 		return "", err
 	}
-	return string(token), err
+	return base64.URLEncoding.EncodeToString(bytes), err
 }
 
 // New return a new Csrf Component with default values.
 func New() *Csrf {
 	c := Csrf{
 		Tokenlength:       defaultTokenlength,
-		TokenMask:         defaultTokenMask,
 		CookieName:        defaultCookieName,
 		CookiePath:        defaultCookiePath,
 		HeaderName:        defaultHeaderName,
@@ -162,8 +148,7 @@ func New() *Csrf {
 //You can use Csrf.SetCsrfTokenMiddleware,Csrf.VerifyFormMiddleware,Csrf.VerifyHeaderMiddleware or Csrf.CsrfInput to protected your web app.
 //All value can be change after creation.
 type Csrf struct {
-	Tokenlength       int        //Length of csrf token.Default value is 64.
-	TokenMask         []byte     //Which chars should be used in token.Default value is 0-9a-zA-z.
+	Tokenlength       int        //Length of csrf token.Default value is 64.Generaged tokenbytes will convert to base64encoded,so actual length will be longer than TokenValue.
 	CookieName        string     //Name of cookie which the token stored in.Default value is "herb-csrf-token".
 	CookiePath        string     //Path of cookie the token stored in.Default value is "/".
 	HeaderName        string     //Name of Header which the token stroed in.Default value is ""X-CSRF-TOKEN".

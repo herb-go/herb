@@ -7,8 +7,8 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-//TokenMask The []bytes of string a-zA-Z0-0 used to generate token.
-var TokenMask = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+//TokenMask The []bytes of RFC 4648  Base 64 Alphabet to generate token.
+var TokenMask = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
 
 //RandomBytes Generate a give length random []byte.
 //Return the random [] byte and any error raised.

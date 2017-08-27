@@ -1,3 +1,10 @@
+package tokenstore
+
+import (
+	"net/http"
+	"time"
+)
+
 type ClientStoreResponseWriter struct {
 	http.ResponseWriter
 	r       *http.Request
