@@ -1,6 +1,8 @@
 package tokenstore
 
 import (
+	"bytes"
+	"encoding/base64"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -22,7 +24,157 @@ func getTimeoutClientStore(ttl time.Duration, UpdateActiveInterval time.Duration
 	s.UpdateActiveInterval = UpdateActiveInterval
 	return s
 }
+func getBase64ClientStore(ttl time.Duration) Store {
+	s := NewClientStore([]byte("getClientStore"), ttl)
+	s.TokenMarshaler = func(s *ClientStore, td *TokenData) (err error) {
+		var data []byte
+		data, err = td.Marshal()
+		if err != nil {
+			return err
+		}
+		td.token = base64.StdEncoding.EncodeToString(data)
+		return err
+	}
+	s.TokenUnmarshaler = func(s *ClientStore, v *TokenData) (err error) {
+		var data []byte
+		data, err = base64.StdEncoding.DecodeString(v.token)
+		if err != nil {
+			return ErrDataNotFound
+		}
+		err = v.Unmarshal(v.token, data)
+		if err != nil {
+			return ErrDataNotFound
+		}
+		return nil
 
+	}
+	return s
+}
+func TestClientStoreCustomMarshaler(t *testing.T) {
+	var err error
+	s := getBase64ClientStore(-1)
+	defer s.Close()
+	model := "123456"
+	var result string
+	testKey := "testkey"
+	type modelStruct struct {
+		data string
+	}
+	structModel := modelStruct{
+		data: "test",
+	}
+	var resutStruct = modelStruct{}
+	var testStructKey = "teststructkey"
+	var modelInt = 123456
+	var resultInt int
+	var testIntKey = "testintkey"
+	var modelBytes = []byte("testbytes")
+	var resultBytes []byte
+	var testBytesKey = "testbyteskey"
+	var modelMap = map[string]string{
+		"test": "test",
+	}
+	var resultMap map[string]string
+	var testMapKey = "testmapkey"
+	testOwner := "testowner"
+	_, err = s.RegisterField(testKey, model)
+	if err != ErrMustRegistePtr {
+		t.Fatal(err)
+	}
+	_, err = s.RegisterField(testKey, nil)
+	if err != ErrNilPointer {
+		t.Fatal(err)
+	}
+	field, err := s.RegisterField(testKey, &model)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if field.Store != s {
+		t.Errorf("Field store error")
+	}
+	if field.Type != reflect.TypeOf(model) {
+		t.Errorf("Field type error")
+	}
+	td := field.MustLoginTokenData(testOwner, model)
+	result = ""
+	err = field.LoadFrom(td, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != model {
+		t.Fatal(err)
+	}
+	result = ""
+	err = field.GetFromToken(td.MustToken(), &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != model {
+		t.Errorf("Field GetFromToken error")
+	}
+	fieldStruct, err := s.RegisterField(testIntKey, &modelStruct{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldStruct.SaveTo(td, structModel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldStruct.LoadFrom(td, &resutStruct)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resutStruct.data != structModel.data {
+		t.Errorf("field Struct error %s", resutStruct.data)
+	}
+
+	fieldInt, err := s.RegisterField(testStructKey, &resultInt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldInt.SaveTo(td, modelInt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldInt.LoadFrom(td, &resultInt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultInt != modelInt {
+		t.Errorf("field int error %d", resultInt)
+	}
+	fieldBytes, err := s.RegisterField(testBytesKey, &resultBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldBytes.SaveTo(td, modelBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldBytes.LoadFrom(td, &resultBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Compare(resultBytes, modelBytes) != 0 {
+		t.Errorf("field Bytes error %s", string(resultBytes))
+	}
+
+	fieldMap, err := s.RegisterField(testMapKey, &resultMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldMap.SaveTo(td, modelMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fieldMap.LoadFrom(td, &resultMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(resultMap, modelMap) {
+		t.Error("field Maps error")
+	}
+}
 func TestClientStoreFieldInRequest(t *testing.T) {
 	var err error
 	s := getClientStore(-1)
@@ -296,18 +448,11 @@ func TestClientStoreTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(2 * time.Second)
-	tdForever, err = sforever.GetTokenData(tdForever.MustToken())
-	if err != nil {
-		panic(err)
-	}
-	td3second, err = s3second.GetTokenData(td3second.MustToken())
-	if err != nil {
-		panic(err)
-	}
-	td3secondwithAutoRefresh, err = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
-	if err != nil {
-		panic(err)
-	}
+	tdForever = sforever.GetTokenData(tdForever.MustToken())
+
+	td3second = s3second.GetTokenData(td3second.MustToken())
+
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
 	result = ""
 	err = fieldForever.LoadFrom(tdForever, &result)
 	if result != model {
@@ -327,18 +472,10 @@ func TestClientStoreTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(2 * time.Second)
-	tdForever, err = sforever.GetTokenData(tdForever.MustToken())
-	if err != nil {
-		panic(err)
-	}
-	td3second, err = s3second.GetTokenData(td3second.MustToken())
-	if err != ErrDataNotFound {
-		panic(err)
-	}
-	td3secondwithAutoRefresh, err = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
-	if err != nil {
-		panic(err)
-	}
+	tdForever = sforever.GetTokenData(tdForever.MustToken())
+
+	td3second = s3second.GetTokenData(td3second.MustToken())
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
 	result = ""
 	err = fieldForever.LoadFrom(tdForever, &result)
 	if result != model {
@@ -358,18 +495,12 @@ func TestClientStoreTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(4 * time.Second)
-	tdForever, err = sforever.GetTokenData(tdForever.MustToken())
-	if err != nil {
-		panic(err)
-	}
-	td3second, err = s3second.GetTokenData(td3second.MustToken())
-	if err != ErrDataNotFound {
-		panic(err)
-	}
-	td3secondwithAutoRefresh, err = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
-	if err != ErrDataNotFound {
-		panic(err)
-	}
+	tdForever = sforever.GetTokenData(tdForever.MustToken())
+
+	td3second = s3second.GetTokenData(td3second.MustToken())
+
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
+
 	result = ""
 	err = fieldForever.LoadFrom(tdForever, &result)
 	if result != model {

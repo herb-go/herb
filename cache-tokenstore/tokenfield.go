@@ -53,9 +53,12 @@ func (f *TokenField) LoadFrom(td *TokenData, v interface{}) (err error) {
 	}
 	err = cache.UnmarshalMsgpack(data, v)
 	if err == nil {
-		td.cache[key] = reflect.ValueOf(v).Elem()
+		f.SetCache(td, v)
 	}
 	return
+}
+func (f *TokenField) SetCache(td *TokenData, v interface{}) {
+	td.cache[f.Key] = reflect.ValueOf(v).Elem()
 }
 
 //GetFromToken get data model from given token
@@ -63,10 +66,8 @@ func (f *TokenField) LoadFrom(td *TokenData, v interface{}) (err error) {
 //Return any error raised.
 func (f *TokenField) GetFromToken(token string, v interface{}) (err error) {
 	var td *TokenData
-	td, err = f.Store.GetTokenData(token)
-	if err != nil {
-		return err
-	}
+	td = f.Store.GetTokenData(token)
+
 	return f.LoadFrom(td, v)
 }
 

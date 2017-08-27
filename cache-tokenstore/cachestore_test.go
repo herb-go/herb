@@ -615,18 +615,10 @@ func TestTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(2 * time.Second)
-	tdForever, err = sforever.GetTokenData(tdForever.MustToken())
-	if err != nil {
-		panic(err)
-	}
-	td3second, err = s3second.GetTokenData(td3second.MustToken())
-	if err != nil {
-		panic(err)
-	}
-	td3secondwithAutoRefresh, err = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
-	if err != nil {
-		panic(err)
-	}
+	tdForever = sforever.GetTokenData(tdForever.MustToken())
+
+	td3second = s3second.GetTokenData(td3second.MustToken())
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
 	result = ""
 	err = fieldForever.LoadFrom(tdForever, &result)
 	if result != model {
@@ -646,18 +638,10 @@ func TestTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(2 * time.Second)
-	tdForever, err = sforever.GetTokenData(tdForever.MustToken())
-	if err != nil {
-		panic(err)
-	}
-	td3second, err = s3second.GetTokenData(td3second.MustToken())
-	if err != nil {
-		panic(err)
-	}
-	td3secondwithAutoRefresh, err = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
-	if err != nil {
-		panic(err)
-	}
+	tdForever = sforever.GetTokenData(tdForever.MustToken())
+	td3second = s3second.GetTokenData(td3second.MustToken())
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
+
 	result = ""
 	err = fieldForever.LoadFrom(tdForever, &result)
 	if result != model {
@@ -677,18 +661,11 @@ func TestTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(4 * time.Second)
-	tdForever, err = sforever.GetTokenData(tdForever.MustToken())
-	if err != nil {
-		panic(err)
-	}
-	td3second, err = s3second.GetTokenData(td3second.MustToken())
-	if err != nil {
-		panic(err)
-	}
-	td3secondwithAutoRefresh, err = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
-	if err != nil {
-		panic(err)
-	}
+	tdForever = sforever.GetTokenData(tdForever.MustToken())
+	td3second = s3second.GetTokenData(td3second.MustToken())
+
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
+
 	result = ""
 	err = fieldForever.LoadFrom(tdForever, &result)
 	if result != model {

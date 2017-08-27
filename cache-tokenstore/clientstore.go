@@ -13,6 +13,39 @@ import (
 const clientStoreNonceSize = 4
 const clientStoreNewToken = "."
 
+//AESTokenMarshaler token marshaler which crypt data with AES
+//Return error if raised
+func AESTokenMarshaler(s *ClientStore, td *TokenData) (err error) {
+	var data []byte
+
+	td.Nonce = make([]byte, clientStoreNonceSize)
+	_, err = rand.Read(td.Nonce)
+	if err != nil {
+		return
+	}
+	data, err = td.Marshal()
+	if err != nil {
+		return
+	}
+	td.token, err = security.AESNonceEncryptBase64(data, s.Key)
+	return
+}
+
+//AESTokenUnmarshaler token unmarshaler which crypt data with AES
+//Return error if raised
+func AESTokenUnmarshaler(s *ClientStore, v *TokenData) (err error) {
+	var data []byte
+	data, err = security.AESNonceDecryptBase64(v.token, s.Key)
+	if err != nil {
+		return ErrDataNotFound
+	}
+	err = v.Unmarshal(v.token, data)
+	if err != nil {
+		return ErrDataNotFound
+	}
+	return nil
+}
+
 type ClientStore struct {
 	Fields               map[string]TokenField //All registered field
 	TokenLifetime        time.Duration         //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
@@ -21,8 +54,10 @@ type ClientStore struct {
 	CookieName           string                //Cookie name used in CookieMiddleware.Default value is "herb-session".
 	CookiePath           string                //Cookie path used in cookieMiddleware.Default value is "/".
 	AutoGenerate         bool                  //Whether auto generate token when guset visit.Default value is false.
-	Key                  []byte
-	UpdateActiveInterval time.Duration //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
+	Key                  []byte                //Crypt key
+	UpdateActiveInterval time.Duration         //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
+	TokenMarshaler       func(*ClientStore, *TokenData) error
+	TokenUnmarshaler     func(*ClientStore, *TokenData) error
 }
 
 func NewClientStore(key []byte, TokenLifetime time.Duration) *ClientStore {
@@ -34,12 +69,13 @@ func NewClientStore(key []byte, TokenLifetime time.Duration) *ClientStore {
 		TokenLifetime:        TokenLifetime,
 		UpdateActiveInterval: defaultUpdateActiveInterval,
 		TokenMaxLifetime:     defaultTokenMaxLifetime,
+		TokenMarshaler:       AESTokenMarshaler,
+		TokenUnmarshaler:     AESTokenUnmarshaler,
 	}
 }
 
-func (s *ClientStore) GetTokenData(token string) (td *TokenData, err error) {
+func (s *ClientStore) GetTokenData(token string) (td *TokenData) {
 	td = NewTokenData(token, s)
-	err = s.LoadTokenData(td)
 	return
 }
 func (s *ClientStore) GetTokenDataToken(td *TokenData) (token string, err error) {
@@ -66,21 +102,16 @@ func (s *ClientStore) GenerateTokenData(token string) (td *TokenData, err error)
 	td = NewTokenData(token, s)
 	td.tokenChanged = true
 	return td, nil
-
 }
+
 func (s *ClientStore) LoadTokenData(v *TokenData) (err error) {
 	if v.token == clientStoreNewToken {
 		return
 	}
 	v.notFound = true
-	var data []byte
-	data, err = security.AESNonceDecryptBase64(v.token, s.Key)
+	err = s.TokenUnmarshaler(s, v)
 	if err != nil {
-		return ErrDataNotFound
-	}
-	err = v.Unmarshal(v.token, data)
-	if err != nil {
-		return ErrDataNotFound
+		return err
 	}
 	if v.ExpiredAt > 0 && v.ExpiredAt < time.Now().Unix() {
 		return ErrDataNotFound
@@ -92,6 +123,7 @@ func (s *ClientStore) LoadTokenData(v *TokenData) (err error) {
 	return
 }
 func (s *ClientStore) SaveTokenData(t *TokenData) (err error) {
+	t.Load()
 	if t.token == clientStoreNewToken {
 		t.updated = true
 	}
@@ -111,30 +143,25 @@ func (s *ClientStore) SaveTokenData(t *TokenData) (err error) {
 	}
 	return nil
 }
-func (s *ClientStore) save(t *TokenData) (err error) {
-	var data []byte
-	t.Nonce = make([]byte, clientStoreNonceSize)
-	_, err = rand.Read(t.Nonce)
-	if err != nil {
-		return
-	}
-	if t.ExpiredAt > 0 && t.ExpiredAt < time.Now().Unix() {
+
+func (s *ClientStore) save(td *TokenData) (err error) {
+
+	if td.ExpiredAt > 0 && td.ExpiredAt < time.Now().Unix() {
 		return nil
 	}
-	if s.TokenMaxLifetime > 0 && time.Unix(t.CreatedTime, 0).Add(s.TokenMaxLifetime).Before(time.Now()) {
+	if s.TokenMaxLifetime > 0 && time.Unix(td.CreatedTime, 0).Add(s.TokenMaxLifetime).Before(time.Now()) {
 		return nil
 	}
 	if s.TokenLifetime >= 0 {
-		t.ExpiredAt = time.Now().Add(s.TokenLifetime).Unix()
+		td.ExpiredAt = time.Now().Add(s.TokenLifetime).Unix()
 	} else {
-		t.ExpiredAt = -1
+		td.ExpiredAt = -1
 	}
-	data, err = t.Marshal()
+	err = s.TokenMarshaler(s, td)
 	if err != nil {
 		return
 	}
-	t.token, err = security.AESNonceEncryptBase64(data, s.Key)
-	t.tokenChanged = true
+	td.tokenChanged = true
 	return
 }
 func (s *ClientStore) RegisterField(Key string, v interface{}) (*TokenField, error) {
@@ -155,10 +182,7 @@ func (s *ClientStore) RegisterField(Key string, v interface{}) (*TokenField, err
 	return &tf, nil
 }
 func (s *ClientStore) InstallTokenToRequest(r *http.Request, token string) (td *TokenData, err error) {
-	td, err = s.GetTokenData(token)
-	if err == ErrDataNotFound {
-		err = td.RegenerateToken("")
-	}
+	td = s.GetTokenData(token)
 	if err != nil {
 		return
 	}
@@ -199,10 +223,6 @@ func (s *ClientStore) CookieMiddleware() func(w http.ResponseWriter, r *http.Req
 			written:        false,
 		}
 		next(&cw, r)
-		err = s.SaveRequestTokenData(r)
-		if err != nil {
-			panic(err)
-		}
 	}
 }
 
@@ -240,42 +260,3 @@ func (s *ClientStore) Close() error {
 	return nil
 }
 
-type ClientStoreResponseWriter struct {
-	http.ResponseWriter
-	r       *http.Request
-	store   *ClientStore
-	written bool
-}
-
-func (w *ClientStoreResponseWriter) WriteHeader(status int) {
-	var td *TokenData
-	var err error
-	if w.written == false {
-		w.written = true
-		td, err = w.store.GetRequestTokenData(w.r)
-		if err != nil {
-			panic(err)
-		}
-		if td.tokenChanged {
-			cookie := &http.Cookie{
-				Name:     w.store.CookieName,
-				Value:    td.token,
-				Path:     w.store.CookiePath,
-				Secure:   false,
-				HttpOnly: true,
-			}
-			if w.store.TokenLifetime >= 0 {
-				cookie.Expires = time.Now().Add(w.store.TokenLifetime)
-			}
-			http.SetCookie(w, cookie)
-		}
-	}
-	w.ResponseWriter.WriteHeader(status)
-}
-
-func (w *ClientStoreResponseWriter) Write(data []byte) (int, error) {
-	if w.written == false {
-		w.WriteHeader(http.StatusOK)
-	}
-	return w.ResponseWriter.Write(data)
-}

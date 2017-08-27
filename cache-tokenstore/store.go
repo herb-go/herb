@@ -23,7 +23,7 @@ var defaultTokenContextName = ContextKey("token")
 
 //MustRegenerateToken Regenerate the token name and data with give owner,and save to request.
 //Panic if any error raised.
-func MustRegenerateToken(s *CacheStore, r *http.Request, owner string) *TokenData {
+func MustRegenerateToken(s Store, r *http.Request, owner string) *TokenData {
 	v := MustGetRequestTokenData(s, r)
 	err := v.RegenerateToken(owner)
 	if err != nil {
@@ -57,7 +57,7 @@ func MustRegisterField(s Store, Key string, v interface{}) *TokenField {
 }
 
 type Store interface {
-	GetTokenData(token string) (td *TokenData, err error)
+	GetTokenData(token string) (td *TokenData)
 	GetTokenDataToken(td *TokenData) (token string, err error)
 	GetRequestTokenData(r *http.Request) (td *TokenData, err error)
 	GenerateToken(owner string) (token string, err error)

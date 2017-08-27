@@ -49,7 +49,7 @@ func New(Cache *cache.Cache, TokenLifetime time.Duration) *CacheStore {
 	}
 }
 
-//CacheStore is the stuct store token data in cache.
+//CacheStore CacheStore is the stuct store token data in cache.
 type CacheStore struct {
 	Fields               map[string]TokenField                                       //All registered field
 	Cache                *cache.Cache                                                //Cache which stores token data
@@ -63,6 +63,7 @@ type CacheStore struct {
 	UpdateActiveInterval time.Duration                                               //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
 }
 
+//Close Close cachestore and return any error if raised
 func (s *CacheStore) Close() error {
 	return s.Cache.Close()
 }
@@ -103,6 +104,9 @@ func (s *CacheStore) GenerateTokenData(token string) (td *TokenData, err error) 
 	td.tokenChanged = true
 	return td, nil
 }
+
+//LoadTokenData Load TokenData form the TokenData.token.
+//Return any error if raised
 func (s *CacheStore) LoadTokenData(v *TokenData) error {
 	token := v.token
 	if token == "" {
@@ -130,6 +134,9 @@ func (s *CacheStore) LoadTokenData(v *TokenData) error {
 	}
 	return err
 }
+
+//SaveTokenData Save tokendata if necessary.
+//Return any error raised.
 func (s *CacheStore) SaveTokenData(t *TokenData) error {
 	if s.UpdateActiveInterval > 0 {
 		nextUpdateTime := time.Unix(t.LastActiveTime, 0).Add(s.UpdateActiveInterval)
@@ -192,12 +199,13 @@ func (s *CacheStore) DeleteToken(token string) error {
 
 //GetTokenData get the token data with give name .
 //Return the TokenData
-func (s *CacheStore) GetTokenData(token string) (td *TokenData, err error) {
+func (s *CacheStore) GetTokenData(token string) (td *TokenData) {
 	td = NewTokenData(token, s)
 	td.oldToken = token
-	err = nil
 	return
 }
+
+//GetTokenDataToken Get the token string from token data.
 func (s *CacheStore) GetTokenDataToken(td *TokenData) (token string, err error) {
 	return td.token, nil
 }
@@ -207,10 +215,8 @@ func (s *CacheStore) GetTokenDataToken(td *TokenData) (token string, err error) 
 //You should use this func when use your own token binding func instead of CookieMiddleware or HeaderMiddleware
 //Return the loaded TokenData and any error raised.
 func (s *CacheStore) InstallTokenToRequest(r *http.Request, token string) (td *TokenData, err error) {
-	td, err = s.GetTokenData(token)
-	if err != nil {
-		return
-	}
+	td = s.GetTokenData(token)
+
 	if token == "" && s.AutoGenerate == true {
 		err = td.RegenerateToken("")
 		if err != nil {
@@ -248,10 +254,6 @@ func (s *CacheStore) CookieMiddleware() func(w http.ResponseWriter, r *http.Requ
 			written:        false,
 		}
 		next(&cw, r)
-		err = s.SaveRequestTokenData(r)
-		if err != nil {
-			panic(err)
-		}
 	}
 }
 

@@ -1,18 +1,11 @@
-package tokenstore
-
-import (
-	"net/http"
-	"time"
-)
-
-type cookieResponseWriter struct {
+type ClientStoreResponseWriter struct {
 	http.ResponseWriter
 	r       *http.Request
-	store   *CacheStore
+	store   *ClientStore
 	written bool
 }
 
-func (w *cookieResponseWriter) WriteHeader(status int) {
+func (w *ClientStoreResponseWriter) WriteHeader(status int) {
 	var td *TokenData
 	var err error
 	if w.written == false {
@@ -33,12 +26,8 @@ func (w *cookieResponseWriter) WriteHeader(status int) {
 				Secure:   false,
 				HttpOnly: true,
 			}
-			if td.token != "" {
-				if w.store.TokenLifetime >= 0 {
-					cookie.Expires = time.Now().Add(w.store.TokenLifetime)
-				}
-			} else {
-				cookie.Expires = time.Unix(0, 0)
+			if w.store.TokenLifetime >= 0 {
+				cookie.Expires = time.Now().Add(w.store.TokenLifetime)
 			}
 			http.SetCookie(w, cookie)
 		}
@@ -46,7 +35,7 @@ func (w *cookieResponseWriter) WriteHeader(status int) {
 	w.ResponseWriter.WriteHeader(status)
 }
 
-func (w *cookieResponseWriter) Write(data []byte) (int, error) {
+func (w *ClientStoreResponseWriter) Write(data []byte) (int, error) {
 	if w.written == false {
 		w.WriteHeader(http.StatusOK)
 	}

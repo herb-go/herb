@@ -33,9 +33,9 @@ type TokenData struct {
 	Mutex          *sync.RWMutex //Read write mutex.
 }
 type tokenCachedData struct {
+	Nonce          []byte
 	Data           map[string][]byte
 	CreatedTime    int64
-	Nonce          []byte
 	LastActiveTime int64
 	ExpiredAt      int64
 }
