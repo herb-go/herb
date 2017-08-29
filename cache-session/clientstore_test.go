@@ -1,7 +1,8 @@
-package tokenstore
+package session
 
 import (
 	"bytes"
+	"encoding/base64"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -10,51 +11,97 @@ import (
 	"testing"
 	"time"
 
-	"github.com/herb-go/herb/cache"
 	_ "github.com/herb-go/herb/cache/drivers/freecache"
 )
 
-func getStore(ttl time.Duration) Store {
-	c := cache.New()
-	err := c.OpenJSON([]byte(testCache))
-	if err != nil {
-		panic(err)
-	}
-	err = c.Flush()
-	if err != nil {
-		panic(err)
-	}
-	s := New(c, ttl)
+func getClientStore(ttl time.Duration) *Store {
+	s := NewClientStore([]byte("getClientStore"), ttl)
 	return s
 }
 
-func getTimeoutStore(ttl time.Duration, UpdateActiveInterval time.Duration) Store {
-	c := cache.New()
-	err := c.OpenJSON([]byte(testCache))
-	if err != nil {
-		panic(err)
-	}
-	err = c.Flush()
-	if err != nil {
-		panic(err)
-	}
-	s := New(c, ttl)
+func getTimeoutClientStore(ttl time.Duration, UpdateActiveInterval time.Duration) *Store {
+	s := NewClientStore([]byte("getTimeoutClientStore"), ttl)
 	s.UpdateActiveInterval = UpdateActiveInterval
 	return s
 }
+func getBase64ClientStore(ttl time.Duration) *Store {
+	d := NewClientDriver([]byte("getClientStore"))
+	d.TokenMarshaler = func(s *ClientStore, ts *Session) (err error) {
+		var data []byte
+		data, err = ts.Marshal()
+		if err != nil {
+			return err
+		}
+		ts.token = base64.StdEncoding.EncodeToString(data)
+		return err
+	}
+	d.TokenUnmarshaler = func(s *ClientStore, v *Session) (err error) {
+		var data []byte
+		data, err = base64.StdEncoding.DecodeString(v.token)
+		if err != nil {
+			return ErrDataNotFound
+		}
+		err = v.Unmarshal(v.token, data)
+		if err != nil {
+			return ErrDataNotFound
+		}
+		return nil
 
-func TestField(t *testing.T) {
+	}
+	s := NewStore(d, ttl)
+	return s
+}
+func TestClientKey(t *testing.T) {
+	s := getClientStore(-1)
+	s2 := getTimeoutClientStore(-1, -1)
+	model := "123456"
+	var result string
+	testKey := "testkey"
+	testOwner := "testowner"
+
+	td, err := s.RegenerateToken(testOwner)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Set(testKey, model)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Save()
+	if err != nil {
+		t.Fatal(err)
+	}
+	td2 := s2.GetSession(td.MustToken())
+	result = ""
+	err = td2.Get(testKey, &result)
+	if err != ErrDataNotFound {
+		t.Fatal(err)
+	}
+	td = s.GetSession(td.MustToken())
+	err = s.LoadSession(td)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Get(testKey, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != model {
+		t.Errorf("td LoadSession error")
+	}
+}
+func TestClientTD(t *testing.T) {
 	var err error
-	s := getStore(-1)
+	s := getClientStore(-1)
 	defer s.Close()
 	model := "123456"
 	var result string
 	testKey := "testkey"
 	type modelStruct struct {
-		data string
+		Data string
 	}
 	structModel := modelStruct{
-		data: "test",
+		Data: "test",
 	}
 	var resutStruct = modelStruct{}
 	var testStructKey = "teststructkey"
@@ -70,108 +117,182 @@ func TestField(t *testing.T) {
 	var resultMap map[string]string
 	var testMapKey = "testmapkey"
 	testOwner := "testowner"
-	_, err = s.RegisterField(testKey, model)
-	if err != ErrMustRegistePtr {
-		t.Fatal(err)
-	}
-	_, err = s.RegisterField(testKey, nil)
-	if err != ErrNilPointer {
-		t.Fatal(err)
-	}
-	field, err := s.RegisterField(testKey, &model)
+
+	td, err := s.RegenerateToken(testOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if field.Store != s {
-		t.Errorf("Field store error")
+	err = td.Set(testKey, model)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if field.Type != reflect.TypeOf(model) {
-		t.Errorf("Field type error")
+	err = td.Save()
+	if err != nil {
+		t.Fatal(err)
 	}
-	td := field.MustLoginTokenData(testOwner, model)
 	result = ""
-	err = field.LoadFrom(td, &result)
+	err = td.Get(testKey, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if result != model {
-		t.Fatal(err)
+		t.Errorf("td  error %s", result)
 	}
 	result = ""
-	err = field.GetFromToken(td.MustToken(), &result)
+	td = s.GetSession(td.MustToken())
+	err = s.LoadSession(td)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Get(testKey, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if result != model {
-		t.Errorf("Field GetFromToken error")
-	}
-	fieldStruct, err := s.RegisterField(testIntKey, &modelStruct{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = fieldStruct.SaveTo(td, structModel)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = fieldStruct.LoadFrom(td, &resutStruct)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if resutStruct.data != structModel.data {
-		t.Errorf("field Struct error %s", resutStruct.data)
+		t.Errorf("td LoadSession error")
 	}
 
-	fieldInt, err := s.RegisterField(testStructKey, &resultInt)
+	td, err = s.RegenerateToken(testOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = fieldInt.SaveTo(td, modelInt)
+	err = td.Set(testStructKey, structModel)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = fieldInt.LoadFrom(td, &resultInt)
+	err = td.Save()
+	if err != nil {
+		t.Fatal(err)
+	}
+	resutStruct = modelStruct{}
+	err = td.Get(testStructKey, &resutStruct)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resutStruct != structModel {
+		t.Errorf("td  error %s", resutStruct)
+	}
+	resutStruct = modelStruct{}
+	td = s.GetSession(td.MustToken())
+	err = s.LoadSession(td)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Get(testStructKey, &resutStruct)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resutStruct != structModel {
+		t.Errorf("td LoadSession error")
+	}
+
+	td, err = s.RegenerateToken(testOwner)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Set(testIntKey, modelInt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Save()
+	if err != nil {
+		t.Fatal(err)
+	}
+	resultInt = 0
+	err = td.Get(testIntKey, &resultInt)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if resultInt != modelInt {
-		t.Errorf("field int error %d", resultInt)
+		t.Errorf("td  error %d", resultInt)
 	}
-	fieldBytes, err := s.RegisterField(testBytesKey, &resultBytes)
+	resultInt = 0
+	td = s.GetSession(td.MustToken())
+	err = s.LoadSession(td)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = fieldBytes.SaveTo(td, modelBytes)
+	err = td.Get(testIntKey, &resultInt)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = fieldBytes.LoadFrom(td, &resultBytes)
+	if resultInt != modelInt {
+		t.Errorf("td LoadSession error")
+	}
+
+	td, err = s.RegenerateToken(testOwner)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Set(testBytesKey, modelBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Save()
+	if err != nil {
+		t.Fatal(err)
+	}
+	resultBytes = []byte{}
+	err = td.Get(testBytesKey, &resultBytes)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if bytes.Compare(resultBytes, modelBytes) != 0 {
-		t.Errorf("field Bytes error %s", string(resultBytes))
+		t.Errorf("td  error %s", resultBytes)
+	}
+	resultBytes = []byte{}
+	td = s.GetSession(td.MustToken())
+	err = s.LoadSession(td)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Get(testBytesKey, &resultBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Compare(resultBytes, modelBytes) != 0 {
+		t.Errorf("td  error %s", resultBytes)
 	}
 
-	fieldMap, err := s.RegisterField(testMapKey, &resultMap)
+	td, err = s.RegenerateToken(testOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = fieldMap.SaveTo(td, modelMap)
+	err = td.Set(testMapKey, modelMap)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = fieldMap.LoadFrom(td, &resultMap)
+	err = td.Save()
+	if err != nil {
+		t.Fatal(err)
+	}
+	resultMap = map[string]string{}
+	err = td.Get(testMapKey, &resultMap)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(resultMap, modelMap) {
-		t.Error("field Maps error")
+		t.Errorf("td  error %s", resultMap)
 	}
+	resultMap = map[string]string{}
+	td = s.GetSession(td.MustToken())
+	err = s.LoadSession(td)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = td.Get(testMapKey, &resultMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(resultMap, modelMap) {
+		t.Errorf("td  error %s", resultMap)
+	}
+
 }
 
-func TestFieldInRequest(t *testing.T) {
+func TestClientRequest(t *testing.T) {
 	var err error
-	s := getStore(-1)
+	s := getClientStore(-1)
 	defer s.Close()
 	model := "123456"
 	modelAfterSet := "set"
@@ -180,61 +301,41 @@ func TestFieldInRequest(t *testing.T) {
 	testOwner := "testowner"
 	testHeaderName := "token"
 	var token string
-	field, err := s.RegisterField(testKey, &model)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if field.Store != s {
-		t.Errorf("Field store error")
-	}
-	if field.Type != reflect.TypeOf(model) {
-		t.Errorf("Field type error")
-	}
 	var mux = http.NewServeMux()
 	actionTest := func(w http.ResponseWriter, r *http.Request) {
-		field.Get(r, &result)
+		ts, err := s.GetRequestSession(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s.Get(r, testKey, &result)
 		if result != model {
 			t.Errorf("Field get error %s", result)
 		}
-		td, err := field.Store.GetRequestTokenData(r)
-		if err != nil {
-			t.Fatal(err)
-		}
-		tk, err := field.GetToken(r)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if tk != token {
-			t.Errorf("Field GetToken error %s", tk)
-		}
 		result = ""
-		err = field.GetFromToken(td.MustToken(), &result)
+		ts, err = s.GenerateSession(ts.MustToken())
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = ts.Get(testKey, &result)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if result != model {
-			t.Errorf("Field GetFromToken error %s", tk)
+			t.Errorf("Field get error result %s", result)
 		}
-		ex, err := field.ExpiredAt(r)
+		ex, err := s.ExpiredAt(r)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if ex > 0 {
 			t.Errorf("Field ExpiredAt error %d", ex)
 		}
-		mutex, err := field.RwMutex(r)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if mutex != td.Mutex {
-			t.Errorf("Field mutex error")
-		}
-		err = field.Set(r, modelAfterSet)
+		err = s.Set(r, testKey, modelAfterSet)
 		if err != nil {
 			t.Fatal(err)
 		}
 		result = ""
-		err = field.Get(r, &result)
+		err = s.Get(r, testKey, &result)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -250,8 +351,9 @@ func TestFieldInRequest(t *testing.T) {
 		s.CookieMiddleware()(w, r, actionTest)
 	}
 	actionLogin := func(w http.ResponseWriter, r *http.Request) {
-		td := field.MustLogin(r, testOwner, model)
-		w.Write([]byte(td.MustToken()))
+		ts := s.MustRegenerateRequsetSession(r, testOwner)
+		ts.Set(testKey, model)
+		w.Write([]byte(ts.MustToken()))
 	}
 	actionHeaderLogin := func(w http.ResponseWriter, r *http.Request) {
 		s.HeaderMiddleware(testHeaderName)(w, r, actionLogin)
@@ -271,7 +373,7 @@ func TestFieldInRequest(t *testing.T) {
 		s.HeaderMiddleware(testHeaderName)(w, r, actionLogout)
 	}
 	actionLoginStatus := func(w http.ResponseWriter, r *http.Request) {
-		t, err := field.Store.GetRequestTokenData(r)
+		t, err := s.GetRequestSession(r)
 		if err != ErrDataNotFound && err != nil {
 			panic(err)
 		}
@@ -281,7 +383,7 @@ func TestFieldInRequest(t *testing.T) {
 
 		}
 		result = ""
-		err = field.Get(r, &result)
+		err = s.Get(r, testKey, &result)
 		if err != ErrDataNotFound && err != nil {
 			panic(err)
 		}
@@ -352,30 +454,6 @@ func TestFieldInRequest(t *testing.T) {
 	if rep.StatusCode != http.StatusOK {
 		t.Errorf("HeaderMiddle status error %d", rep.StatusCode)
 	}
-	LogoutRequest, err := http.NewRequest("POST", hs.URL+"/logout", nil)
-	LogoutRequest.Header.Set(testHeaderName, token)
-	if err != nil {
-		t.Fatal(err)
-	}
-	rep, err = c.Do(LogoutRequest)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err != nil {
-		t.Fatal(err)
-	}
-	LoginStatusRequest, err = http.NewRequest("POST", hs.URL+"/loginstatus", nil)
-	LoginStatusRequest.Header.Set(testHeaderName, token)
-	if err != nil {
-		t.Fatal(err)
-	}
-	rep, err = c.Do(LoginStatusRequest)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if rep.StatusCode != http.StatusUnauthorized {
-		t.Errorf("Status code error %d", rep.StatusCode)
-	}
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -428,7 +506,7 @@ func TestFieldInRequest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	LogoutRequest, err = http.NewRequest("POST", hs.URL+"/cookie/logout", nil)
+	LogoutRequest, err := http.NewRequest("POST", hs.URL+"/cookie/logout", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -452,134 +530,23 @@ func TestFieldInRequest(t *testing.T) {
 	}
 }
 
-func TestTokenDataMarshal(t *testing.T) {
-	var err error
+func TestClientTimeout(t *testing.T) {
+	sforever := getTimeoutClientStore(-1, -1)
+	s3second := getTimeoutClientStore(3*time.Second, -1)
+	s3secondwithAutoRefresh := getTimeoutClientStore(3*time.Second, 1*time.Second)
 	testOwner := "testowner"
 	model := "123456"
 	var result string
 	testKey := "testkey"
-	testKey2 := "testkey2"
-	testToken := "testtoken"
-	s := getStore(-1)
-	defer s.Close()
-	field, err := s.RegisterField(testKey, &model)
-	if err != nil {
-		panic(err)
-	}
-	td, err := s.GenerateTokenData(testOwner)
-	if err != nil {
-		panic(err)
-	}
-	err = field.SaveTo(td, model)
-	if err != nil {
-		panic(err)
-	}
-	bytes, err := td.Marshal()
-	if err != nil {
-		panic(err)
-	}
-	td2 := NewTokenData(testToken, s)
-	err = td2.Unmarshal(testKey2, bytes)
-	if err != nil {
-		panic(err)
-	}
-	err = field.LoadFrom(td2, &result)
-	if err != nil {
-		panic(err)
-	}
-	if result != model {
-		t.Errorf("Tokendata Unmarshal err %s", result)
-	}
-
-}
-func TestTokenData(t *testing.T) {
-	var err error
-	s := getStore(-1)
-	defer s.Close()
-	testOwner := "testowner"
-	model := "123456"
-	var result string
-	testKey := "testkey"
-	field, err := s.RegisterField(testKey, &model)
-	if err != nil {
-		panic(err)
-	}
-	td, err := s.GenerateTokenData(testOwner)
-	if err != nil {
-		panic(err)
-	}
-	err = field.SaveTo(td, model)
-	if err != nil {
-		panic(err)
-	}
-	testToken := td.MustToken()
-	td2 := NewTokenData(testToken, s)
-	err = td2.Load()
-	if err != ErrDataNotFound {
-		t.Fatal(err)
-	}
-	err = field.LoadFrom(td2, &result)
-	if err != ErrDataNotFound {
-		t.Fatal(err)
-	}
-	err = td.Save()
-	if err != nil {
-		panic(err)
-	}
-
-	td3 := NewTokenData(testToken, s)
-	err = td3.Load()
-	if err != nil {
-		panic(err)
-	}
-	result = ""
-	err = field.LoadFrom(td3, &result)
-	if err != nil {
-		panic(err)
-	}
-	if result != model {
-		t.Errorf("Tokendata save/load error %s", result)
-	}
-	err = td.DeleteAndSave()
-	if err != nil {
-		panic(err)
-	}
-	td4 := NewTokenData(testToken, s)
-	err = td4.Load()
-	if err != ErrDataNotFound {
-		t.Fatal(err)
-	}
-	err = field.LoadFrom(td4, &result)
-	if err != ErrDataNotFound {
-		t.Fatal(err)
-	}
-}
-
-func TestTimeout(t *testing.T) {
-	sforever := getTimeoutStore(-1, -1)
-	s3second := getTimeoutStore(3*time.Second, -1)
-	s3secondwithAutoRefresh := getTimeoutStore(3*time.Second, 1*time.Second)
-	testOwner := "testowner"
-	model := "123456"
-	var result string
-	testKey := "testkey"
-	fieldForever, err := sforever.RegisterField(testKey, &model)
-	if err != nil {
-		panic(err)
-	}
 	tdForeverKey, err := sforever.GenerateToken(testOwner)
 	if err != nil {
 		panic(err)
 	}
-	tdForever, err := sforever.GenerateTokenData(tdForeverKey)
+	tdForever, err := sforever.GenerateSession(tdForeverKey)
 	if err != nil {
 		panic(err)
 	}
-	err = fieldForever.SaveTo(tdForever, model)
-	if err != nil {
-		panic(err)
-	}
-	field3second, err := s3second.RegisterField(testKey, &model)
+	err = tdForever.Set(testKey, model)
 	if err != nil {
 		panic(err)
 	}
@@ -587,15 +554,11 @@ func TestTimeout(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	td3second, err := s3second.GenerateTokenData(td3secondKey)
+	td3second, err := s3second.GenerateSession(td3secondKey)
 	if err != nil {
 		panic(err)
 	}
-	err = field3second.SaveTo(td3second, model)
-	if err != nil {
-		panic(err)
-	}
-	field3secondwithAutoRefresh, err := s3secondwithAutoRefresh.RegisterField(testKey, &model)
+	err = td3second.Set(testKey, model)
 	if err != nil {
 		panic(err)
 	}
@@ -603,11 +566,11 @@ func TestTimeout(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	td3secondwithAutoRefresh, err := s3secondwithAutoRefresh.GenerateTokenData(td3secondwithAutoRefreshKey)
+	td3secondwithAutoRefresh, err := s3secondwithAutoRefresh.GenerateSession(td3secondwithAutoRefreshKey)
 	if err != nil {
 		panic(err)
 	}
-	err = field3secondwithAutoRefresh.SaveTo(td3secondwithAutoRefresh, model)
+	err = td3secondwithAutoRefresh.Set(testKey, model)
 	if err != nil {
 		panic(err)
 	}
@@ -615,22 +578,22 @@ func TestTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(2 * time.Second)
-	tdForever = sforever.GetTokenData(tdForever.MustToken())
+	tdForever = sforever.GetSession(tdForever.MustToken())
 
-	td3second = s3second.GetTokenData(td3second.MustToken())
-	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
+	td3second = s3second.GetSession(td3second.MustToken())
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetSession(td3secondwithAutoRefresh.MustToken())
 	result = ""
-	err = fieldForever.LoadFrom(tdForever, &result)
+	err = tdForever.Get(testKey, &result)
 	if result != model {
 		t.Errorf("Timeout error %s", result)
 	}
 	result = ""
-	err = field3second.LoadFrom(td3second, &result)
+	err = td3second.Get(testKey, &result)
 	if result != model {
 		t.Errorf("Timeout error %s", result)
 	}
 	result = ""
-	err = field3secondwithAutoRefresh.LoadFrom(td3secondwithAutoRefresh, &result)
+	err = td3secondwithAutoRefresh.Get(testKey, &result)
 	if result != model {
 		t.Errorf("Timeout error %s", result)
 	}
@@ -638,22 +601,22 @@ func TestTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(2 * time.Second)
-	tdForever = sforever.GetTokenData(tdForever.MustToken())
-	td3second = s3second.GetTokenData(td3second.MustToken())
-	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
+	tdForever = sforever.GetSession(tdForever.MustToken())
+	td3second = s3second.GetSession(td3second.MustToken())
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetSession(td3secondwithAutoRefresh.MustToken())
 
 	result = ""
-	err = fieldForever.LoadFrom(tdForever, &result)
+	err = tdForever.Get(testKey, &result)
 	if result != model {
 		t.Errorf("Timeout error %s", result)
 	}
 	result = ""
-	err = field3second.LoadFrom(td3second, &result)
+	err = td3second.Get(testKey, &result)
 	if err != ErrDataNotFound {
 		t.Errorf("Timeout error %s", err)
 	}
 	result = ""
-	err = field3secondwithAutoRefresh.LoadFrom(td3secondwithAutoRefresh, &result)
+	err = td3secondwithAutoRefresh.Get(testKey, &result)
 	if result != model {
 		t.Errorf("Timeout error %s", result)
 	}
@@ -661,23 +624,23 @@ func TestTimeout(t *testing.T) {
 	td3second.Save()
 	td3secondwithAutoRefresh.Save()
 	time.Sleep(4 * time.Second)
-	tdForever = sforever.GetTokenData(tdForever.MustToken())
-	td3second = s3second.GetTokenData(td3second.MustToken())
+	tdForever = sforever.GetSession(tdForever.MustToken())
+	td3second = s3second.GetSession(td3second.MustToken())
 
-	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetTokenData(td3secondwithAutoRefresh.MustToken())
+	td3secondwithAutoRefresh = s3secondwithAutoRefresh.GetSession(td3secondwithAutoRefresh.MustToken())
 
 	result = ""
-	err = fieldForever.LoadFrom(tdForever, &result)
+	err = tdForever.Get(testKey, &result)
 	if result != model {
 		t.Errorf("Timeout error %s", result)
 	}
 	result = ""
-	err = field3second.LoadFrom(td3second, &result)
+	err = td3second.Get(testKey, &result)
 	if err != ErrDataNotFound {
 		t.Errorf("Timeout error %s", err)
 	}
 	result = ""
-	err = field3secondwithAutoRefresh.LoadFrom(td3secondwithAutoRefresh, &result)
+	err = td3secondwithAutoRefresh.Get(testKey, &result)
 	if err != ErrDataNotFound {
 		t.Errorf("Timeout error %s", err)
 	}

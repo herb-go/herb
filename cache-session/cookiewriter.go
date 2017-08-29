@@ -1,27 +1,27 @@
-package tokenstore
+package session
 
 import (
 	"net/http"
 	"time"
 )
 
-type clientStoreResponseWriter struct {
+type cookieResponseWriter struct {
 	http.ResponseWriter
 	r       *http.Request
-	store   *ClientStore
+	store   *Store
 	written bool
 }
 
-func (w *clientStoreResponseWriter) WriteHeader(status int) {
-	var td *TokenData
+func (w *cookieResponseWriter) WriteHeader(status int) {
+	var td *Session
 	var err error
 	if w.written == false {
 		w.written = true
-		td, err = w.store.GetRequestTokenData(w.r)
+		td, err = w.store.GetRequestSession(w.r)
 		if err != nil {
 			panic(err)
 		}
-		err = w.store.SaveRequestTokenData(w.r)
+		err = w.store.SaveRequestSession(w.r)
 		if err != nil {
 			panic(err)
 		}
@@ -33,8 +33,12 @@ func (w *clientStoreResponseWriter) WriteHeader(status int) {
 				Secure:   false,
 				HttpOnly: true,
 			}
-			if w.store.TokenLifetime >= 0 {
-				cookie.Expires = time.Now().Add(w.store.TokenLifetime)
+			if td.token != "" {
+				if w.store.TokenLifetime >= 0 {
+					cookie.Expires = time.Now().Add(w.store.TokenLifetime)
+				}
+			} else {
+				cookie.Expires = time.Unix(0, 0)
 			}
 			http.SetCookie(w, cookie)
 		}
@@ -42,7 +46,7 @@ func (w *clientStoreResponseWriter) WriteHeader(status int) {
 	w.ResponseWriter.WriteHeader(status)
 }
 
-func (w *clientStoreResponseWriter) Write(data []byte) (int, error) {
+func (w *cookieResponseWriter) Write(data []byte) (int, error) {
 	if w.written == false {
 		w.WriteHeader(http.StatusOK)
 	}
