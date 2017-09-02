@@ -556,7 +556,7 @@ func TestRequest(t *testing.T) {
 		s.CookieMiddleware()(w, r, actionLogin)
 	}
 	actionLogout := func(w http.ResponseWriter, r *http.Request) {
-		s.LogoutMiddleware()(w, r, func(w http.ResponseWriter, r *http.Request) {
+		s.DestoryMiddleware()(w, r, func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("ok"))
 		})
 	}

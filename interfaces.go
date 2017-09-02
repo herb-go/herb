@@ -14,3 +14,11 @@ type DataField interface {
 	Get(v interface{}) error
 	Set(v interface{}) error
 }
+type RequestItem interface {
+	LoadFromRequest(r *http.Request) error
+	SaveToRequest(r *http.Request) error
+}
+
+type Requestvalidator interface {
+	ValidateRequest(r *http.Request) (bool, error)
+}
