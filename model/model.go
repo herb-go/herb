@@ -75,12 +75,12 @@ func (model *ModelErrors) AddError(field string, msg string) {
 func (model *ModelErrors) AddErrorf(field string, msg string) {
 	model.AddPlainError(field, model.getMessageTextf(field, msg))
 }
-func (model *ModelErrors) ValidateField(field string, msg string, validated bool) {
+func (model *ModelErrors) ValidateField(validated bool, field string, msg string) {
 	if !validated {
 		model.AddError(field, msg)
 	}
 }
-func (model *ModelErrors) ValidateFieldf(field string, msg string, validated bool) {
+func (model *ModelErrors) ValidateFieldf(validated bool, field string, msg string) {
 	if !validated {
 		model.AddErrorf(field, msg)
 	}

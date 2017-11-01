@@ -12,7 +12,7 @@ type BasicAuthConfig struct {
 	Password string
 }
 
-func BasicAuth(c BasicAuthConfig) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func BasicAuth(c *BasicAuthConfig) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	if c.Realm == "" || c.Username == "" || c.Password == "" {
 		return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 			http.NotFound(w, r)
