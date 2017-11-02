@@ -38,7 +38,7 @@ func mustPath(path string, err error) string {
 var SrcPath = mustPath(os.Executable())
 var RootPath = path.Join(path.Dir(SrcPath), "../")
 var ResouresPath = path.Join(RootPath, "resources")
-var AppdataPath = path.Join(RootPath, "appdata")
+var AppDataPath = path.Join(RootPath, "appdata")
 var ConfigPath = path.Join(RootPath, "config")
 
 func SetConfigPath(paths ...string) {
@@ -61,8 +61,8 @@ func Resource(filepaths ...string) string {
 func Config(filepaths ...string) string {
 	return joinPath(ConfigPath, filepaths...)
 }
-func Appdata(filepaths ...string) string {
-	return joinPath(AppdataPath, filepaths...)
+func AppData(filepaths ...string) string {
+	return joinPath(AppDataPath, filepaths...)
 }
 
 var QuitChan = make(chan int)
