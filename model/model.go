@@ -10,6 +10,10 @@ type FieldError struct {
 	Field string
 	Msg   string
 }
+type ValidatedResult struct {
+	Validated bool
+	Model     *ModelErrors
+}
 type ModelErrors struct {
 	errors   []FieldError
 	messages ModelMessages
@@ -75,14 +79,22 @@ func (model *ModelErrors) AddError(field string, msg string) {
 func (model *ModelErrors) AddErrorf(field string, msg string) {
 	model.AddPlainError(field, model.getMessageTextf(field, msg))
 }
-func (model *ModelErrors) ValidateField(validated bool, field string, msg string) {
+func (model *ModelErrors) ValidateField(validated bool, field string, msg string) *ValidatedResult {
 	if !validated {
 		model.AddError(field, msg)
 	}
+	return &ValidatedResult{
+		Validated: validated,
+		Model:     model,
+	}
 }
-func (model *ModelErrors) ValidateFieldf(validated bool, field string, msg string) {
+func (model *ModelErrors) ValidateFieldf(validated bool, field string, msg string) *ValidatedResult {
 	if !validated {
 		model.AddErrorf(field, msg)
+	}
+	return &ValidatedResult{
+		Validated: validated,
+		Model:     model,
 	}
 }
 func (model *ModelErrors) Errors() []FieldError {
