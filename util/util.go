@@ -36,10 +36,10 @@ func mustPath(path string, err error) string {
 }
 
 var SrcPath = mustPath(os.Executable())
-var Rootpath = path.Join(path.Dir(SrcPath), "../")
-var ResouresPath = path.Join(Rootpath, "resources")
-var AppdataPath = path.Join(Rootpath, "appdata")
-var ConfigPath = path.Join(Rootpath, "config")
+var RootPath = path.Join(path.Dir(SrcPath), "../")
+var ResouresPath = path.Join(RootPath, "resources")
+var AppdataPath = path.Join(RootPath, "appdata")
+var ConfigPath = path.Join(RootPath, "config")
 
 func SetConfigPath(paths ...string) {
 	ConfigPath = path.Join(paths...)
