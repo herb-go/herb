@@ -8,6 +8,7 @@ import (
 
 type FieldError struct {
 	Field string
+	Label string
 	Msg   string
 }
 type ValidatedResult struct {
@@ -15,8 +16,9 @@ type ValidatedResult struct {
 	Model     *ModelErrors
 }
 type ModelErrors struct {
-	errors   []FieldError
-	messages ModelMessages
+	errors      []FieldError
+	messages    ModelMessages
+	fieldLabels map[string]string
 }
 
 func MustValidate(m Model) bool {
@@ -64,14 +66,28 @@ func (model *ModelErrors) getMessageText(msg string) string {
 }
 func (model *ModelErrors) getMessageTextf(field, msg string) string {
 	msg = model.getMessageText(msg)
-	return fmt.Sprintf("%[2]s"+msg, field, "")
+	return fmt.Sprintf("%[3]s"+msg, model.GetFieldLabel(field), field, "")
 }
 func (model *ModelErrors) AddPlainError(field string, msg string) {
 	f := FieldError{
 		Field: field,
+		Label: model.GetFieldLabel(field),
 		Msg:   msg,
 	}
 	model.errors = append(model.Errors(), f)
+}
+func (model *ModelErrors) SetFieldLabels(labels map[string]string) {
+	model.fieldLabels = labels
+}
+func (model *ModelErrors) GetFieldLabel(field string) string {
+	if model.fieldLabels == nil {
+		return field
+	}
+	label, ok := model.fieldLabels[field]
+	if ok == false {
+		return field
+	}
+	return label
 }
 func (model *ModelErrors) AddError(field string, msg string) {
 	model.AddPlainError(field, model.getMessageText(msg))

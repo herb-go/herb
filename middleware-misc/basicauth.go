@@ -40,7 +40,7 @@ func BasicAuth(c *BasicAuthConfig) func(w http.ResponseWriter, r *http.Request, 
 			return
 		}
 
-		if pair[0] != c.Username && pair[1] != c.Password {
+		if pair[0] != c.Username || pair[1] != c.Password {
 			http.Error(w, http.StatusText(401), 401)
 			return
 		}
