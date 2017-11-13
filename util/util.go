@@ -3,10 +3,12 @@ package util
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
 	"path"
+	"runtime/debug"
 	"time"
 )
 
@@ -108,6 +110,21 @@ func ShutdownHTTPWithContext(Server *http.Server, ctx context.Context) {
 	Server.Shutdown(ctx)
 	fmt.Println("Quited.")
 }
+
+func Recover(args ...interface{}) {
+	if r := recover(); r != nil {
+		err := r.(error)
+		log.Println(err)
+		if len(args) > 0 {
+			for _, v := range args {
+				log.Println(v)
+			}
+		}
+		debug.PrintStack()
+	}
+
+}
+
 func Quit() {
 	defer func() {
 		recover()
