@@ -310,6 +310,13 @@ func (s *Store) Get(r *http.Request, fieldName string, v interface{}) (err error
 	return ts.Get(fieldName, v)
 }
 
+func (s *Store) Del(r *http.Request, fieldName string) (err error) {
+	ts, err := s.GetRequestSession(r)
+	if err != nil {
+		return
+	}
+	return ts.Del(fieldName)
+}
 func (s *Store) ExpiredAt(r *http.Request) (ExpiredAt int64, err error) {
 	ts, err := s.GetRequestSession(r)
 	if err != nil {

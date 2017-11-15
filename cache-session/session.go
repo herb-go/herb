@@ -192,6 +192,23 @@ func (t *Session) Set(name string, v interface{}) (err error) {
 	return
 }
 
+func (t *Session) Del(name string) (err error) {
+	err = t.Load()
+	if err == ErrDataNotFound {
+		*t = *NewSession(t.token, t.Store)
+		err = nil
+	}
+	if err != nil {
+		return
+	}
+	t.Mutex.Lock()
+	defer t.Mutex.Unlock()
+	delete(t.data, name)
+	delete(t.cache, name)
+	t.updated = true
+	return
+}
+
 //LoadFrom load data model from given token data.
 //Parameter v should be pointer to empty data model which data filled in.
 //Return any error raised.
