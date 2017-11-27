@@ -58,6 +58,7 @@ type Store struct {
 	CookiePath           string        //Cookie path used in cookieMiddleware.Default Session is "/".
 	AutoGenerate         bool          //Whether auto generate token when guset visit.Default Session is false.
 	UpdateActiveInterval time.Duration //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
+	DefaultSessionFlag   Flag          //Default flag when creating session.
 }
 
 func NewStore(d Driver, TokenLifetime time.Duration) *Store {

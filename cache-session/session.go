@@ -15,6 +15,16 @@ var (
 	ErrNilPointer = errors.New("Data point to nil")
 )
 
+//Flag Flag used when saving session
+type Flag uint64
+
+//SessionFlagDefault default session flag
+const FlagDefault = Flag(0)
+
+//SessionFlagTemporay Flag what stands for a Temporay sesson.
+//For example,a login withour "remeber me".
+const FlagTemporay = Flag(1)
+
 //Session Token data in every request.
 type Session struct {
 	data           map[string][]byte
@@ -30,14 +40,31 @@ type Session struct {
 	notFound       bool
 	Store          *Store
 	Nonce          []byte
+	Flag           Flag
 	Mutex          *sync.RWMutex //Read write mutex.
 }
+
+//SetFlag Set a flag to session.
+func (s *Session) SetFlag(flag Flag, value bool) {
+	if value {
+		s.Flag = s.Flag | flag
+	} else {
+		s.Flag = s.Flag &^ flag
+	}
+}
+
+//HasFlag verify if session has given flag.
+func (s *Session) HasFlag(flag Flag) bool {
+	return (s.Flag & flag) != 0
+}
+
 type tokenCachedSession struct {
 	Nonce          []byte
 	Data           map[string][]byte
 	CreatedTime    int64
 	LastActiveTime int64
 	ExpiredAt      int64
+	Flag           Flag
 }
 
 //NewSession create new token data in store with given name.
@@ -55,6 +82,7 @@ func NewSession(token string, s *Store) *Session {
 		Mutex:          &sync.RWMutex{},
 		CreatedTime:    t,
 		LastActiveTime: t,
+		Flag:           s.DefaultSessionFlag,
 		ExpiredAt:      -1,
 	}
 
@@ -89,12 +117,18 @@ func (ts *Session) RegenerateToken(owner string) error {
 	if err != nil {
 		return err
 	}
+	ts.SetToken(token)
+
+	return nil
+}
+
+//Regenerate reset all session values except token
+func (ts *Session) Regenerate() {
 	ts.data = map[string][]byte{}
 	ts.cache = map[string]reflect.Value{}
 	ts.updated = false
 	ts.notFound = false
-	ts.SetToken(token)
-	return nil
+	ts.Flag = ts.Store.DefaultSessionFlag
 }
 
 //Load the token data from cache.
@@ -146,6 +180,7 @@ func (t *Session) Marshal() ([]byte, error) {
 			CreatedTime:    t.CreatedTime,
 			Nonce:          t.Nonce,
 			LastActiveTime: t.LastActiveTime,
+			Flag:           t.Flag,
 		})
 }
 
@@ -166,6 +201,7 @@ func (t *Session) Unmarshal(token string, bytes []byte) error {
 	t.ExpiredAt = Data.ExpiredAt
 	t.CreatedTime = Data.CreatedTime
 	t.LastActiveTime = Data.LastActiveTime
+	t.Flag = Data.Flag
 	t.loaded = true
 	return nil
 }

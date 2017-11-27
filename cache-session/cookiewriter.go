@@ -40,6 +40,9 @@ func (w *cookieResponseWriter) WriteHeader(status int) {
 			} else {
 				cookie.Expires = time.Unix(0, 0)
 			}
+			if td.HasFlag(FlagTemporay) {
+				cookie.Expires = time.Unix(0, 0)
+			}
 			http.SetCookie(w, cookie)
 		}
 	}
