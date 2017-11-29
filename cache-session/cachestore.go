@@ -1,4 +1,4 @@
-//Package tokenstore is used to store user data in token based cache.
+//Package session is used to store user data in token based cache.
 //It is normally used as user session or token.
 //This package depands github.com/herb-go/herb/cache.
 package session
@@ -68,6 +68,7 @@ func (s *CacheStore) GenerateToken(prefix string) (token string, err error) {
 	return s.TokenGenerater(s, prefix)
 }
 
+//Load load a given session with token from store.
 func (s *CacheStore) Load(v *Session) (err error) {
 	token := v.token
 	bytes, err := s.Cache.GetBytesValue(token)

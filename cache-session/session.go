@@ -134,19 +134,19 @@ func (ts *Session) Regenerate() {
 //Load the token data from cache.
 //Repeat call Load will only load data once.
 //Return any error raised.
-func (t *Session) Load() error {
-	if t.token == "" {
+func (s *Session) Load() error {
+	if s.token == "" {
 		return ErrTokenNotValidated
 	}
-	if t.loaded {
-		if t.notFound {
+	if s.loaded {
+		if s.notFound {
 			return ErrDataNotFound
 		}
 		return nil
 	}
-	err := t.Store.LoadSession(t)
+	err := s.Store.LoadSession(s)
 	if err == ErrDataNotFound {
-		if t.tokenChanged == false {
+		if s.tokenChanged == false {
 			return ErrDataNotFound
 		}
 		err = nil
@@ -158,29 +158,29 @@ func (t *Session) Load() error {
 }
 
 //DeleteAndSave Delete token.
-func (t *Session) DeleteAndSave() error {
-	t.SetToken("")
-	return t.Save()
+func (s *Session) DeleteAndSave() error {
+	s.SetToken("")
+	return s.Save()
 }
 
 //Save Save token data to cache.
 //Won't do anything if token data not changed.
 //You should call Save manually in your token binding func or non http request usage.
-func (t *Session) Save() error {
-	return t.Store.SaveSession(t)
+func (s *Session) Save() error {
+	return s.Store.SaveSession(s)
 }
 
 //Marshal convert Session to bytes.
 //Return  Converted bytes and any error raised.
-func (t *Session) Marshal() ([]byte, error) {
+func (s *Session) Marshal() ([]byte, error) {
 	return cache.MarshalMsgpack(
 		tokenCachedSession{
-			Data:           t.data,
-			ExpiredAt:      t.ExpiredAt,
-			CreatedTime:    t.CreatedTime,
-			Nonce:          t.Nonce,
-			LastActiveTime: t.LastActiveTime,
-			Flag:           t.Flag,
+			Data:           s.data,
+			ExpiredAt:      s.ExpiredAt,
+			CreatedTime:    s.CreatedTime,
+			Nonce:          s.Nonce,
+			LastActiveTime: s.LastActiveTime,
+			Flag:           s.Flag,
 		})
 }
 

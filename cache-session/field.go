@@ -32,6 +32,10 @@ func (f *Field) GetSession(r *http.Request) (ts *Session, err error) {
 	return f.Store.GetRequestSession(r)
 }
 
+func (f *Field) MustGetSession(r *http.Request) *Session {
+	return f.Store.MustGetRequestSession(r)
+}
+
 func (f *Field) IdentifyRequest(r *http.Request) (string, error) {
 	var id = ""
 	err := f.Get(r, &id)

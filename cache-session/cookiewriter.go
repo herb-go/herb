@@ -34,15 +34,13 @@ func (w *cookieResponseWriter) WriteHeader(status int) {
 				HttpOnly: true,
 			}
 			if td.token != "" {
-				if w.store.TokenLifetime >= 0 {
+				if w.store.TokenLifetime >= 0 && !td.HasFlag(FlagTemporay) {
 					cookie.Expires = time.Now().Add(w.store.TokenLifetime)
 				}
 			} else {
 				cookie.Expires = time.Unix(0, 0)
 			}
-			if td.HasFlag(FlagTemporay) {
-				cookie.Expires = time.Unix(0, 0)
-			}
+
 			http.SetCookie(w, cookie)
 		}
 	}
