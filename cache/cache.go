@@ -314,3 +314,10 @@ func (c *Cache) Load(key string, v interface{}, ttl time.Duration, closure func(
 	}
 	return nil
 }
+
+func (c *Cache) GetField(fieldname string) *Field {
+	return &Field{
+		Cache:     c,
+		FieldName: fieldname,
+	}
+}
