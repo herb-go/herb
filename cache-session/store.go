@@ -212,7 +212,7 @@ func (s *Store) RegenerateToken(prefix string) (ts *Session, err error) {
 func (s *Store) Install(r *http.Request, token string) (ts *Session, err error) {
 	ts = s.GetSession(token)
 
-	if token == "" && s.AutoGenerate == true {
+	if (token == "" || token == clientStoreNewToken) && s.AutoGenerate == true {
 		err = ts.RegenerateToken("")
 		if err != nil {
 			return

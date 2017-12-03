@@ -103,7 +103,15 @@ func (s *ClientStore) Load(v *Session) (err error) {
 //Save Save Session if necessary.
 //Return any error raised.
 func (s *ClientStore) Save(ts *Session, ttl time.Duration) (err error) {
-	return s.TokenMarshaler(s, ts)
+	ts.oldToken = ts.token
+	err = s.TokenMarshaler(s, ts)
+	if err != nil {
+		return
+	}
+	if ts.oldToken != ts.token {
+		ts.tokenChanged = true
+	}
+	return
 }
 
 //Delete delete the token with given name.
