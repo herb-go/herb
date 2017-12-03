@@ -506,6 +506,9 @@ func TestClientRequest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if rep.Header.Get("set-cookie") == "" {
+		t.Error("coolie update fail")
+	}
 	LogoutRequest, err := http.NewRequest("POST", hs.URL+"/cookie/logout", nil)
 	if err != nil {
 		t.Fatal(err)
