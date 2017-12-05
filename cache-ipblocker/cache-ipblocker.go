@@ -13,7 +13,7 @@ import (
 const StatusAny = 0
 const defaultBlockedStatus = http.StatusTooManyRequests
 
-func New(name string, cache *cache.Cache) *Blocker {
+func New(name string, cache cache.Cacheable) *Blocker {
 	return &Blocker{
 		config:        map[int]statusConfig{},
 		Cache:         cache,
@@ -29,7 +29,7 @@ type statusConfig struct {
 }
 type Blocker struct {
 	config        map[int]statusConfig
-	Cache         *cache.Cache
+	Cache         cache.Cacheable
 	StatusBlocked int
 	Name          string
 }

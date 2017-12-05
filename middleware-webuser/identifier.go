@@ -38,3 +38,21 @@ func LogoutMiddleware(s LogoutService) func(w http.ResponseWriter, r *http.Reque
 		next(w, r)
 	}
 }
+
+func ForbiddenExceptForUsers(s Identifier, users []string) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		id, err := s.IdentifyRequest(r)
+		if err != nil {
+			panic(err)
+		}
+		if id != "" && users != nil {
+			for _, v := range users {
+				if v == id {
+					next(w, r)
+					return
+				}
+			}
+		}
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+	}
+}

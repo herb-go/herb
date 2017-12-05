@@ -23,6 +23,8 @@ var (
 	ErrKeyUnavailable = errors.New("Key Unavailable")
 	//ErrFeatureNotSupported raised when calling feature on unsupported driver.
 	ErrFeatureNotSupported = errors.New("Feature is not supported")
+
+	ErrPermanentCacheNotSupport = errors.New("Permanent cache is not supported.can use ttl <0 on this cache")
 )
 
 //DefualtTTL means use cache default ttl setting.
@@ -320,4 +322,12 @@ func (c *Cache) GetField(fieldname string) *Field {
 		Cache:     c,
 		FieldName: fieldname,
 	}
+}
+
+func (c *Cache) DefualtTTL() time.Duration {
+	return c.TTL
+}
+
+func (c *Cache) NewCollection(prefix string, ttlInSecond int64) *Collection {
+	return NewCollection(c, prefix, ttlInSecond)
 }

@@ -9,8 +9,8 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-func New(c *cache.Cache) PageCache {
-	p := PageCache{
+func New(c cache.Cacheable) *PageCache {
+	p := &PageCache{
 		Cache:           c,
 		KeyPrefix:       defaultKeyPrefix,
 		StatusValidator: defualtStatusValidator,
@@ -25,7 +25,7 @@ type cachedPage struct {
 }
 
 type PageCache struct {
-	Cache           *cache.Cache
+	Cache           cache.Cacheable
 	KeyPrefix       string
 	StatusValidator func(status int) bool
 }
