@@ -3,16 +3,12 @@ package cache
 import "time"
 
 type Field struct {
-	Cache     *Cache
+	Cache     Cacheable
 	FieldName string
 }
 
 func (f *Field) Set(v interface{}, ttl time.Duration) error {
 	return f.Cache.Set(f.FieldName, v, ttl)
-}
-
-func (f *Field) Update(v interface{}, ttl time.Duration) error {
-	return f.Cache.Update(f.FieldName, v, ttl)
 }
 
 func (f *Field) Get(key string, v interface{}) error {
@@ -21,10 +17,6 @@ func (f *Field) Get(key string, v interface{}) error {
 
 func (f *Field) SetBytesValue(bytes []byte, ttl time.Duration) error {
 	return f.Cache.SetBytesValue(f.FieldName, bytes, ttl)
-}
-
-func (f *Field) UpdateBytesValue(bytes []byte, ttl time.Duration) error {
-	return f.Cache.UpdateBytesValue(f.FieldName, bytes, ttl)
 }
 
 func (f *Field) GetBytesValue() ([]byte, error) {

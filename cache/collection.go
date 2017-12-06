@@ -6,19 +6,19 @@ import "strconv"
 type Collection struct {
 	Cache  Cacheable
 	Prefix string
-	ttl    time.Duration
+	TTL    time.Duration
 }
 
-func NewCollection(cache Cacheable, prefix string, ttlInSecond int64) *Collection {
+func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collection {
 	return &Collection{
 		Cache:  cache,
 		Prefix: prefix,
-		ttl:    time.Duration(ttlInSecond) * time.Second,
+		TTL:    TTL,
 	}
 }
 func (c *Collection) GetCacheKey(key string) (string, error) {
 	var ts string
-	err := c.Cache.Load(c.Prefix, &ts, c.ttl, func(v interface{}) error {
+	err := c.Cache.Load(c.Prefix, &ts, c.TTL, func(v interface{}) error {
 		ts = strconv.FormatInt(time.Now().UnixNano(), 10)
 		return nil
 	})
@@ -35,15 +35,15 @@ func (c *Collection) MustGetCacheKey(key string) string {
 	return k
 }
 
-func (c *Collection) Set(key string, v interface{}, ttl time.Duration) error {
-	if ttl < 0 || (ttl == 0 && c.Cache.DefualtTTL() < 0) {
+func (c *Collection) Set(key string, v interface{}, TTL time.Duration) error {
+	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
 		return ErrPermanentCacheNotSupport
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
 		return err
 	}
-	return c.Cache.Set(k, v, ttl)
+	return c.Cache.Set(k, v, TTL)
 }
 
 func (c *Collection) Get(key string, v interface{}) error {
@@ -53,15 +53,15 @@ func (c *Collection) Get(key string, v interface{}) error {
 	}
 	return c.Cache.Get(k, &v)
 }
-func (c *Collection) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
-	if ttl < 0 || (ttl == 0 && c.Cache.DefualtTTL() < 0) {
+func (c *Collection) SetBytesValue(key string, bytes []byte, TTL time.Duration) error {
+	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
 		return ErrPermanentCacheNotSupport
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
 		return err
 	}
-	return c.Cache.SetBytesValue(k, bytes, ttl)
+	return c.Cache.SetBytesValue(k, bytes, TTL)
 
 }
 func (c *Collection) GetBytesValue(key string) ([]byte, error) {
@@ -78,27 +78,34 @@ func (c *Collection) Del(key string) error {
 	}
 	return c.Cache.Del(k)
 }
-func (c *Collection) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
-	if ttl < 0 || (ttl == 0 && c.Cache.DefualtTTL() < 0) {
+func (c *Collection) IncrCounter(key string, increment int64, TTL time.Duration) (int64, error) {
+	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
 		return 0, ErrPermanentCacheNotSupport
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
 		return 0, err
 	}
-	return c.Cache.IncrCounter(k, increment, ttl)
+	return c.Cache.IncrCounter(k, increment, TTL)
 
 }
-func (c *Collection) SetCounter(key string, v int64, ttl time.Duration) error {
-	if ttl < 0 || (ttl == 0 && c.Cache.DefualtTTL() < 0) {
+func (c *Collection) SetCounter(key string, v int64, TTL time.Duration) error {
+	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
 		return ErrPermanentCacheNotSupport
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
 		return err
 	}
-	return c.Cache.SetCounter(k, v, ttl)
+	return c.Cache.SetCounter(k, v, TTL)
 
+}
+func (c *Collection) DelCounter(key string) error {
+	k, err := c.GetCacheKey(key)
+	if err != nil {
+		return err
+	}
+	return c.Cache.DelCounter(k)
 }
 func (c *Collection) GetCounter(key string) (int64, error) {
 	k, err := c.GetCacheKey(key)
@@ -108,15 +115,15 @@ func (c *Collection) GetCounter(key string) (int64, error) {
 	return c.Cache.GetCounter(k)
 
 }
-func (c *Collection) Load(key string, v interface{}, ttl time.Duration, closure func(v interface{}) error) error {
-	if ttl < 0 || (ttl == 0 && c.Cache.DefualtTTL() < 0) {
+func (c *Collection) Load(key string, v interface{}, TTL time.Duration, closure func(v interface{}) error) error {
+	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
 		return ErrPermanentCacheNotSupport
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
 		return err
 	}
-	return c.Cache.Load(k, &v, ttl, closure)
+	return c.Cache.Load(k, &v, TTL, closure)
 }
 
 func (c *Collection) Flush() error {
@@ -127,10 +134,15 @@ func (c *Collection) DefualtTTL() time.Duration {
 	return c.Cache.DefualtTTL()
 }
 
-func (c *Collection) SubCollection(prefix string) *Collection {
-	return &Collection{
-		Cache:  c,
-		Prefix: prefix,
-		ttl:    c.ttl,
+func (c *Collection) Collection(prefix string) *Collection {
+	return NewCollection(c, prefix, c.TTL)
+}
+func (c *Collection) Node(prefix string) *Node {
+	return NewNode(c, prefix)
+}
+func (c *Collection) Field(fieldname string) *Field {
+	return &Field{
+		Cache:     c,
+		FieldName: fieldname,
 	}
 }

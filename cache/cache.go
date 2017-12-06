@@ -317,7 +317,7 @@ func (c *Cache) Load(key string, v interface{}, ttl time.Duration, closure func(
 	return nil
 }
 
-func (c *Cache) GetField(fieldname string) *Field {
+func (c *Cache) Field(fieldname string) *Field {
 	return &Field{
 		Cache:     c,
 		FieldName: fieldname,
@@ -328,6 +328,9 @@ func (c *Cache) DefualtTTL() time.Duration {
 	return c.TTL
 }
 
-func (c *Cache) NewCollection(prefix string, ttlInSecond int64) *Collection {
-	return NewCollection(c, prefix, ttlInSecond)
+func (c *Cache) Collection(prefix string) *Collection {
+	return NewCollection(c, prefix, c.TTL)
+}
+func (c *Cache) Node(prefix string) *Node {
+	return NewNode(c, prefix)
 }
