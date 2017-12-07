@@ -15,18 +15,16 @@ type keyType string
 const ContextParamsKey = keyType("httprouterParams")
 
 type Router struct {
-	handlers []func(http.ResponseWriter, *http.Request, http.HandlerFunc)
-	router   *httprouter.Router
+	router *httprouter.Router
 }
 
-func New(funcs ...func(http.ResponseWriter, *http.Request, http.HandlerFunc)) *Router {
+func New() *Router {
 	r := httprouter.New()
 	r.RedirectTrailingSlash = false
 	r.RedirectFixedPath = false
 	router := Router{
 		router: r,
 	}
-	router.handlers = funcs
 	return &router
 }
 func wrap(f http.Handler) httprouter.Handle {
@@ -37,7 +35,7 @@ func wrap(f http.Handler) httprouter.Handle {
 }
 
 func (r *Router) Handle(method, path string) *middleware.App {
-	app := middleware.New(r.handlers...)
+	app := middleware.New()
 	r.router.Handle(method, path, wrap(app))
 	return app
 }
@@ -51,14 +49,6 @@ func (router *Router) Handlers() []func(w http.ResponseWriter, r *http.Request, 
 	return []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){router.ServeMiddleware}
 }
 
-func (r *Router) Use(funcs ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) *Router {
-	r.handlers = append(r.handlers, funcs...)
-	return r
-}
-func (r *Router) Chain(apps ...middleware.HandlerSlice) *Router {
-	r.Use(middleware.AppToMiddlewares(apps...)...)
-	return r
-}
 func GetParams(r *http.Request) *httprouter.Params {
 	p := r.Context().Value(ContextParamsKey)
 	params, _ := p.(httprouter.Params)
@@ -97,7 +87,7 @@ func (r *Router) DELETE(path string) *middleware.App {
 	return r.Handle("DELETE", path)
 }
 func (r *Router) ALL(path string) *middleware.App {
-	app := middleware.New(r.handlers...)
+	app := middleware.New()
 	handler := wrap(app)
 	r.router.GET(path, handler)
 	r.router.POST(path, handler)
@@ -110,7 +100,6 @@ func (r *Router) ALL(path string) *middleware.App {
 }
 func (r *Router) StripPrefix(path string) *middleware.App {
 	app := middleware.New(stripPrefixfunc)
-	app.Use(r.handlers...)
 	handler := wrap(app)
 	p := path + "/*filepath"
 	r.router.GET(p, handler)

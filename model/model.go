@@ -3,8 +3,11 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 )
+
+const MsgBadRequest = "Bad request."
 
 type FieldError struct {
 	Field string
@@ -18,6 +21,7 @@ type ValidatedResult struct {
 type ModelErrors struct {
 	errors      []FieldError
 	messages    ModelMessages
+	badRequest  bool
 	fieldLabels map[string]string
 }
 
@@ -29,10 +33,18 @@ func MustValidate(m Model) bool {
 	return !m.HasError()
 }
 func MustValidateJSONPost(r *http.Request, m HttpModel) bool {
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&m)
+	var params []byte
+	var body, err = ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
+	}
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &params)
+		if err != nil {
+			m.SetBadRequest(true)
+			m.AddErrorf("", MsgBadRequest)
+			return false
+		}
 	}
 	err = m.InitWithRequest(r)
 	if err != nil {
@@ -42,6 +54,10 @@ func MustValidateJSONPost(r *http.Request, m HttpModel) bool {
 
 }
 func MustRenderErrors(w http.ResponseWriter, m Model) {
+	if m.BadRequest() {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(422)
 	bytes, err := json.Marshal(m.Errors())
@@ -55,6 +71,12 @@ func MustRenderErrors(w http.ResponseWriter, m Model) {
 }
 func (model *ModelErrors) SetMessages(m *Messages) {
 	model.messages = m
+}
+func (model *ModelErrors) BadRequest() bool {
+	return model.badRequest
+}
+func (model *ModelErrors) SetBadRequest(v bool) {
+	model.badRequest = v
 }
 func (model *ModelErrors) getMessageText(msg string) string {
 	var msgtext string
@@ -128,13 +150,16 @@ func (model *ModelErrors) InitWithRequest(*http.Request) error {
 }
 
 func (model *ModelErrors) HasError() bool {
-	return len(model.Errors()) != 0
+	return model.badRequest || len(model.Errors()) != 0
 }
 
 type Model interface {
 	HasError() bool
 	Errors() []FieldError
 	AddError(field string, msg string)
+	AddErrorf(field string, msg string)
+	BadRequest() bool
+	SetBadRequest(bool)
 	Validate() error
 }
 
