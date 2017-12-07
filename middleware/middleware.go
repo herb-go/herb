@@ -44,7 +44,11 @@ func (s *serveWorker) Next(w http.ResponseWriter, r *http.Request) {
 	} else {
 		current := s.current
 		s.current = s.current + 1
-		s.handlers[current](w, r, s.Next)
+		handler := s.handlers[current]
+		if handler == nil {
+			handler = voidMiddleware
+		}
+		handler(w, r, s.Next)
 	}
 }
 
@@ -98,6 +102,9 @@ func Wrap(f http.Handler) func(w http.ResponseWriter, r *http.Request, next http
 }
 
 func voidNextFunc(w http.ResponseWriter, r *http.Request) {
+}
+func voidMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	next(w, r)
 }
 
 // HandlerSlice : interface which contains slice of middlewares.
@@ -170,3 +177,5 @@ func (a *App) UseApp(apps ...*App) *App {
 	Use(a, funcs...)
 	return a
 }
+
+type Middleware func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)

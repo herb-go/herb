@@ -31,7 +31,8 @@ func New(funcs ...func(http.ResponseWriter, *http.Request, http.HandlerFunc)) *R
 }
 func wrap(f http.Handler) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		f.ServeHTTP(w, SetParams(r, params))
+		SetParams(r, params)
+		f.ServeHTTP(w, r)
 	}
 }
 
@@ -63,10 +64,9 @@ func GetParams(r *http.Request) *httprouter.Params {
 	params, _ := p.(httprouter.Params)
 	return &params
 }
-func SetParams(r *http.Request, params httprouter.Params) *http.Request {
+func SetParams(r *http.Request, params httprouter.Params) {
 	ctx := context.WithValue(r.Context(), ContextParamsKey, params)
-	r = r.WithContext(ctx)
-	return r
+	*r = *r.WithContext(ctx)
 }
 
 func (r *Router) GET(path string) *middleware.App {

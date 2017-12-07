@@ -18,11 +18,20 @@ func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collectio
 }
 func (c *Collection) GetCacheKey(key string) (string, error) {
 	var ts string
-	err := c.Cache.Load(c.Prefix, &ts, c.TTL, func(v interface{}) error {
+	data, err := c.Cache.GetBytesValue(c.Prefix)
+	if err == nil {
+		ts = string(data)
+	} else if err == ErrNotFound {
+		err = nil
 		ts = strconv.FormatInt(time.Now().UnixNano(), 10)
-		return nil
-	})
-	if err != nil {
+		err2 := c.Cache.SetBytesValue(c.Prefix, []byte(ts), c.TTL)
+		if err2 == ErrNotCacheable {
+			err2 = nil
+		}
+		if err2 != nil {
+			return "", err2
+		}
+	} else {
 		return "", err
 	}
 	return c.Prefix + keyPrefix + ts + keyPrefix + key, nil

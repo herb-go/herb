@@ -30,8 +30,11 @@ func MustValidate(m Model) bool {
 }
 func MustValidateJSONPost(r *http.Request, m HttpModel) bool {
 	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&m)
-	err := m.PrepareWithRequest(r)
+	err := decoder.Decode(&m)
+	if err != nil {
+		panic(err)
+	}
+	err = m.InitWithRequest(r)
 	if err != nil {
 		panic(err)
 	}
@@ -120,7 +123,7 @@ func (model *ModelErrors) Errors() []FieldError {
 		return model.errors
 	}
 }
-func (model *ModelErrors) PrepareWithRequest(*http.Request) error {
+func (model *ModelErrors) InitWithRequest(*http.Request) error {
 	return nil
 }
 
@@ -137,5 +140,5 @@ type Model interface {
 
 type HttpModel interface {
 	Model
-	PrepareWithRequest(*http.Request) error
+	InitWithRequest(*http.Request) error
 }
