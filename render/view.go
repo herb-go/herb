@@ -25,8 +25,8 @@ func (v *NamedView) MustRenderError(writer http.ResponseWriter, data interface{}
 	return MustWriteHTML(writer, []byte(output), status)
 }
 func (v *NamedView) RenderString(data interface{}) (string, error) {
-	cv, ok := v.Renderer.Views[v.Name]
-	if ok == false {
+	var cv = v.Renderer.view(v.Name)
+	if cv == nil {
 		return "", NewViewError(v.Name, ErrorViewNotExist)
 	}
 	return cv.Execute(data)

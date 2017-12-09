@@ -2,6 +2,7 @@ package render
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -28,6 +29,8 @@ const (
 	// Default character encoding.
 	defaultCharset = "UTF-8"
 )
+
+var ErrTooManyViewFiles = errors.New("error too many view files")
 
 func WriteJSON(w http.ResponseWriter, data []byte, status int) (int, error) {
 	w.Header().Set(ContentType, ContentJSON)

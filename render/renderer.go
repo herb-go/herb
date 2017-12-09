@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"path/filepath"
 )
 
 type ViewConfig struct {
@@ -13,24 +12,26 @@ type ViewConfig struct {
 
 func New(e Engine, viewRoot string) *Renderer {
 	r := Renderer{}
-	r.Engine = e
-	r.ViewRoot = viewRoot
+	r.engine = e
+	if e != nil {
+		r.engine.SetViewRoot(viewRoot)
+	}
 	r.Views = map[string]CompiledView{}
 	return &r
 }
 
-func Init(e Engine, viewRoot string, f func(*Renderer)) *Renderer {
-	renderer := New(e, viewRoot)
-	f(renderer)
-	return renderer
-}
-
 type Renderer struct {
-	ViewRoot string
-	Engine   Engine
-	Views    map[string]CompiledView
+	engine Engine
+	Views  map[string]CompiledView
 }
 
+func (r *Renderer) Engine() Engine {
+	return r.engine
+}
+func (r *Renderer) SetEngine(e Engine, viewRoot string) {
+	r.engine = e
+	e.SetViewRoot(viewRoot)
+}
 func (r *Renderer) WriteJSON(w http.ResponseWriter, data []byte, status int) (int, error) {
 	return WriteJSON(w, data, status)
 }
@@ -56,6 +57,22 @@ func (r *Renderer) Error(w http.ResponseWriter, status int) (int, error) {
 }
 func (r *Renderer) MustError(w http.ResponseWriter, status int) int {
 	return MustError(w, status)
+}
+func (r *Renderer) view(name string) CompiledView {
+	if r.Views == nil {
+		return nil
+	}
+	view, ok := r.Views[name]
+	if ok == false {
+		return nil
+	}
+	return view
+}
+func (r *Renderer) setView(name string, view CompiledView) {
+	if r.Views == nil {
+		r.Views = map[string]CompiledView{}
+	}
+	r.Views[name] = view
 }
 func (r *Renderer) LoadViews(configpath string) (map[string]*NamedView, error) {
 	var data map[string]ViewConfig
@@ -88,15 +105,11 @@ func (r *Renderer) GetView(ViewName string) *NamedView {
 	}
 }
 func (r *Renderer) NewView(ViewName string, viewFiles ...string) (*NamedView, error) {
-	absViewFiles := make([]string, len(viewFiles))
-	for k, v := range viewFiles {
-		absViewFiles[k] = filepath.Join(r.ViewRoot, v)
-	}
-	cv, err := r.Engine.Compile(absViewFiles...)
+	cv, err := r.engine.Compile(viewFiles...)
 	if err != nil {
 		return nil, NewViewError(ViewName, err)
 	}
-	r.Views[ViewName] = cv
+	r.setView(ViewName, cv)
 	v := &NamedView{
 		Name:     ViewName,
 		Renderer: r,
@@ -109,5 +122,6 @@ type CompiledView interface {
 }
 
 type Engine interface {
+	SetViewRoot(string)
 	Compile(viewFiles ...string) (CompiledView, error)
 }
