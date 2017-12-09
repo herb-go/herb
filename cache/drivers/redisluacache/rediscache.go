@@ -1,6 +1,6 @@
-//Package rediscache provides cache driver uses redis to store cache data.
+//Package redisluacache provides cache driver uses redis to store cache data.
 //Using github.com/garyburd/redigo/redis as driver.
-package rediscache
+package redisluacache
 
 import (
 	"encoding/json"
@@ -24,6 +24,27 @@ var defualtWriteTimeout = 2 * time.Second
 var defaultSepartor = string(0)
 var tokenMask = cache.TokenMask
 var tokenLength = 64
+var flushLua = `
+	if redis.call("HEXISTS",KEYS[2],KEYS[3])==1 then return 0 end
+	local v=redis.call("GET",KEYS[1]);
+	if (v==false) then v="" end;
+    redis.call("HSET",KEYS[2],v,0);
+	redis.call("SET",KEYS[1],KEYS[3]);
+	return 1;
+`
+var gcLua = `
+	redis.replicate_commands()
+	local ks=redis.call("HKEYS",KEYS[1])
+	if ks ==false then return end
+	local k=ks[1]
+	if k ==nil then return end
+	local v=redis.call("HGET",KEYS[1],k)
+	local r=redis.call("SCAN",v,"MATCH",KEYS[2]..KEYS[3]..KEYS[3]..k..KEYS[3].."*","COUNT",KEYS[4])
+	for _,k in ipairs(r[2]) do 
+    	redis.call('DEL', k) 
+	end
+	if r[1]=="0" then redis.call("HDEL",KEYS[1],k) end
+`
 
 const modeSet = 0
 const modeUpdate = 1
@@ -85,12 +106,15 @@ func (c *Cache) start() error {
 	conn := c.Pool.Get()
 	defer conn.Close()
 	_, err := conn.Do("PING")
-	return err
+	if err != nil {
+		return err
+	}
+	return c.gc()
 }
 func (c *Cache) getKey(key string) string {
 	c.versionLock.Lock()
 	defer c.versionLock.Unlock()
-	return c.name + c.Separtor + c.Separtor + key
+	return c.name + c.Separtor + c.Separtor + c.version + c.Separtor + key
 }
 
 //SearchByPrefix Search All key start with given prefix.
@@ -98,10 +122,53 @@ func (c *Cache) getKey(key string) string {
 func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
 	return nil, cache.ErrFeatureNotSupported
 }
+func (c *Cache) getVersionKey() string {
+	return c.name + c.Separtor + "version" + c.Separtor
+}
+func (c *Cache) getUsedVersionsKey() string {
+	return c.name + c.Separtor + "usedVersions" + c.Separtor
 
-//Flush Flush not supported.
+}
+func (c *Cache) getVersionFromConn(conn redis.Conn) (string, error) {
+	var version string
+	vk := c.getVersionKey()
+	version, err := redis.String(conn.Do("GET", vk))
+	if err == redis.ErrNil {
+		version = ""
+	} else {
+		return version, err
+	}
+	return version, nil
+}
+
+//Flush Delete all data in cache.
+//Return any error if raised
 func (c *Cache) Flush() error {
-	return cache.ErrFeatureNotSupported
+	conn := c.Pool.Get()
+	defer conn.Close()
+	vk := c.getVersionKey()
+	version, err := c.getVersionFromConn(conn)
+	nv, err := cache.NewRandMaskedBytes(tokenMask, tokenLength, []byte(version))
+	if err != nil {
+		return err
+	}
+	vsk := c.getUsedVersionsKey()
+	result, err := redis.Int64(conn.Do("EVAL", flushLua, 3, vk, vsk, string(nv)))
+	if err != nil {
+		return err
+	}
+	if result == 0 {
+		return c.Flush()
+	}
+	return nil
+}
+func (c *Cache) gc() error {
+	var err error
+	conn := c.Pool.Get()
+	defer conn.Close()
+	vsk := c.getUsedVersionsKey()
+	_, err = conn.Do("EVAL", gcLua, 4, vsk, c.name, c.Separtor, c.gcLimit)
+	return err
 }
 
 //Close Close cache.
@@ -139,6 +206,12 @@ func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
 	}
 	return c.UpdateBytesValue(key, bytes, ttl)
 }
+func (c *Cache) setVersion(newVersion string) {
+	c.versionLock.Lock()
+	c.version = newVersion
+	c.versionLock.Unlock()
+
+}
 
 //SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return any error raised.
@@ -172,12 +245,21 @@ func (c *Cache) DelCounter(key string) error {
 //Return int data value and any error raised.
 func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
 	var err error
+	var version string
 	var v int64
 	conn := c.Pool.Get()
 	defer conn.Close()
 	k := c.getKey(key)
-
-	v, err = redis.Int64(conn.Do("INCRBY", k, increment))
+	_, err = conn.Do("MULTI")
+	if err != nil {
+		return v, err
+	}
+	vk := c.getVersionKey()
+	_, err = conn.Do("GET", vk)
+	if err != nil {
+		return 0, err
+	}
+	_, err = conn.Do("INCRBY", k, increment)
 	if err != nil {
 		return v, err
 	}
@@ -189,14 +271,42 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 	if err != nil {
 		return v, err
 	}
-
+	values, err := redis.Values(conn.Do("EXEC"))
+	if err != nil {
+		return v, err
+	}
+	values, err = redis.Scan(values, &version)
+	if err == redis.ErrNil {
+		version = ""
+	} else if err != nil {
+		return 0, err
+	}
+	if version != c.version {
+		c.version = version
+		_, err = conn.Do("DEL", k)
+		if err != nil {
+			return 0, err
+		}
+		return c.IncrCounter(key, increment, ttl)
+	}
+	_, err = redis.Scan(values, &v)
 	return v, err
 }
 func (c *Cache) doSet(key string, bytes []byte, ttl time.Duration, mode int) error {
 	var err error
+	var version string
 	conn := c.Pool.Get()
 	defer conn.Close()
 	k := c.getKey(key)
+	_, err = conn.Do("MULTI")
+	if err != nil {
+		return err
+	}
+	vk := c.getVersionKey()
+	_, err = conn.Do("GET", vk)
+	if err != nil {
+		return err
+	}
 	if ttl < 0 {
 		if mode == modeUpdate {
 			_, err = conn.Do("SET", k, bytes, "XX")
@@ -212,7 +322,28 @@ func (c *Cache) doSet(key string, bytes []byte, ttl time.Duration, mode int) err
 
 		}
 	}
-	return err
+	if err != nil {
+		return err
+	}
+	values, err := redis.Values(conn.Do("EXEC"))
+	if err != nil {
+		return err
+	}
+	_, err = redis.Scan(values, &version)
+	if err == redis.ErrNil {
+		version = ""
+	} else if err != nil {
+		return err
+	}
+	if version != c.version {
+		c.version = version
+		_, err = conn.Do("DEL", k)
+		if err != nil {
+			return err
+		}
+		return c.SetBytesValue(key, bytes, ttl)
+	}
+	return nil
 }
 
 //SetBytesValue Set bytes data to cache by given key.
@@ -241,25 +372,40 @@ func (c *Cache) Get(key string, v interface{}) error {
 //GetBytesValue Get bytes data from cache by given key.
 //Return data bytes and any error raised.
 func (c *Cache) GetBytesValue(key string) ([]byte, error) {
-	var bs []byte
+	var bytes []byte
+	var version string
 	conn := c.Pool.Get()
 	defer conn.Close()
 	k := c.getKey(key)
-	bs, err := redis.Bytes((conn.Do("GET", k)))
+	v := c.getVersionKey()
+	values, err := redis.Values((conn.Do("MGET", v, k)))
+	b, err := redis.Scan(values, &version)
 	if err == redis.ErrNil {
-		return nil, cache.ErrNotFound
+		version = ""
+	} else {
+		if err != nil {
+			return bytes, err
+		}
 	}
-	if err != nil {
-		return nil, err
+	c.versionLock.Lock()
+	if version != c.version {
+		c.version = version
+		c.versionLock.Unlock()
+		return c.GetBytesValue(key)
 	}
-	if bs == nil {
-		return nil, cache.ErrNotFound
+	c.versionLock.Unlock()
+	_, err = redis.Scan(b, &bytes)
+	if err == redis.ErrNil || bytes == nil {
+		return bytes, cache.ErrNotFound
+	} else if err != nil {
+		return bytes, nil
 	}
-	return bs, err
+	return bytes, err
 }
 
 //SetGCErrHandler Set callback to handler error raised when gc.
 func (c *Cache) SetGCErrHandler(f func(err error)) {
+	c.gcErrHandler = f
 	return
 }
 
@@ -306,6 +452,23 @@ func (_ *Cache) New(config json.RawMessage) (cache.Driver, error) {
 		gcLimit = defaultGcLimit
 	}
 	cache.gcLimit = gcLimit
+	go func() {
+		for {
+			select {
+			case <-cache.ticker.C:
+				err := cache.gc()
+				if err != nil {
+					if cache.gcErrHandler != nil {
+						cache.gcErrHandler(err)
+					}
+				}
+			case <-cache.quit:
+				cache.ticker.Stop()
+				return
+			}
+		}
+
+	}()
 	err = cache.start()
 	if err != nil {
 		return &cache, err
@@ -313,5 +476,5 @@ func (_ *Cache) New(config json.RawMessage) (cache.Driver, error) {
 	return &cache, nil
 }
 func init() {
-	cache.Register("rediscache", &Cache{})
+	cache.Register("redisluacache", &Cache{})
 }

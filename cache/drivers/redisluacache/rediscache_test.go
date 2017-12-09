@@ -1,4 +1,4 @@
-package rediscache
+package redisluacache
 
 import (
 	"testing"
@@ -12,7 +12,11 @@ import (
 
 func newTestCache(ttl int64) *cache.Cache {
 	c := cache.New()
-	err := c.Open("rediscache", json.RawMessage(testConfig), ttl)
+	err := c.Open("redisluacache", json.RawMessage(testConfig), ttl)
+	if err != nil {
+		panic(err)
+	}
+	err = c.Flush()
 	if err != nil {
 		panic(err)
 	}
@@ -102,11 +106,11 @@ func TestCloseAndFlush(t *testing.T) {
 		t.Errorf("Cache get result error %s", resultDataModel)
 	}
 	err = c.Flush()
-	if err != cache.ErrFeatureNotSupported {
+	if err != nil {
 		t.Fatal(err)
 	}
 	err = c.Get(testKey, &resultDataModel)
-	if err == cache.ErrNotFound {
+	if err != cache.ErrNotFound {
 		t.Fatal(err)
 	}
 

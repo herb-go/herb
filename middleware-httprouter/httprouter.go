@@ -10,9 +10,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type keyType string
+type Contextkey string
 
-const ContextParamsKey = keyType("httprouterParams")
+const ContextParamsKey = Contextkey("httprouterParams")
 
 type Router struct {
 	router *httprouter.Router
