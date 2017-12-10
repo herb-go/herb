@@ -79,3 +79,11 @@ func (f *Field) Logout(r *http.Request) error {
 	s.SetToken("")
 	return nil
 }
+
+func (f *Field) CookieMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return f.Store.CookieMiddleware()
+}
+
+func (f *Field) HeaderMiddleware(Name string) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return f.Store.HeaderMiddleware(Name)
+}

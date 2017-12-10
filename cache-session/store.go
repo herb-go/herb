@@ -326,7 +326,7 @@ func (s *Store) ExpiredAt(r *http.Request) (ExpiredAt int64, err error) {
 	return ts.ExpiredAt, nil
 }
 
-func (s *Store) GetField(name string) *Field {
+func (s *Store) Field(name string) *Field {
 	return &Field{Name: name, Store: s}
 }
 

@@ -53,7 +53,7 @@ func TestField(t *testing.T) {
 	testOwner := "testowner"
 	testHeaderName := "token"
 
-	field := s.GetField(testKey)
+	field := s.Field(testKey)
 	token, err := s.GenerateToken(testOwner)
 	if err != nil {
 		panic(err)
