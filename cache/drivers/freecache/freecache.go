@@ -30,6 +30,8 @@ func (c *Cache) SetGCErrHandler(f func(err error)) {
 //SetBytesValue Set bytes data to cache by given key.
 //Return any error raised.
 func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	err := c.freecache.Set([]byte(key), bytes, int(ttl/time.Second))
 	if err == freecache.ErrLargeEntry {
 		return cache.ErrEntryTooLarge
@@ -166,6 +168,34 @@ func (c *Cache) GetCounter(key string) (int64, error) {
 func (c *Cache) DelCounter(key string) error {
 	_ = c.freecache.Del([]byte(key))
 	return nil
+}
+
+func (c *Cache) Expire(key string, ttl time.Duration) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	b, err := c.freecache.Get([]byte(key))
+	if err != nil {
+		return err
+	}
+	err = c.freecache.Set([]byte(key), b, int(ttl/time.Second))
+	if err == freecache.ErrLargeEntry {
+		return cache.ErrEntryTooLarge
+	}
+	return err
+}
+
+func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	b, err := c.freecache.Get([]byte(key))
+	if err != nil {
+		return err
+	}
+	err = c.freecache.Set([]byte(key), b, int(ttl/time.Second))
+	if err == freecache.ErrLargeEntry {
+		return cache.ErrEntryTooLarge
+	}
+	return err
 }
 
 //SearchByPrefix Search All key start with given prefix.

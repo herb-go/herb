@@ -317,6 +317,10 @@ func TestTTL(t *testing.T) {
 	testKeyTTLRefresh := "refresh"
 	testKeyTTLRefreshBytes := "refreshbytes"
 	testKeyTTLRefreshCounter := "refreshcounter"
+	testKeyTTLExpire := "expire"
+	testKeyTTLExpireBytes := "expirebytes"
+	testKeyTTLExpireCounter := "expirecounter"
+
 	testDataModel := "12345"
 	testDataBytes := []byte("12345byte")
 	testDataInt := int64(99999)
@@ -369,10 +373,25 @@ func TestTTL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = c.Set(testKeyTTLExpire, testDataModel, 3*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.SetBytesValue(testKeyTTLExpireBytes, testDataBytes, 3*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.SetCounter(testKeyTTLExpireCounter, testDataInt, 3*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	err = c.Get(testKeyTTLForver, &resultModelData)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	_, err = c.GetBytesValue(testKeyTTLForverBytes)
 	if err != nil {
 		t.Fatal(err)
@@ -414,6 +433,18 @@ func TestTTL(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err = c.GetCounter(testKeyTTLRefreshCounter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Get(testKeyTTLExpire, &resultModelData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetBytesValue(testKeyTTLExpireBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetCounter(testKeyTTLExpireCounter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -479,6 +510,20 @@ func TestTTL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = c.Expire(testKeyTTLExpire, 3*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Expire(testKeyTTLExpireBytes, 3*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.ExpireCounter(testKeyTTLExpireCounter, 3*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	time.Sleep(2000 * time.Millisecond)
 	err = c.Get(testKeyTTLForver, &resultModelData)
 	if err != nil {
@@ -525,6 +570,19 @@ func TestTTL(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err = c.GetCounter(testKeyTTLRefreshCounter)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = c.Get(testKeyTTLExpire, &resultModelData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetBytesValue(testKeyTTLExpireBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetCounter(testKeyTTLExpireCounter)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -4,6 +4,7 @@
 package session
 
 import (
+	"net/url"
 	"time"
 
 	"github.com/herb-go/herb/cache"
@@ -23,7 +24,7 @@ func defaultTokenGenerater(s *CacheStore, prefix string) (token string, err erro
 		return
 	}
 
-	token = prefix + "-" + string(t)
+	token = url.PathEscape(prefix) + "-" + string(t)
 	return
 }
 

@@ -258,6 +258,32 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	return bs, err
 }
 
+func (c *Cache) Expire(key string, ttl time.Duration) error {
+	var err error
+	conn := c.Pool.Get()
+	defer conn.Close()
+	k := c.getKey(key)
+	if ttl < 0 {
+		_, err = conn.Do("PERSIST", k)
+	} else {
+		_, err = conn.Do("EXPIRE", k, int64(ttl/time.Second))
+	}
+	return err
+}
+
+func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
+	var err error
+	conn := c.Pool.Get()
+	defer conn.Close()
+	k := c.getKey(key)
+	if ttl < 0 {
+		_, err = conn.Do("PERSIST", k)
+	} else {
+		_, err = conn.Do("EXPIRE", k, int64(ttl/time.Second))
+	}
+	return err
+}
+
 //SetGCErrHandler Set callback to handler error raised when gc.
 func (c *Cache) SetGCErrHandler(f func(err error)) {
 	return

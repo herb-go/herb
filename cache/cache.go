@@ -61,8 +61,10 @@ type Driver interface {
 	GetCounter(key string) (int64, error)                                      //Get int val from cache by given key.Count cache and data cache are in two independent namespace.
 	DelCounter(key string) error                                               //Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
 	SetGCErrHandler(f func(err error))                                         //Set callback to handler error raised when gc.
-	Close() error                                                              //Close cache.
-	Flush() error                                                              //Delete all data in cache.
+	Expire(key string, ttl time.Duration) error
+	ExpireCounter(key string, ttl time.Duration) error
+	Close() error //Close cache.
+	Flush() error //Delete all data in cache.
 }
 
 var (
@@ -238,6 +240,14 @@ func (c *Cache) Del(key string) error {
 	}
 	return c.Driver.Del(c.getKey(key))
 }
+
+func (c *Cache) Expire(key string, ttl time.Duration) error {
+	if key == "" {
+		return ErrKeyUnavailable
+	}
+	return c.Driver.Expire(c.getKey(key), ttl)
+}
+
 func (c *Cache) getIntKey(key string) string {
 	return intKeyPrefix + key
 }
@@ -289,7 +299,22 @@ func (c *Cache) DelCounter(key string) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	return c.Driver.DelCounter(c.getIntKey(key))
+	err := c.Driver.DelCounter(c.getIntKey(key))
+	if err == ErrNotFound {
+		return nil
+	}
+	return err
+}
+
+func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
+	if key == "" {
+		return ErrKeyUnavailable
+	}
+	err := c.Driver.Expire(c.getIntKey(key), ttl)
+	if err == ErrNotFound {
+		return nil
+	}
+	return err
 }
 
 //Load Get data model from cache by given key.If data not found,call closure to get current data value and save to cache.

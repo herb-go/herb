@@ -9,6 +9,8 @@ type Collection struct {
 	TTL    time.Duration
 }
 
+var DefaultCollectionExpireDelay = int64(10 * (time.Second / time.Nanosecond))
+
 func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collection {
 	return &Collection{
 		Cache:  cache,
@@ -18,13 +20,17 @@ func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collectio
 }
 func (c *Collection) GetCacheKey(key string) (string, error) {
 	var ts string
-	data, err := c.Cache.GetBytesValue(c.Prefix)
+	var data int64
+	err := c.Cache.Get(c.Prefix, data)
+	now := time.Now().UnixNano()
 	if err == nil {
-		ts = string(data)
+		ts = strconv.FormatInt(data, 10)
+		if (now - data) > DefaultCollectionExpireDelay {
+			c.Cache.Expire(c.Prefix, c.TTL)
+		}
 	} else if err == ErrNotFound {
 		err = nil
-		ts = strconv.FormatInt(time.Now().UnixNano(), 10)
-		err2 := c.Cache.SetBytesValue(c.Prefix, []byte(ts), c.TTL)
+		err2 := c.Cache.Set(c.Prefix, now, c.TTL)
 		if err2 == ErrNotCacheable {
 			err2 = nil
 		}
@@ -142,7 +148,20 @@ func (c *Collection) Flush() error {
 func (c *Collection) DefualtTTL() time.Duration {
 	return c.Cache.DefualtTTL()
 }
-
+func (n *Collection) Expire(key string, ttl time.Duration) error {
+	k, err := n.GetCacheKey(key)
+	if err != nil {
+		return err
+	}
+	return n.Cache.Expire(k, ttl)
+}
+func (n *Collection) ExpireCounter(key string, ttl time.Duration) error {
+	k, err := n.GetCacheKey(key)
+	if err != nil {
+		return err
+	}
+	return n.Cache.ExpireCounter(k, ttl)
+}
 func (c *Collection) Collection(prefix string) *Collection {
 	return NewCollection(c, prefix, c.TTL)
 }

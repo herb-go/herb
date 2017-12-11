@@ -105,6 +105,14 @@ func (c *DummyCache) GetCounter(key string) (int64, error) {
 func (c *DummyCache) DelCounter(key string) error {
 	return nil
 }
+func (c *DummyCache) Expire(key string, ttl time.Duration) error {
+	return nil
+}
+
+func (c *DummyCache) ExpireCounter(key string, ttl time.Duration) error {
+	return nil
+}
+
 func init() {
 	Register("dummycache", &DummyCache{})
 }

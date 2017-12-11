@@ -443,6 +443,78 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	return v, err
 }
 
+func (c *Cache) Expire(key string, ttl time.Duration) error {
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	version, err := c.getVersionTx(tx)
+	if err != nil {
+		return err
+	}
+	var expired int64
+	if ttl < 0 {
+		expired = -1
+	} else {
+		expired = time.Now().Add(ttl).Unix()
+	}
+	stmt, err := tx.Prepare(`update ` + c.table + ` set
+	 expired=?
+	 Where cache_name=? 
+	 and version=?
+	 and cache_key=?
+	 `)
+
+	defer stmt.Close()
+	_, err = stmt.Exec(
+		expired,
+		c.name,
+		version,
+		key)
+	if err != nil {
+		return err
+	}
+	tx.Commit()
+	return err
+}
+
+func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	version, err := c.getVersionTx(tx)
+	if err != nil {
+		return err
+	}
+	var expired int64
+	if ttl < 0 {
+		expired = -1
+	} else {
+		expired = time.Now().Add(ttl).Unix()
+	}
+	stmt, err := tx.Prepare(`update ` + c.table + ` set
+	 expired=?
+	 Where cache_name=? 
+	 and version=?
+	 and cache_key=?
+	 `)
+
+	defer stmt.Close()
+	_, err = stmt.Exec(
+		expired,
+		c.name,
+		version,
+		key)
+	if err != nil {
+		return err
+	}
+	tx.Commit()
+	return err
+}
+
 //Close Close cache.
 //Return any error if raised
 func (c *Cache) Close() error {

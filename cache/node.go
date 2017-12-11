@@ -73,6 +73,21 @@ func (n *Node) DelCounter(key string) error {
 	return n.Cache.DelCounter(k)
 }
 
+func (n *Node) Expire(key string, ttl time.Duration) error {
+	k, err := n.GetCacheKey(key)
+	if err != nil {
+		return err
+	}
+	return n.Cache.Expire(k, ttl)
+}
+func (n *Node) ExpireCounter(key string, ttl time.Duration) error {
+	k, err := n.GetCacheKey(key)
+	if err != nil {
+		return err
+	}
+	return n.Cache.ExpireCounter(k, ttl)
+}
+
 func (n *Node) Collection(prefix string) *Collection {
 	return NewCollection(n, prefix, n.Cache.DefualtTTL())
 }

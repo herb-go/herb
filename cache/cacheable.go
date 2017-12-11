@@ -12,6 +12,8 @@ type Cacheable interface {
 	SetCounter(key string, v int64, ttl time.Duration) error
 	GetCounter(key string) (int64, error)
 	DelCounter(key string) error
+	Expire(key string, ttl time.Duration) error
+	ExpireCounter(key string, ttl time.Duration) error
 	Load(key string, v interface{}, ttl time.Duration, closure func(v interface{}) error) error
 	Flush() error
 	DefualtTTL() time.Duration
