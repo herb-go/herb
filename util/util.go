@@ -131,14 +131,15 @@ func Quit() {
 	}()
 	close(QuitChan)
 }
-func RecoverMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func RecoverMiddleware(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 	defer func() {
 		if r := recover(); r != nil {
 			err := r.(error)
+			log.Printf("%s : %s - ", req.Method, req.RequestURI)
 			log.Println(err)
 			debug.PrintStack()
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}()
-	next(w, r)
+	next(w, req)
 }
