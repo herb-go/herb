@@ -43,6 +43,9 @@ func (lr *LoginRedirector) RedirectAction(w http.ResponseWriter, r *http.Request
 }
 func (lr *LoginRedirector) ClearSource(w http.ResponseWriter, r *http.Request) (string, error) {
 	cookie, err := r.Cookie(lr.Cookie.Name)
+	if err == http.ErrNoCookie {
+		return "", nil
+	}
 	if err != nil || cookie == nil {
 		return "", err
 	}
