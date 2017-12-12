@@ -310,7 +310,7 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	err := c.Driver.Expire(c.getIntKey(key), ttl)
+	err := c.Driver.ExpireCounter(c.getIntKey(key), ttl)
 	if err == ErrNotFound {
 		return nil
 	}

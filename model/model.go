@@ -33,13 +33,12 @@ func MustValidate(m Model) bool {
 	return !m.HasError()
 }
 func MustValidateJSONPost(r *http.Request, m HttpModel) bool {
-	var params []byte
 	var body, err = ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
 	if len(body) > 0 {
-		err = json.Unmarshal(body, &params)
+		err = json.Unmarshal(body, &m)
 		if err != nil {
 			m.SetBadRequest(true)
 			m.AddErrorf("", MsgBadRequest)
