@@ -13,8 +13,6 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-var defaultGCPeriod = 30 * time.Second
-var defaultGcLimit = int64(100)
 var defaultMaxIdle = 200
 var defaultMaxAlive = 200
 var defaultIdleTimeout = 60 * time.Second
@@ -22,8 +20,6 @@ var defualtConnectTimeout = 10 * time.Second
 var defualtReadTimeout = 2 * time.Second
 var defualtWriteTimeout = 2 * time.Second
 var defaultSepartor = string(0)
-var tokenMask = cache.TokenMask
-var tokenLength = 64
 
 const modeSet = 0
 const modeUpdate = 1
@@ -322,16 +318,6 @@ func (_ *Cache) New(config json.RawMessage) (cache.Driver, error) {
 	}
 	cache.Pool.Wait = true
 	cache.quit = make(chan int)
-	period := time.Duration(c.GCPeriod)
-	if period == 0 {
-		period = defaultGCPeriod
-	}
-	cache.ticker = time.NewTicker(period)
-	gcLimit := c.GCLimit
-	if gcLimit == 0 {
-		gcLimit = defaultGcLimit
-	}
-	cache.gcLimit = gcLimit
 	err = cache.start()
 	if err != nil {
 		return &cache, err

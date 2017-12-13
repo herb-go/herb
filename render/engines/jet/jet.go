@@ -59,7 +59,7 @@ var Engine = New()
 func New() *JetEngine {
 	var e = &JetEngine{}
 	e.Set = jet.NewHTMLSetLoader(newLoader(e))
-	e.Set.SetDevelopmentMode(true)
+	// e.Set.SetDevelopmentMode(true)
 	return e
 }
 

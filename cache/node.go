@@ -92,7 +92,7 @@ func (n *Node) Collection(prefix string) *Collection {
 	return NewCollection(n, prefix, n.Cache.DefualtTTL())
 }
 func (n *Node) Node(prefix string) *Node {
-	return NewNode(n, prefix)
+	return NewNode(n.Cache, n.MustGetCacheKey(prefix))
 }
 func (n *Node) Field(fieldname string) *Field {
 	return &Field{

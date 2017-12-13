@@ -245,6 +245,9 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
+	if ttl == DefualtTTL {
+		ttl = c.TTL
+	}
 	return c.Driver.Expire(c.getKey(key), ttl)
 }
 

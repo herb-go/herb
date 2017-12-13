@@ -9,8 +9,7 @@ type Collection struct {
 	TTL    time.Duration
 }
 
-var collectionExpirePrefix = "E"
-var collectionExpireData = []byte("E")
+var CollectionTTLMultiple = 10
 
 func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collection {
 	return &Collection{
@@ -23,27 +22,13 @@ func (c *Collection) GetCacheKey(key string) (string, error) {
 	var ts string
 	var data int64
 	err := c.Cache.Get(c.Prefix, &ts)
-	if err == nil {
-		if !c.persist() {
-			_, err := c.Cache.GetBytesValue(c.Prefix + keyPrefix + collectionExpirePrefix)
-			if err == ErrNotFound {
-				err = c.Cache.SetBytesValue(c.Prefix+keyPrefix+collectionExpirePrefix, collectionExpireData, c.TTL)
-				if err != nil {
-					return "", err
-				}
-				err = c.Cache.Expire(c.Prefix, c.TTL)
-			}
-			if err != nil {
-				return "", err
-			}
-		}
-	} else if err == ErrNotFound {
+	if err == ErrNotFound {
 		data = time.Now().UnixNano()
 		ts = strconv.FormatInt(data, 10)
 		err = nil
 		ttl := c.TTL
 		if !c.persist() {
-			ttl = ttl * 2
+			ttl = ttl * time.Duration(CollectionTTLMultiple)
 		}
 		err2 := c.Cache.Set(c.Prefix, ts, ttl)
 		if err2 == ErrNotCacheable {
@@ -52,10 +37,11 @@ func (c *Collection) GetCacheKey(key string) (string, error) {
 		if err2 != nil {
 			return "", err2
 		}
-	} else {
+	}
+	if err != nil {
 		return "", err
 	}
-	return c.Prefix + keyPrefix + keyPrefix + ts + keyPrefix + key, nil
+	return c.Prefix + keyPrefix + ts + keyPrefix + key, nil
 }
 func (c *Collection) persist() bool {
 	return c.TTL < 0 || (c.TTL == 0 && c.Cache.DefualtTTL() < 0)
