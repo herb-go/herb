@@ -84,9 +84,7 @@ func (c *Cache) start() error {
 	return err
 }
 func (c *Cache) getKey(key string) string {
-	c.versionLock.Lock()
-	defer c.versionLock.Unlock()
-	return c.name + c.Separtor + c.Separtor + key
+	return c.name + c.Separtor + key
 }
 
 //SearchByPrefix Search All key start with given prefix.
