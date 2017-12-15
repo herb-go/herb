@@ -41,7 +41,7 @@ func (c *Collection) GetCacheKey(key string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return c.Prefix + keyPrefix + ts + keyPrefix + key, nil
+	return c.Prefix + KeyPrefix + ts + KeyPrefix + key, nil
 }
 func (c *Collection) persist() bool {
 	return c.TTL < 0 || (c.TTL == 0 && c.Cache.DefualtTTL() < 0)

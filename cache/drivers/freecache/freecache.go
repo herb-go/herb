@@ -174,6 +174,9 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	b, err := c.freecache.Get([]byte(key))
+	if err == freecache.ErrNotFound {
+		return cache.ErrNotFound
+	}
 	if err != nil {
 		return err
 	}
@@ -188,6 +191,9 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	b, err := c.freecache.Get([]byte(key))
+	if err == freecache.ErrNotFound {
+		return cache.ErrNotFound
+	}
 	if err != nil {
 		return err
 	}

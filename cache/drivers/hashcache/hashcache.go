@@ -1,0 +1,288 @@
+package hashcache
+
+import (
+	"encoding/json"
+	"errors"
+	"strconv"
+	"time"
+
+	"github.com/herb-go/herb/cache"
+)
+
+const hashTypeKey = byte(1)
+const hashTypeValue = byte(2)
+const hashMinLength = 256
+
+var ErrHashFormatWrong = errors.New("error hash format wrong")
+
+//Cache The redis cache Driver.
+type Cache struct {
+	Local  *cache.Cache
+	Remote *cache.Cache
+}
+
+//Config Cache driver config.
+type Config struct {
+	Local  cache.Config
+	Remote cache.Config
+}
+
+//SearchByPrefix Search All key start with given prefix.
+//Return All matched key and any error raised.
+func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
+	return nil, cache.ErrFeatureNotSupported
+}
+
+//Flush Flush not supported.
+func (c *Cache) Flush() error {
+	var finalErr error
+	var err error
+	err = c.Remote.Flush()
+	if err != nil {
+		finalErr = err
+	}
+	err = c.Local.Flush()
+	if err != nil {
+		finalErr = err
+	}
+	return finalErr
+}
+
+//Close Close cache.
+//Return any error if raised
+func (c *Cache) Close() error {
+	var finalErr error
+	var err error
+	err = c.Remote.Flush()
+	if err != nil {
+		finalErr = err
+	}
+	err = c.Local.Flush()
+	if err != nil {
+		finalErr = err
+	}
+	return finalErr
+}
+
+//Get Get data model from cache by given key.
+//Parameter v should be pointer to empty data model which data filled in.
+//Return any error raised.
+func (c *Cache) Get(key string, v interface{}) error {
+	bytes, err := c.GetBytesValue(key)
+	if err != nil {
+		return err
+	}
+	return cache.UnmarshalMsgpack(bytes, &v)
+}
+
+//Set Set data model to cache by given key.
+//Return any error raised.
+func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
+	bytes, err := cache.MarshalMsgpack(&v)
+	if err != nil {
+		return err
+	}
+	return c.SetBytesValue(key, bytes, ttl)
+}
+
+//Update Update data model to cache by given key only if the cache exist.
+//Return any error raised.
+func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
+	bytes, err := cache.MarshalMsgpack(&v)
+	if err != nil {
+		return err
+	}
+	return c.UpdateBytesValue(key, bytes, ttl)
+}
+
+//SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
+//Return any error raised.
+func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
+	return c.Remote.SetCounter(key, v, ttl)
+}
+
+//GetCounter Get int val from cache by given key.Count cache and data cache are in two independent namespace.
+//Return int data value and any error raised.
+func (c *Cache) GetCounter(key string) (int64, error) {
+	return c.Remote.GetCounter(key)
+}
+
+//DelCounter Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
+//Return any error raised.
+func (c *Cache) DelCounter(key string) error {
+	return c.Remote.DelCounter(key)
+}
+
+//IncrCounter Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
+//Return int data value and any error raised.
+func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
+	return c.Remote.IncrCounter(key, increment, ttl)
+}
+
+func (c *Cache) getHash(key string) (byte, []byte, error) {
+	b, err := c.Remote.GetBytesValue(key + cache.KeyPrefix)
+	if err != nil {
+		return 0, nil, err
+	}
+	if len(b) < 2 || !(b[0] == hashTypeKey || b[0] == hashTypeValue) {
+		return 0, nil, ErrHashFormatWrong
+	}
+	return b[0], b[1:], nil
+}
+
+//SetBytesValue Set bytes data to cache by given key.
+//Return any error raised.
+func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	var err error
+	if len(bytes) < hashMinLength {
+		b := make([]byte, len(bytes)+1)
+		b[0] = hashTypeValue
+		copy(b[1:], bytes)
+		return c.Remote.SetBytesValue(key+cache.KeyPrefix, b, ttl)
+	}
+	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
+	b := make([]byte, len(ts)+1)
+	b[0] = hashTypeKey
+	copy(b[1:], ts)
+	err = c.Remote.SetBytesValue(key+cache.KeyPrefix, b, ttl)
+	if err != nil {
+		return err
+	}
+	var k = key + cache.KeyPrefix + string(ts)
+	err = c.Remote.SetBytesValue(k, bytes, ttl)
+	if err != nil {
+		return err
+	}
+	return c.Local.SetBytesValue(k, bytes, ttl)
+}
+
+//UpdateBytesValue Update bytes data to cache by given key only if the cache exist.
+//Return any error raised.
+func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
+	var err error
+	if len(bytes) < hashMinLength {
+		b := make([]byte, len(bytes)+1)
+		b[0] = hashTypeValue
+		copy(b[1:], bytes)
+		return c.Remote.UpdateBytesValue(key+cache.KeyPrefix, b, ttl)
+	}
+	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
+	b := make([]byte, len(ts)+1)
+	b[0] = hashTypeKey
+	copy(b[1:], ts)
+	err = c.Remote.UpdateBytesValue(key+cache.KeyPrefix, b, ttl)
+
+	if err != nil {
+		return err
+	}
+	var k = key + cache.KeyPrefix + string(ts)
+	err = c.Remote.SetBytesValue(k, bytes, ttl)
+	if err != nil {
+		return err
+	}
+	return c.Local.SetBytesValue(k, bytes, ttl)
+}
+
+//Del Delete data in cache by given key.
+//Return any error raised.
+func (c *Cache) Del(key string) error {
+	var finalErr error
+	t, b, err := c.getHash(key)
+	if err != nil {
+		return err
+	}
+	err = c.Remote.Del(key + cache.KeyPrefix)
+	if err != nil {
+		return err
+	}
+	if t == hashTypeValue {
+		return nil
+	}
+	k := string(b)
+	finalErr = c.Remote.Del(k)
+	err = c.Local.Del(k)
+	if err != nil {
+		finalErr = err
+	}
+	return finalErr
+}
+
+//GetBytesValue Get bytes data from cache by given key.
+//Return data bytes and any error raised.
+func (c *Cache) GetBytesValue(key string) ([]byte, error) {
+	t, b, err := c.getHash(key)
+	if err != nil {
+		return b, err
+	}
+	if t == hashTypeValue {
+		return b, nil
+	}
+	hashKey := key + cache.KeyPrefix + string(b)
+	b, err = c.Local.GetBytesValue(hashKey)
+	if err == cache.ErrNotFound {
+		b, err = c.Remote.GetBytesValue(hashKey)
+		if err != nil {
+			return b, err
+		}
+		err = c.Local.SetBytesValue(hashKey, b, 0)
+	}
+	return b, err
+}
+
+func (c *Cache) Expire(key string, ttl time.Duration) error {
+	var err error
+	err = c.Remote.Expire(key+cache.KeyPrefix, ttl)
+	if err != nil {
+		return err
+	}
+	t, b, err := c.getHash(key)
+	if err == cache.ErrNotFound {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if t == hashTypeValue {
+		return nil
+	}
+	hashKey := key + cache.KeyPrefix + string(b)
+	return c.Remote.Expire(hashKey, ttl)
+}
+
+func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
+	return c.Remote.ExpireCounter(key, ttl)
+}
+
+//SetGCErrHandler Set callback to handler error raised when gc.
+func (c *Cache) SetGCErrHandler(f func(err error)) {
+	c.Local.SetGCErrHandler(f)
+	c.Remote.SetGCErrHandler(f)
+	return
+}
+
+//New Create new cache driver with given json bytes.
+//Return new driver and any error raised.
+func (_ *Cache) New(bytes json.RawMessage) (cache.Driver, error) {
+	config := Config{}
+	err := json.Unmarshal(bytes, &config)
+	if err != nil {
+		return nil, err
+	}
+	cc := Cache{}
+	localcache := cache.New()
+	err = localcache.OpenConfig(config.Local)
+	if err != nil {
+		return &cc, err
+	}
+	cc.Local = localcache
+	remotecache := cache.New()
+	err = remotecache.OpenConfig(config.Remote)
+	if err != nil {
+		return &cc, err
+	}
+	cc.Remote = remotecache
+	return &cc, nil
+}
+func init() {
+	cache.Register("hashcache", &Cache{})
+}

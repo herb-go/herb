@@ -16,7 +16,7 @@ func NewNode(c Cacheable, prefix string) *Node {
 	}
 }
 func (n *Node) GetCacheKey(key string) (string, error) {
-	return n.Prefix + keyPrefix + key, nil
+	return n.Prefix + KeyPrefix + key, nil
 }
 func (n *Node) MustGetCacheKey(key string) string {
 	k, _ := n.GetCacheKey(key)

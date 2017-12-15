@@ -34,7 +34,7 @@ var DefualtTTL = time.Duration(0)
 var TTLForever = time.Duration(-1)
 
 var (
-	keyPrefix    = string([]byte{0})
+	KeyPrefix    = string([]byte{0})
 	intKeyPrefix = string([]byte{69, 0})
 )
 
@@ -149,7 +149,7 @@ func (c *Cache) OpenJSON(data []byte) error {
 }
 
 func (c *Cache) getKey(key string) string {
-	return keyPrefix + key
+	return KeyPrefix + key
 }
 
 //Set Set data model to cache by given key.
@@ -248,7 +248,11 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 	if ttl == DefualtTTL {
 		ttl = c.TTL
 	}
-	return c.Driver.Expire(c.getKey(key), ttl)
+	err := c.Driver.Expire(c.getKey(key), ttl)
+	if err == ErrNotFound {
+		err = nil
+	}
+	return err
 }
 
 func (c *Cache) getIntKey(key string) string {

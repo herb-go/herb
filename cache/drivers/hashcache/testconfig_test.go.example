@@ -1,0 +1,15 @@
+//please rename this file to testconfig_test.go
+package hashcache
+
+var testConfig = `{
+            "Local":{
+                "Driver":"freecache",
+	            "Config":{"Size": 10000000},
+	            "TTL":1200
+	        },
+            "Remote":{
+                "Driver":"freecache",
+	            "Config":{"Size": 10000000},
+	            "TTL":1200
+            }
+        }`

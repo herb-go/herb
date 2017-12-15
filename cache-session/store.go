@@ -340,7 +340,7 @@ func (s *Store) SaveRequestSession(r *http.Request) error {
 	return err
 }
 
-//LogoutMiddleware return a middleware clear the token in request.
+//DestoryMiddleware return a middleware clear the token in request.
 func (s *Store) DestoryMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		v := s.MustGetRequestSession(r)
@@ -359,7 +359,7 @@ func (s Store) MustGetRequestSession(r *http.Request) (v *Session) {
 	return v
 }
 
-//MustRegenerateToken Regenerate the token name and data with give owner,and save to request.
+//MustRegenerateRequestToken Regenerate the token name and data with give owner,and save to request.
 //Panic if any error raised.
 func (s Store) MustRegenerateRequestToken(r *http.Request, owner string) *Session {
 	v := s.MustGetRequestSession(r)
