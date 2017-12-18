@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"runtime/debug"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -115,13 +116,20 @@ func ShutdownHTTPWithContext(Server *http.Server, ctx context.Context) {
 func Recover(args ...interface{}) {
 	if r := recover(); r != nil {
 		err := r.(error)
-		log.Println(err)
-		if len(args) > 0 {
-			for _, v := range args {
-				log.Println(v)
+		if _, ok := LoggerIgnoredErrors[err]; ok == false {
+			lines := strings.Split(string(debug.Stack()), "\n")
+			length := len(lines)
+			maxLength := LoggerMaxLength*2 + 7
+			if length > maxLength {
+				length = maxLength
 			}
+			var output = make([]string, length-6)
+			output[0] = fmt.Sprintf("Panic: %s", err.Error())
+			output[0] += "\n" + lines[0]
+			copy(output[1:], lines[7:])
+			log.Println(strings.Join(output, "\n"))
+
 		}
-		debug.PrintStack()
 	}
 
 }
@@ -133,6 +141,7 @@ func Quit() {
 	close(QuitChan)
 }
 
+var LoggerMaxLength = 5
 var LoggerIgnoredErrors = map[error]bool{
 	syscall.EPIPE: true,
 }
@@ -142,9 +151,17 @@ func RecoverMiddleware(w http.ResponseWriter, req *http.Request, next http.Handl
 		if r := recover(); r != nil {
 			err := r.(error)
 			if _, ok := LoggerIgnoredErrors[err]; ok == false {
-				log.Printf("%s : %s - ", req.Method, req.RequestURI)
-				log.Println(err)
-				debug.PrintStack()
+				lines := strings.Split(string(debug.Stack()), "\n")
+				length := len(lines)
+				maxLength := LoggerMaxLength*2 + 7
+				if length > maxLength {
+					length = maxLength
+				}
+				var output = make([]string, length-6)
+				output[0] = fmt.Sprintf("Panic: %s - http request %s \"%s\" ", err.Error(), req.Method, req.URL.String())
+				output[0] += "\n" + lines[0]
+				copy(output[1:], lines[7:])
+				log.Println(strings.Join(output, "\n"))
 			}
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
