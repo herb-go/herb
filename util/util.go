@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"runtime/debug"
+	"syscall"
 	"time"
 )
 
@@ -131,13 +132,20 @@ func Quit() {
 	}()
 	close(QuitChan)
 }
+
+var LoggerIgnoredErrors = map[error]bool{
+	syscall.EPIPE: true,
+}
+
 func RecoverMiddleware(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 	defer func() {
 		if r := recover(); r != nil {
 			err := r.(error)
-			log.Printf("%s : %s - ", req.Method, req.RequestURI)
-			log.Println(err)
-			debug.PrintStack()
+			if _, ok := LoggerIgnoredErrors[err]; ok == false {
+				log.Printf("%s : %s - ", req.Method, req.RequestURI)
+				log.Println(err)
+				debug.PrintStack()
+			}
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}()
