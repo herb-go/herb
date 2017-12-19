@@ -222,10 +222,55 @@ func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) er
 }
 
 func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
-	return map[string][]byte{}, cache.ErrFeatureNotSupported
+	var data = make(map[string][]byte, len(keys))
+	var err error
+	conn := c.Pool.Get()
+	defer conn.Close()
+	for key := range keys {
+		k := c.getKey(keys[key])
+		err := (conn.Send("GET", k))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = conn.Flush()
+	if err != nil {
+		return nil, err
+	}
+	for key := range keys {
+		bs, err := redis.Bytes((conn.Receive()))
+		if err == redis.ErrNil {
+			data[keys[key]] = nil
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		data[keys[key]] = bs
+	}
+
+	return data, nil
 }
 func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
-	return cache.ErrFeatureNotSupported
+	var err error
+	conn := c.Pool.Get()
+	defer conn.Close()
+	var ttlInSecond = int64(ttl / time.Second)
+	for key := range data {
+		k := c.getKey(key)
+		if ttl < 0 {
+			err = conn.Send("SET", k, data[key])
+		} else {
+			err = conn.Send("SET", k, data[key], "EX", ttlInSecond)
+
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return conn.Flush()
+
 }
 
 //Get Get data model from cache by given key.
