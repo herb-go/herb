@@ -24,6 +24,64 @@ func newTestCache(ttl int64) *cache.Cache {
 	return c
 }
 
+func TestMSetMGet(t *testing.T) {
+	c := newTestCache(-1)
+	var err error
+	var testkeys = []string{
+		"test1",
+		"test2",
+		"test3",
+		"test4",
+		"test5",
+	}
+	var testDataModels = map[string][]byte{
+		testkeys[0]: []byte("testModel1"),
+		testkeys[1]: []byte("testModel2"),
+		testkeys[2]: []byte("testModel3"),
+		testkeys[3]: []byte("testModel4"),
+		testkeys[4]: []byte("testModel5"),
+	}
+	var updatedModel = []byte("updatedModel")
+	var unusedKey = "unuseds"
+	err = c.SetBytesValue(testkeys[0], updatedModel, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = c.MSetBytesValue(testDataModels, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for k := range testkeys {
+		d, err := c.GetBytesValue(testkeys[k])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Compare(d, testDataModels[testkeys[k]]) != 0 {
+			t.Errorf("%s != %s", d, testDataModels[testkeys[k]])
+		}
+	}
+	_, err = c.GetBytesValue(unusedKey)
+	if err != cache.ErrNotFound {
+		t.Fatal(err)
+	}
+
+	var mixedKeys = make([]string, len(testkeys)+1)
+	mixedKeys[0] = unusedKey
+	copy(mixedKeys[1:], testkeys)
+	d, err := c.MGetBytesValue(mixedKeys...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d[unusedKey] != nil {
+		t.Errorf("%s", d[unusedKey])
+	}
+	for k := range testkeys {
+		if bytes.Compare(d[testkeys[k]], testDataModels[testkeys[k]]) != 0 {
+			t.Errorf("%s != %s", d[testkeys[k]], testDataModels[testkeys[k]])
+		}
+	}
+}
 func TestNameConflict(t *testing.T) {
 	var err error
 	defaultTTL := int64(1)

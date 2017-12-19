@@ -254,6 +254,9 @@ func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error 
 	for k := range data {
 		prefixed[c.getKey(k)] = data[k]
 	}
+	if ttl == DefualtTTL {
+		ttl = c.TTL
+	}
 	return c.Driver.MSetBytesValue(prefixed, ttl)
 }
 

@@ -412,11 +412,7 @@ func (c *Cache) Del(key string) error {
 //SetBytesValue Set bytes data to cache by given key.
 //Return any error raised.
 func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
-	b, err := json.Marshal(bytes)
-	if err != nil {
-		return err
-	}
-	return c.Set(key, b, ttl)
+	return c.Set(key, bytes, ttl)
 }
 
 //UpdateBytesValue Update bytes data to cache by given key only if the cache exist.
@@ -430,10 +426,105 @@ func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) er
 }
 
 func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
-	return map[string][]byte{}, cache.ErrFeatureNotSupported
+	var data = make(map[string][]byte, len(keys))
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	version, err := c.getVersionTx(tx)
+	if err != nil {
+		return nil, err
+	}
+	stmt, err := tx.Prepare(`Select cache_value FROM ` + c.table + ` WHERE ( expired < 0 OR expired > ?) AND cache_name =? AND cache_key = ? AND version=? `)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+	for k := range keys {
+		var value string
+		var b []byte
+		err := stmt.QueryRow(time.Now().Unix(), c.name, keys[k], version).Scan(&value)
+		if err == sql.ErrNoRows {
+			data[keys[k]] = nil
+		} else if err != nil {
+			return nil, err
+		} else {
+			err = json.Unmarshal([]byte(value), &b)
+			if err != nil {
+				return nil, err
+			}
+			data[keys[k]] = b
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
-	return cache.ErrFeatureNotSupported
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	version, err := c.getVersionTx(tx)
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare(`update ` + c.table + ` set
+		cache_value=?,
+		version=?,
+		expired=?
+		Where cache_name=? 
+		and cache_key=?
+		`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	stmt2, err := tx.Prepare(`insert into ` + c.table + ` (cache_name,cache_key,cache_value,version,expired) values (?,?,?,?,?)`)
+	if err != nil {
+		return err
+	}
+	defer stmt2.Close()
+	var expired int64
+	if ttl < 0 {
+		expired = -1
+	} else {
+		expired = time.Now().Add(ttl).Unix()
+	}
+	for k := range data {
+		val, err := json.Marshal(data[k])
+		if err != nil {
+			return err
+		}
+
+		r, err := stmt.Exec(
+			val,
+			version,
+			expired,
+			c.name,
+			k)
+		if err != nil {
+			return err
+		}
+		affected, err := r.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affected == 0 {
+
+			_, err = stmt2.Exec(c.name, k, string(val), version, expired)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
 //GetBytesValue Get bytes data from cache by given key.
@@ -445,9 +536,7 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 		return nil, err
 	}
 
-	v := []byte{}
-	err = json.Unmarshal(b, &v)
-	return v, err
+	return b, err
 }
 
 func (c *Cache) Expire(key string, ttl time.Duration) error {
