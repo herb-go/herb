@@ -65,6 +65,38 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	return bytes, err
 }
 
+func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	var result = make(map[string][]byte, len(keys))
+	for k := range keys {
+		b, err := c.GetBytesValue(keys[k])
+		if err == cache.ErrNotFound {
+			result[keys[k]] = nil
+		} else if err != nil {
+			return result, err
+		} else {
+			result[keys[k]] = b
+		}
+
+	}
+	return result, nil
+}
+func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
+	var err error
+	var ttlsecond = int(ttl / time.Second)
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	for k := range data {
+		err = c.freecache.Set([]byte(k), data[k], ttlsecond)
+		if err == freecache.ErrLargeEntry {
+			return cache.ErrEntryTooLarge
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 //Set Set data model to cache by given key.
 //Return any error raised.
 func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {

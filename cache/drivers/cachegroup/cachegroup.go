@@ -227,6 +227,38 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	return buf, nil
 }
 
+func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	emap, err := c.SubCaches[len(c.SubCaches)-1].MGetBytesValue(keys...)
+	if err != nil {
+		return nil, err
+	}
+	var data = make(map[string][]byte, len(emap))
+	for k := range emap {
+		if emap[k] != nil {
+			var e = entry(emap[k])
+			buf, _, err := e.Get()
+			if err == cache.ErrNotFound {
+				data[k] = nil
+			} else if err != nil {
+				return nil, err
+			} else {
+				data[k] = buf
+			}
+		}
+	}
+	return data, nil
+}
+func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
+
+	var emap = make(map[string][]byte, len(data))
+	for k := range data {
+		var e entry
+		e.Set(data[k], ttl)
+		emap[k] = []byte(e)
+	}
+	return c.SubCaches[len(c.SubCaches)-1].MSetBytesValue(emap, ttl)
+}
+
 //SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return any error raised.
 func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {

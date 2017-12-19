@@ -403,6 +403,13 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	return bytes, err
 }
 
+func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	return map[string][]byte{}, cache.ErrFeatureNotSupported
+}
+func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
+	return cache.ErrFeatureNotSupported
+}
+
 func (c *Cache) Expire(key string, ttl time.Duration) error {
 	var err error
 	conn := c.Pool.Get()

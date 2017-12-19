@@ -429,6 +429,13 @@ func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) er
 	return c.Update(key, b, ttl)
 }
 
+func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	return map[string][]byte{}, cache.ErrFeatureNotSupported
+}
+func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
+	return cache.ErrFeatureNotSupported
+}
+
 //GetBytesValue Get bytes data from cache by given key.
 //Return data bytes and any error raised.
 func (c *Cache) GetBytesValue(key string) ([]byte, error) {

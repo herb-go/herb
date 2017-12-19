@@ -63,6 +63,8 @@ type Driver interface {
 	SetGCErrHandler(f func(err error))                                         //Set callback to handler error raised when gc.
 	Expire(key string, ttl time.Duration) error
 	ExpireCounter(key string, ttl time.Duration) error
+	MGetBytesValue(keys ...string) (map[string][]byte, error)
+	MSetBytesValue(map[string][]byte, time.Duration) error
 	Close() error //Close cache.
 	Flush() error //Delete all data in cache.
 }
@@ -230,6 +232,29 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 		return nil, ErrKeyUnavailable
 	}
 	return c.Driver.GetBytesValue(c.getKey(key))
+}
+func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	var result map[string][]byte
+	var prefixedKeys = make([]string, len(keys))
+	for k := range keys {
+		prefixedKeys[k] = c.getKey(keys[k])
+	}
+	data, err := c.Driver.MGetBytesValue(prefixedKeys...)
+	if err != nil {
+		return result, err
+	}
+	result = make(map[string][]byte, len(data))
+	for k := range data {
+		result[k[len(KeyPrefix):]] = data[k]
+	}
+	return result, nil
+}
+func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
+	var prefixed = make(map[string][]byte, len(data))
+	for k := range data {
+		prefixed[c.getKey(k)] = data[k]
+	}
+	return c.Driver.MSetBytesValue(prefixed, ttl)
 }
 
 //Del Delete data in cache by given name.

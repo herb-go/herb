@@ -1,7 +1,9 @@
 package cache
 
-import "time"
-import "strconv"
+import (
+	"strconv"
+	"time"
+)
 
 type Collection struct {
 	Cache  Cacheable
@@ -90,6 +92,30 @@ func (c *Collection) GetBytesValue(key string) ([]byte, error) {
 	}
 	return c.GetBytesValue(k)
 }
+
+func (c *Collection) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	prefix, err := c.GetCacheKey("")
+	if err != nil {
+		return map[string][]byte{}, err
+	}
+	var prefixedKeys = make([]string, len(keys))
+	for k := range keys {
+		prefixedKeys[k] = prefix + keys[k]
+	}
+	return c.Cache.MGetBytesValue(prefixedKeys...)
+}
+func (c *Collection) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
+	prefix, err := c.GetCacheKey("")
+	if err != nil {
+		return err
+	}
+	var prefixed = make(map[string][]byte, len(data))
+	for k := range data {
+		prefixed[prefix+k] = data[k]
+	}
+	return c.Cache.MSetBytesValue(prefixed, ttl)
+}
+
 func (c *Collection) Del(key string) error {
 	k, err := c.GetCacheKey(key)
 	if err != nil {

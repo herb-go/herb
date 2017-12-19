@@ -221,6 +221,13 @@ func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) er
 	return c.doSet(key, bytes, ttl, modeUpdate)
 }
 
+func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	return map[string][]byte{}, cache.ErrFeatureNotSupported
+}
+func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
+	return cache.ErrFeatureNotSupported
+}
+
 //Get Get data model from cache by given key.
 //Parameter v should be pointer to empty data model which data filled in.
 //Return any error raised.

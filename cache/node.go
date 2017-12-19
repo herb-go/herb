@@ -39,6 +39,22 @@ func (n *Node) GetBytesValue(key string) ([]byte, error) {
 	k := n.MustGetCacheKey(key)
 	return n.Cache.GetBytesValue(k)
 }
+
+func (n *Node) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	var prefixedKeys = make([]string, len(keys))
+	for k := range keys {
+		prefixedKeys[k] = n.MustGetCacheKey(keys[k])
+	}
+	return n.Cache.MGetBytesValue(prefixedKeys...)
+}
+func (n *Node) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
+	var prefixed = make(map[string][]byte, len(data))
+	for k := range data {
+		prefixed[n.MustGetCacheKey(k)] = data[k]
+	}
+	return n.Cache.MSetBytesValue(prefixed, ttl)
+}
+
 func (n *Node) Del(key string) error {
 	k := n.MustGetCacheKey(key)
 	return n.Cache.Del(k)

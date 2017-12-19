@@ -1,6 +1,7 @@
 package hashcache
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/herb-go/herb/cache"
@@ -117,6 +118,61 @@ func TestCloseAndFlush(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestMSetMGet(t *testing.T) {
+	c := newTestCache(-1)
+	var err error
+	var testkeys = []string{
+		"test1",
+		"test2",
+		"test3",
+		"test4",
+		"test5",
+	}
+	var testDataModels = map[string][]byte{
+		testkeys[0]: []byte("testModel1"),
+		testkeys[1]: []byte("testModel2"),
+		testkeys[2]: []byte("testModel3"),
+		testkeys[3]: []byte("testModel4" + strings.Repeat(".", hashMinLength)),
+		testkeys[4]: []byte("testModel5" + strings.Repeat(".", hashMinLength)),
+	}
+	var unusedKey = "unuseds"
+
+	err = c.MSetBytesValue(testDataModels, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for k := range testkeys {
+		v, err := c.GetBytesValue(testkeys[k])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Compare(v, testDataModels[testkeys[k]]) != 0 {
+			t.Errorf("%s != %s", v, testDataModels[testkeys[k]])
+		}
+	}
+	_, err = c.GetBytesValue(unusedKey)
+	if err != cache.ErrNotFound {
+		t.Fatal(err)
+	}
+
+	var mixedKeys = make([]string, len(testkeys)+1)
+	mixedKeys[0] = unusedKey
+	copy(mixedKeys[1:], testkeys)
+	d, err := c.MGetBytesValue(mixedKeys...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d[unusedKey] != nil {
+		t.Errorf("%s", d[unusedKey])
+	}
+	for k := range testkeys {
+		if bytes.Compare(d[testkeys[k]], testDataModels[testkeys[k]]) != 0 {
+			t.Errorf("%s != %s", d[testkeys[k]], testDataModels[testkeys[k]])
+		}
+	}
+}
+
 func TestSearchUpdate(t *testing.T) {
 	var err error
 	defaultTTL := int64(1)
@@ -242,7 +298,7 @@ func TestDefaulTTL(t *testing.T) {
 	testKey := "testKey"
 	testKey2 := "testKey2"
 	testKey3 := "testKey3"
-	testDataModel := "test"
+	testDataModel := "test" + strings.Repeat(".", hashMinLength)
 	var resultDataModel string
 	testDataBytes := []byte("testbytes")
 	var resultDataBytes []byte

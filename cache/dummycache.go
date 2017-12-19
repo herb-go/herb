@@ -59,6 +59,13 @@ func (c *DummyCache) GetBytesValue(key string) ([]byte, error) {
 	return nil, ErrNotFound
 }
 
+func (c *DummyCache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	return map[string][]byte{}, nil
+}
+func (c *DummyCache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
+	return nil
+}
+
 //Del Delete data in cache by given key.
 //Return any error raised.
 func (c *DummyCache) Del(key string) error {

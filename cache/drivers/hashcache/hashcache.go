@@ -149,11 +149,7 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 		return err
 	}
 	var k = key + cache.KeyPrefix + string(ts)
-	err = c.Remote.SetBytesValue(k, bytes, ttl)
-	if err != nil {
-		return err
-	}
-	return c.Local.SetBytesValue(k, bytes, ttl)
+	return c.Remote.SetBytesValue(k, bytes, ttl)
 }
 
 //UpdateBytesValue Update bytes data to cache by given key only if the cache exist.
@@ -181,6 +177,97 @@ func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) er
 		return err
 	}
 	return c.Local.SetBytesValue(k, bytes, ttl)
+}
+
+func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	var data = make(map[string][]byte, len(keys))
+	var prefixedKeys = make([]string, len(keys))
+	var hashedValueKeys = make([]string, len(keys))
+	var hashedKeys = make(map[string]string, len(keys))
+	var hashedValueKeysLength = 0
+
+	var prefixLength = len(cache.KeyPrefix)
+	for k := range keys {
+		prefixedKeys[k] = keys[k] + cache.KeyPrefix
+	}
+	hashs, err := c.Remote.MGetBytesValue(prefixedKeys...)
+	if err != nil {
+		return nil, err
+	}
+	for k := range hashs {
+		if hashs[k] == nil {
+			continue
+		}
+		if hashs[k][0] == hashTypeValue {
+			data[k[:len(k)-prefixLength]] = hashs[k][1:]
+		} else if hashs[k][0] == hashTypeKey {
+			var key = k + string(hashs[k][1:])
+			hashedValueKeys[hashedValueKeysLength] = key
+			hashedKeys[key] = k[:len(k)-prefixLength]
+			hashedValueKeysLength++
+		} else {
+			return nil, ErrHashFormatWrong
+		}
+	}
+	hashedValueKeys = hashedValueKeys[:hashedValueKeysLength]
+	var RemoteValueKeys = make([]string, len(hashedValueKeys))
+	var RemoteValueKeysLength = 0
+	if hashedValueKeysLength > 0 {
+		LocalData, err := c.Local.MGetBytesValue(hashedValueKeys...)
+		if err != nil {
+			return nil, err
+		}
+		for k := range LocalData {
+			if LocalData[k] != nil {
+				key, ok := hashedKeys[k]
+				if ok == true {
+					data[key] = LocalData[k]
+				}
+			} else {
+				RemoteValueKeys[RemoteValueKeysLength] = k
+				RemoteValueKeysLength++
+			}
+		}
+	}
+	if RemoteValueKeysLength > 0 {
+		RemoteValueKeys = RemoteValueKeys[:RemoteValueKeysLength]
+		RemoteData, err := c.Remote.MGetBytesValue(RemoteValueKeys...)
+		if err != nil {
+			return nil, err
+		}
+		for k := range RemoteData {
+			key, ok := hashedKeys[k]
+			if ok == true {
+				data[key] = RemoteData[k]
+			}
+		}
+
+	}
+	return data, nil
+}
+func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
+	var hashs = make(map[string][]byte, len(data))
+	var RemoteData = make(map[string][]byte, len(data))
+	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
+	for k := range data {
+		if len(data[k]) < hashMinLength {
+			b := make([]byte, len(data[k])+1)
+			b[0] = hashTypeValue
+			copy(b[1:], data[k])
+			hashs[k+cache.KeyPrefix] = b
+		} else {
+			b := make([]byte, len(ts)+1)
+			b[0] = hashTypeKey
+			copy(b[1:], ts)
+			hashs[k+cache.KeyPrefix] = b
+			RemoteData[k+cache.KeyPrefix+string(ts)] = data[k]
+		}
+	}
+	err := c.Remote.MSetBytesValue(hashs, ttl)
+	if err != nil {
+		return err
+	}
+	return c.Remote.MSetBytesValue(RemoteData, ttl)
 }
 
 //Del Delete data in cache by given key.
