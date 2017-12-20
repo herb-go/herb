@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"sync"
 )
 
 type ViewConfig struct {
@@ -21,8 +22,10 @@ func New(e Engine, viewRoot string) *Renderer {
 }
 
 type Renderer struct {
-	engine Engine
-	Views  map[string]CompiledView
+	engine    Engine
+	ViewFiles map[string][]string
+	Views     map[string]CompiledView
+	lock      sync.RWMutex
 }
 
 func (r *Renderer) Engine() Engine {
@@ -58,21 +61,39 @@ func (r *Renderer) Error(w http.ResponseWriter, status int) (int, error) {
 func (r *Renderer) MustError(w http.ResponseWriter, status int) int {
 	return MustError(w, status)
 }
-func (r *Renderer) view(name string) CompiledView {
-	if r.Views == nil {
-		return nil
+func (r *Renderer) view(name string) (CompiledView, error) {
+	var err error
+	var view CompiledView
+	if r.ViewFiles == nil {
+		return nil, NewViewError(name, ErrorViewNotExist)
 	}
-	view, ok := r.Views[name]
-	if ok == false {
-		return nil
+	if r.Views != nil {
+		view = r.Views[name]
 	}
-	return view
+	if view == nil {
+		vf := r.ViewFiles[name]
+		if vf == nil {
+			return nil, NewViewError(name, ErrorViewNotExist)
+		}
+		view, err = r.engine.Compile(vf...)
+		if err != nil {
+			return nil, err
+		}
+		r.setView(name, view)
+	}
+	return view, nil
 }
 func (r *Renderer) setView(name string, view CompiledView) {
 	if r.Views == nil {
 		r.Views = map[string]CompiledView{}
 	}
 	r.Views[name] = view
+}
+func (r *Renderer) setViewFiles(name string, viewFiles []string) {
+	if r.ViewFiles == nil {
+		r.ViewFiles = map[string][]string{}
+	}
+	r.ViewFiles[name] = viewFiles
 }
 func (r *Renderer) LoadViews(configpath string) (map[string]*NamedView, error) {
 	var data map[string]ViewConfig
@@ -87,34 +108,59 @@ func (r *Renderer) LoadViews(configpath string) (map[string]*NamedView, error) {
 	if data == nil {
 		return nil, nil
 	}
-	loadedViewsName := map[string]*NamedView{}
-	for k, v := range data {
-		namedView, err := r.NewView(k, v.Views...)
-		if err != nil {
-			return loadedViewsName, err
-		}
-		loadedViewsName[k] = namedView
+	var loadedNamedViews = make(map[string]*NamedView, len(data))
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.Views == nil {
+		r.Views = make(map[string]CompiledView, len(data))
 	}
-	return loadedViewsName, nil
+	for k, v := range data {
+		delete(r.Views, k)
+		r.setViewFiles(k, v.Views)
+		loadedNamedViews[k] = &NamedView{
+			Name:     k,
+			Renderer: r,
+		}
+	}
+	return loadedNamedViews, nil
 }
-
+func (r *Renderer) MustLoadViews(configpath string) map[string]*NamedView {
+	vs, err := r.LoadViews(configpath)
+	if err != nil {
+		panic(err)
+	}
+	return vs
+}
 func (r *Renderer) GetView(ViewName string) *NamedView {
 	return &NamedView{
 		Name:     ViewName,
 		Renderer: r,
 	}
 }
-func (r *Renderer) NewView(ViewName string, viewFiles ...string) (*NamedView, error) {
-	cv, err := r.engine.Compile(viewFiles...)
+
+func (r *Renderer) Execute(viewname string, data interface{}) (string, error) {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+	var cv, err = r.view(viewname)
 	if err != nil {
-		return nil, NewViewError(ViewName, err)
+		return "", NewViewError(viewname, err)
 	}
-	r.setView(ViewName, cv)
+	if cv == nil {
+		return "", NewViewError(viewname, ErrorViewNotExist)
+	}
+	return cv.Execute(data)
+
+}
+func (r *Renderer) NewView(ViewName string, viewFiles ...string) *NamedView {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	delete(r.Views, ViewName)
+	r.setViewFiles(ViewName, viewFiles)
 	v := &NamedView{
 		Name:     ViewName,
 		Renderer: r,
 	}
-	return v, nil
+	return v
 }
 
 type CompiledView interface {
