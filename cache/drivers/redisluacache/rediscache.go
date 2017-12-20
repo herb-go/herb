@@ -105,11 +105,12 @@ func (c *Cache) dial() (redis.Conn, error) {
 func (c *Cache) start() error {
 	conn := c.Pool.Get()
 	defer conn.Close()
-	_, err := conn.Do("PING")
+	version, err := c.getVersionFromConn(conn)
 	if err != nil {
 		return err
 	}
-	return c.gc()
+	c.version = version
+	return nil
 }
 func (c *Cache) getKey(key string) string {
 	c.versionLock.Lock()
@@ -341,7 +342,7 @@ func (c *Cache) doSet(key string, bytes []byte, ttl time.Duration, mode int) err
 		if err != nil {
 			return err
 		}
-		return c.SetBytesValue(key, bytes, ttl)
+		return c.doSet(key, bytes, ttl, mode)
 	}
 	return nil
 }
@@ -404,10 +405,93 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 }
 
 func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
-	return map[string][]byte{}, cache.ErrFeatureNotSupported
+	var data map[string][]byte
+	var version string
+	var args = make([]interface{}, len(keys)+1)
+	conn := c.Pool.Get()
+	defer conn.Close()
+	v := c.getVersionKey()
+	args[0] = v
+	for k := range keys {
+		args[k+1] = c.getKey(keys[k])
+	}
+	values, err := redis.Values((conn.Do("MGET", args...)))
+	values, err = redis.Scan(values, &version)
+	if err == redis.ErrNil {
+		version = ""
+	} else {
+		if err != nil {
+			return nil, err
+		}
+	}
+	c.versionLock.Lock()
+	if version != c.version {
+		c.version = version
+		c.versionLock.Unlock()
+		return c.MGetBytesValue(keys...)
+	}
+	c.versionLock.Unlock()
+	data = make(map[string][]byte, len(keys))
+	for k := range keys {
+		var bytes []byte
+		values, err = redis.Scan(values, &bytes)
+		if err == redis.ErrNil || bytes == nil {
+			data[keys[k]] = nil
+		} else if err != nil {
+			return nil, nil
+		} else {
+			data[keys[k]] = bytes
+		}
+	}
+
+	return data, nil
 }
-func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
-	return cache.ErrFeatureNotSupported
+func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) (err error) {
+	var version string
+	conn := c.Pool.Get()
+	defer conn.Close()
+	err = conn.Send("MULTI")
+	if err != nil {
+		return err
+	}
+	vk := c.getVersionKey()
+	err = conn.Send("GET", vk)
+	if err != nil {
+		return err
+	}
+	var ttlInSecond = int64(ttl / time.Second)
+	for k := range data {
+		if ttl < 0 {
+			err = conn.Send("SET", c.getKey(k), data[k])
+
+		} else {
+			err = conn.Send("SET", c.getKey(k), data[k], "EX", ttlInSecond)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	values, err := redis.Values(conn.Do("EXEC"))
+	if err != nil {
+		return err
+	}
+	_, err = redis.Scan(values, &version)
+	if err == redis.ErrNil {
+		version = ""
+	} else if err != nil {
+		return err
+	}
+	if version != c.version {
+		for k := range data {
+			err = conn.Send("DEL", c.getKey(k))
+			if err != nil {
+				return err
+			}
+		}
+		c.version = version
+		return c.MSetBytesValue(data, ttl)
+	}
+	return nil
 }
 
 func (c *Cache) Expire(key string, ttl time.Duration) error {

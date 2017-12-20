@@ -179,69 +179,99 @@ func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) er
 	return c.Local.SetBytesValue(k, bytes, ttl)
 }
 
-func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
-	var data = make(map[string][]byte, len(keys))
+func (c *Cache) getPrefixedKeys(keys ...string) []string {
 	var prefixedKeys = make([]string, len(keys))
-	var hashedValueKeys = make([]string, len(keys))
-	var hashedKeys = make(map[string]string, len(keys))
-	var hashedValueKeysLength = 0
-
-	var prefixLength = len(cache.KeyPrefix)
 	for k := range keys {
 		prefixedKeys[k] = keys[k] + cache.KeyPrefix
 	}
-	hashs, err := c.Remote.MGetBytesValue(prefixedKeys...)
+	return prefixedKeys
+}
+func (c *Cache) mGetHashs(data *map[string][]byte, keys ...string) (hashedKeys map[string]string, hashedValueKeys []string, err error) {
+	hashedValueKeys = make([]string, len(keys))
+	hashedKeys = make(map[string]string, len(keys))
+	var prefixLength = len(cache.KeyPrefix)
+
+	var hashedValueKeysLength = 0
+	hashs, err := c.Remote.MGetBytesValue(c.getPrefixedKeys(keys...)...)
 	if err != nil {
-		return nil, err
+		return
 	}
 	for k := range hashs {
 		if hashs[k] == nil {
 			continue
 		}
 		if hashs[k][0] == hashTypeValue {
-			data[k[:len(k)-prefixLength]] = hashs[k][1:]
+			(*data)[k[:len(k)-prefixLength]] = hashs[k][1:]
 		} else if hashs[k][0] == hashTypeKey {
 			var key = k + string(hashs[k][1:])
 			hashedValueKeys[hashedValueKeysLength] = key
 			hashedKeys[key] = k[:len(k)-prefixLength]
 			hashedValueKeysLength++
 		} else {
-			return nil, ErrHashFormatWrong
+			err = ErrHashFormatWrong
+			return
 		}
 	}
 	hashedValueKeys = hashedValueKeys[:hashedValueKeysLength]
-	var RemoteValueKeys = make([]string, len(hashedValueKeys))
+	return
+}
+func (c *Cache) mGetLocalData(data *map[string][]byte, hashedKeys map[string]string, hashedValueKeys []string) (RemoteValueKeys []string, err error) {
+	var LocalData map[string][]byte
+	RemoteValueKeys = make([]string, len(hashedValueKeys))
 	var RemoteValueKeysLength = 0
-	if hashedValueKeysLength > 0 {
-		LocalData, err := c.Local.MGetBytesValue(hashedValueKeys...)
+	if len(hashedValueKeys) > 0 {
+		LocalData, err = c.Local.MGetBytesValue(hashedValueKeys...)
 		if err != nil {
-			return nil, err
+			return
 		}
 		for k := range LocalData {
 			if LocalData[k] != nil {
 				key, ok := hashedKeys[k]
 				if ok == true {
-					data[key] = LocalData[k]
+					(*data)[key] = LocalData[k]
 				}
 			} else {
 				RemoteValueKeys[RemoteValueKeysLength] = k
 				RemoteValueKeysLength++
 			}
 		}
-	}
-	if RemoteValueKeysLength > 0 {
 		RemoteValueKeys = RemoteValueKeys[:RemoteValueKeysLength]
-		RemoteData, err := c.Remote.MGetBytesValue(RemoteValueKeys...)
+	}
+	return
+}
+func (c *Cache) mGetRemoteData(data *map[string][]byte, hashedKeys map[string]string, RemoteValueKeys []string) (err error) {
+	var RemoteData map[string][]byte
+	if len(RemoteValueKeys) > 0 {
+		RemoteData, err = c.Remote.MGetBytesValue(RemoteValueKeys...)
 		if err != nil {
-			return nil, err
+			return
 		}
 		for k := range RemoteData {
 			key, ok := hashedKeys[k]
 			if ok == true {
-				data[key] = RemoteData[k]
+				(*data)[key] = RemoteData[k]
 			}
 		}
-
+		err = c.Local.MSetBytesValue(RemoteData, 0)
+	}
+	return
+}
+func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	var err error
+	var unfinishedKeys []string
+	var hashedKeys map[string]string
+	var data = make(map[string][]byte, len(keys))
+	hashedKeys, unfinishedKeys, err = c.mGetHashs(&data, keys...)
+	if err != nil {
+		return nil, err
+	}
+	unfinishedKeys, err = c.mGetLocalData(&data, hashedKeys, unfinishedKeys)
+	if err != nil {
+		return nil, err
+	}
+	err = c.mGetRemoteData(&data, hashedKeys, unfinishedKeys)
+	if err != nil {
+		return nil, err
 	}
 	return data, nil
 }
