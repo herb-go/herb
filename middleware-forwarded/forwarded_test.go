@@ -193,6 +193,13 @@ func TestMiddleware(t *testing.T) {
 		t.Fatal(statusCode)
 	}
 
+	middleware.SetTokenFailedAction(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+	})
+	data, statusCode = doRequest(t, nil)
+	if statusCode != http.StatusForbidden {
+		t.Fatal(statusCode)
+	}
 	middleware.Status = 0
 	data, statusCode = doRequest(t, nil)
 
