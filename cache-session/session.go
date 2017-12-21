@@ -19,11 +19,11 @@ var (
 type Flag uint64
 
 //SessionFlagDefault default session flag
-const FlagDefault = Flag(0)
+const FlagDefault = Flag(1)
 
 //SessionFlagTemporay Flag what stands for a Temporay sesson.
 //For example,a login withour "remeber me".
-const FlagTemporay = Flag(1)
+const FlagTemporay = Flag(3)
 
 //Session Token data in every request.
 type Session struct {
