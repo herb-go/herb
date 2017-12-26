@@ -4,3 +4,5 @@ type UserAccount struct {
 	Keyword string
 	Account string
 }
+
+type UserAccounts []UserAccount

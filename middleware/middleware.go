@@ -2,7 +2,10 @@
 //All middleware is func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc).
 package middleware
 
-import "net/http"
+import (
+	"errors"
+	"net/http"
+)
 
 // New : Create new chainable middleware app.
 func New(funcs ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) *App {
@@ -20,7 +23,7 @@ func ServeHTTP(app HandlerSlice, w http.ResponseWriter, r *http.Request) {
 func ServeMiddleware(app HandlerSlice, w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	handlers := app.Handlers()
 	if len(handlers) == 0 {
-		panic("handlers cant be nil")
+		panic(errors.New("handlers cant be nil"))
 	}
 	s := serveWorker{
 		handlers: handlers,

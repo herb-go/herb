@@ -58,7 +58,7 @@ func TestAfterNext(t *testing.T) {
 func TestUse(t *testing.T) {
 	var ret testResults
 	var app = New(ret.newBeforeMiddleware("a"), ret.newBeforeMiddleware("b"), ret.newBeforeMiddleware("c"))
-	app.Use(ret.newAfterMiddleware("g"))
+	app.Use(ret.newAfterMiddleware("g"), nil)
 	app.Use(ret.newBeforeMiddleware("d"), ret.newBeforeMiddleware("e"))
 	app.HandleFunc(ret.newHandleFunc("f"))
 	r, err := http.NewRequest("GET", "/", nil)
@@ -134,6 +134,12 @@ func TestChain(t *testing.T) {
 	var app2 = New(ret.newAfterMiddleware("e"))
 	var app3 = New(ret.newBeforeMiddleware("d"))
 	var app4 = New(ret.newBeforeMiddleware("f"))
+	var startLength = len(app.handlers)
+	app.Chain()
+	if len(app.handlers) != startLength {
+		t.Fatal(len(app.handlers))
+	}
+
 	app.Chain(app2, app3)
 	app2.UseApp(app3, app4)
 	r, err := http.NewRequest("GET", "/", nil)
@@ -268,4 +274,55 @@ func TestFuncWrap(t *testing.T) {
 		t.Errorf("New middleware order %s error", ret.data)
 	}
 
+}
+
+type testhandeler struct {
+	tr   *testResults
+	data string
+}
+
+func (h testhandeler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.tr.data = h.tr.data + h.data
+}
+func TestHandler(t *testing.T) {
+	var ret testResults
+	var app = New(ret.newBeforeMiddleware("a"), ret.newBeforeMiddleware("b"), ret.newBeforeMiddleware("c"))
+	app.Use(ret.newAfterMiddleware("g"))
+	app.Use(Wrap(http.HandlerFunc((ret.newHandleFunc("d")))))
+	app.Use(ret.newBeforeMiddleware("e"))
+	app.Handle(testhandeler{
+		tr:   &ret,
+		data: "f",
+	})
+	r, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rr = httptest.NewRecorder()
+	ServeHTTP(app, rr, r)
+	if ret.data != "abcdefg" {
+		t.Errorf("New middleware order %s error", ret.data)
+	}
+
+}
+
+type wrongMiddleware struct {
+	handlers []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
+}
+
+func (m *wrongMiddleware) Handlers() []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return m.handlers
+}
+func TestErrorServeMiddleware(t *testing.T) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal(r)
+		}
+		err, ok := r.(error)
+		if ok == false || err == nil {
+			t.Fatal(err, ok)
+		}
+	}()
+	ServeMiddleware(&wrongMiddleware{}, nil, nil, nil)
 }
