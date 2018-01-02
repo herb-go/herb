@@ -95,14 +95,21 @@ func (c *Collection) GetBytesValue(key string) ([]byte, error) {
 
 func (c *Collection) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	prefix, err := c.GetCacheKey("")
-	if err != nil {
-		return map[string][]byte{}, err
-	}
+	var result map[string][]byte
 	var prefixedKeys = make([]string, len(keys))
 	for k := range keys {
 		prefixedKeys[k] = prefix + keys[k]
 	}
-	return c.Cache.MGetBytesValue(prefixedKeys...)
+	data, err := c.Cache.MGetBytesValue(prefixedKeys...)
+	if err != nil {
+		return result, err
+	}
+	result = make(map[string][]byte, len(data))
+	for k := range data {
+		result[k[len(prefix):]] = data[k]
+	}
+	return result, nil
+
 }
 func (c *Collection) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
 	prefix, err := c.GetCacheKey("")

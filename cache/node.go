@@ -41,11 +41,21 @@ func (n *Node) GetBytesValue(key string) ([]byte, error) {
 }
 
 func (n *Node) MGetBytesValue(keys ...string) (map[string][]byte, error) {
+	var result map[string][]byte
 	var prefixedKeys = make([]string, len(keys))
 	for k := range keys {
 		prefixedKeys[k] = n.MustGetCacheKey(keys[k])
 	}
-	return n.Cache.MGetBytesValue(prefixedKeys...)
+	data, err := n.Cache.MGetBytesValue(prefixedKeys...)
+	if err != nil {
+		return result, err
+	}
+	result = make(map[string][]byte, len(data))
+	for k := range data {
+		result[k[len(n.Prefix+KeyPrefix):]] = data[k]
+	}
+	return result, nil
+
 }
 func (n *Node) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
 	var prefixed = make(map[string][]byte, len(data))

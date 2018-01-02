@@ -23,12 +23,15 @@ func newTestCache(ttl int64) *cache.Cache {
 func TestMSetMGet(t *testing.T) {
 	c := newTestCache(-1)
 	var err error
+	var deletedkey = "deletedkey"
+
 	var testkeys = []string{
 		"test1",
 		"test2",
 		"test3",
 		"test4",
 		"test5",
+		deletedkey,
 	}
 	var testDataModels = map[string][]byte{
 		testkeys[0]: []byte("testModel1"),
@@ -36,6 +39,7 @@ func TestMSetMGet(t *testing.T) {
 		testkeys[2]: []byte("testModel3"),
 		testkeys[3]: []byte("testModel4"),
 		testkeys[4]: []byte("testModel5"),
+		testkeys[5]: []byte("deletedModel"),
 	}
 	var unusedKey = "unuseds"
 
@@ -71,6 +75,21 @@ func TestMSetMGet(t *testing.T) {
 		if bytes.Compare(d[testkeys[k]], testDataModels[testkeys[k]]) != 0 {
 			t.Errorf("%s != %s", d[testkeys[k]], testDataModels[testkeys[k]])
 		}
+	}
+	err = c.Del(deletedkey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetBytesValue(unusedKey)
+	if err != cache.ErrNotFound {
+		t.Fatal(err)
+	}
+	d, err = c.MGetBytesValue(mixedKeys...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d[deletedkey] != nil {
+		t.Errorf("%s", d[unusedKey])
 	}
 }
 
