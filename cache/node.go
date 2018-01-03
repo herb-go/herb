@@ -29,7 +29,7 @@ func (n *Node) Set(key string, v interface{}, ttl time.Duration) error {
 }
 func (n *Node) Get(key string, v interface{}) error {
 	k := n.MustGetCacheKey(key)
-	return n.Cache.Get(k, &v)
+	return n.Cache.Get(k, v)
 }
 func (n *Node) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	k := n.MustGetCacheKey(key)

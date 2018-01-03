@@ -113,7 +113,7 @@ func (c *Cache) Get(key string, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	return cache.UnmarshalMsgpack(bytes, &v)
+	return cache.UnmarshalMsgpack(bytes, v)
 }
 
 func (c *Cache) Expire(key string, ttl time.Duration) error {

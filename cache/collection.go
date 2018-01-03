@@ -72,7 +72,7 @@ func (c *Collection) Get(key string, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	return c.Cache.Get(k, &v)
+	return c.Cache.Get(k, v)
 }
 func (c *Collection) SetBytesValue(key string, bytes []byte, TTL time.Duration) error {
 	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
@@ -175,7 +175,7 @@ func (c *Collection) Load(key string, v interface{}, TTL time.Duration, closure 
 	if err != nil {
 		return err
 	}
-	return c.Cache.Load(k, &v, TTL, closure)
+	return c.Cache.Load(k, v, TTL, closure)
 }
 
 func (c *Collection) Flush() error {

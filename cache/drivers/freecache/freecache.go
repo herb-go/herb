@@ -100,7 +100,7 @@ func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error 
 //Set Set data model to cache by given key.
 //Return any error raised.
 func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
-	bytes, err := cache.MarshalMsgpack(&v)
+	bytes, err := cache.MarshalMsgpack(v)
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 //Update Update data model to cache by given key only if the cache exist.
 //Return any error raised.
 func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
-	bytes, err := cache.MarshalMsgpack(&v)
+	bytes, err := cache.MarshalMsgpack(v)
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (c *Cache) Get(key string, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	return cache.UnmarshalMsgpack(bytes, &v)
+	return cache.UnmarshalMsgpack(bytes, v)
 }
 
 //Flush Delete all data in cache.

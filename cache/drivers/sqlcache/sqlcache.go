@@ -326,7 +326,7 @@ func (c *Cache) Get(key string, v interface{}) error {
 		return err
 	}
 	tx.Commit()
-	err = json.Unmarshal([]byte(j), &v)
+	err = json.Unmarshal([]byte(j), v)
 	return err
 }
 

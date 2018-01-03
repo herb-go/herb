@@ -12,7 +12,7 @@ func (f *Field) Set(v interface{}, ttl time.Duration) error {
 }
 
 func (f *Field) Get(key string, v interface{}) error {
-	return f.Cache.Get(f.FieldName, &v)
+	return f.Cache.Get(f.FieldName, v)
 }
 
 func (f *Field) SetBytesValue(bytes []byte, ttl time.Duration) error {

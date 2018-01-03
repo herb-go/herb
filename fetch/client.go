@@ -112,10 +112,10 @@ type Result struct {
 }
 
 func (r *Result) UnmarshalJSON(v interface{}) error {
-	return json.Unmarshal(r.BodyContent, &v)
+	return json.Unmarshal(r.BodyContent, v)
 }
 func (r *Result) UnmarshalXML(v interface{}) error {
-	return xml.Unmarshal(r.BodyContent, &v)
+	return xml.Unmarshal(r.BodyContent, v)
 }
 func (r Result) Error() string {
 	msg := fmt.Sprintf("http error [ %s ] %s : %s", r.Response.Request.URL.String(), r.Status, string(r.BodyContent))

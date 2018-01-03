@@ -187,7 +187,7 @@ func (c *Cache) Get(key string, v interface{}) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	return c.Driver.Get(c.getKey(key), &v)
+	return c.Driver.Get(c.getKey(key), v)
 }
 
 //SearchByPrefix Search All key start with given prefix.
@@ -359,9 +359,9 @@ func (c *Cache) Load(key string, v interface{}, ttl time.Duration, closure func(
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	err := c.Get(key, &v)
+	err := c.Get(key, v)
 	if err == ErrNotFound {
-		err2 := closure(&v)
+		err2 := closure(v)
 		if err2 != nil {
 			return err2
 		}

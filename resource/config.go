@@ -26,14 +26,14 @@ func LoadJson(path string, v interface{}) error {
 		}
 		bytes = append(bytes, []byte(line)...)
 	}
-	err = json.Unmarshal(bytes, &v)
+	err = json.Unmarshal(bytes, v)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 func MustLoadJson(path string, v interface{}) {
-	err := LoadJson(path, &v)
+	err := LoadJson(path, v)
 	if err != nil {
 		panic(err)
 	}
