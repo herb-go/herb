@@ -1,5 +1,7 @@
 package user
 
+import "strings"
+
 type UserAccount struct {
 	Keyword string
 	Account string
@@ -37,4 +39,33 @@ func (a *UserAccounts) Unbind(account *UserAccount) error {
 		}
 	}
 	return ErrAccountUnbindNotExists
+}
+
+type AccountType interface {
+	NewAccount(keyword string, account string) (*UserAccount, error)
+}
+
+type PlainAccountType struct {
+	Prefix          string
+	CaseInsensitive bool
+}
+
+func (s *PlainAccountType) NewAccount(keyword string, account string) (*UserAccount, error) {
+	if s.CaseInsensitive {
+		account = strings.ToLower(account)
+	}
+	return &UserAccount{
+		Keyword: keyword,
+		Account: account,
+	}, nil
+}
+
+var CaseInsensitiveAcountType = &PlainAccountType{
+	Prefix:          "",
+	CaseInsensitive: true,
+}
+
+var CaseSensitiveAcountType = &PlainAccountType{
+	Prefix:          "",
+	CaseInsensitive: false,
 }
