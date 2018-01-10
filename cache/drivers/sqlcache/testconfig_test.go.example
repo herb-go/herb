@@ -4,7 +4,7 @@ package sqlcache
 
 var testConfig = `{
                     "Driver":"mysql",
-                    "Conn":"username:oass@/dbname",
+                    "Conn":"username:pass@/dbname",
                     "Table":"cache",
                     "Name":""
                 }`
