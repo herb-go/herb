@@ -14,6 +14,10 @@ import (
 	"time"
 )
 
+type SiteConfig struct {
+	Name    string
+	BaseURL string
+}
 type NetConfig struct {
 	Net  string
 	Addr string
