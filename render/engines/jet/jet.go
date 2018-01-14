@@ -39,6 +39,9 @@ type JetEngine struct {
 	ViewRoot string
 }
 
+func (e *JetEngine) AddGlobal(Name string, fn interface{}) {
+	(*e.Set).AddGlobal(Name, fn)
+}
 func (e *JetEngine) Compile(viewFiles ...string) (render.CompiledView, error) {
 	if len(viewFiles) > 1 {
 		return nil, render.ErrTooManyViewFiles
