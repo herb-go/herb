@@ -41,6 +41,13 @@ func (r *Renderer) WriteJSON(w http.ResponseWriter, data []byte, status int) (in
 func (r *Renderer) MustWriteJSON(w http.ResponseWriter, data []byte, status int) int {
 	return MustWriteJSON(w, data, status)
 }
+
+func (r *Renderer) HTMLFile(w http.ResponseWriter, path string, status int) (int, error) {
+	return HTMLFile(w, path, status)
+}
+func (r *Renderer) MustHTMLFile(w http.ResponseWriter, path string, status int) int {
+	return MustHTMLFile(w, path, status)
+}
 func (r *Renderer) WriteHTML(w http.ResponseWriter, data []byte, status int) (int, error) {
 	return r.WriteHTML(w, data, status)
 }

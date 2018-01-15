@@ -224,6 +224,21 @@ func (s *Store) Install(r *http.Request, token string) (ts *Session, err error) 
 	return
 }
 
+func (s *Store) AutoGenerateMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		var ts = s.MustGetRequestSession(r)
+		if ts.token == "" || ts.token == clientStoreNewToken {
+			err := ts.RegenerateToken("")
+			if err != nil {
+				return
+			}
+			ctx := context.WithValue(r.Context(), s.TokenContextName, ts)
+			*r = *r.WithContext(ctx)
+		}
+		next(w, r)
+	}
+}
+
 //CookieMiddleware return a Middleware which install the token which special by cookie.
 //This middleware will save token after request finished if the token changed,and update cookie if necessary.
 func (s *Store) CookieMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

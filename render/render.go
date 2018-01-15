@@ -3,6 +3,7 @@ package render
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -60,6 +61,20 @@ func MustWriteHTML(w http.ResponseWriter, data []byte, status int) int {
 	return result
 }
 
+func MustHTMLFile(w http.ResponseWriter, path string, status int) int {
+	result, err := HTMLFile(w, path, status)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+func HTMLFile(w http.ResponseWriter, path string, status int) (int, error) {
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return 0, err
+	}
+	return WriteHTML(w, bytes, status)
+}
 func JSON(w http.ResponseWriter, data interface{}, status int) (int, error) {
 	bytes, err := json.Marshal(data)
 	if err != nil {

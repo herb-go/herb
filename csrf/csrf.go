@@ -3,9 +3,9 @@ package csrf
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 //ContextKey string type used in Context key
@@ -26,6 +26,9 @@ func (csrf *Csrf) fail(w http.ResponseWriter) {
 //Verify Verify if the given token is equal to token value save in cookie.
 //Return verification result and any error raised.
 func (csrf *Csrf) Verify(r *http.Request, token string) (bool, error) {
+	if !csrf.Enabled {
+		return true, nil
+	}
 	c, err := r.Cookie(csrf.CookieName)
 	if err == http.ErrNoCookie {
 		return false, nil
@@ -69,6 +72,9 @@ func (csrf *Csrf) VerifyHeaderMiddleware(w http.ResponseWriter, r *http.Request,
 
 //CsrfInput return a html fragment that contains a csrf hidden input.
 func (csrf *Csrf) CsrfInput(w http.ResponseWriter, r *http.Request) (string, error) {
+	if !csrf.Enabled {
+		return "", nil
+	}
 	err := csrf.SetCsrfToken(w, r)
 	if err != nil {
 		return "", err
@@ -115,19 +121,20 @@ func (csrf *Csrf) SetCsrfToken(w http.ResponseWriter, r *http.Request) error {
 
 //SetCsrfTokenMiddleware The middleware set a random token in cookie which is used in later verification if the cookie does not exist.
 func (csrf *Csrf) SetCsrfTokenMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	err := csrf.SetCsrfToken(w, r)
-	if err != nil {
-		panic(err)
+	if csrf.Enabled {
+		err := csrf.SetCsrfToken(w, r)
+		if err != nil {
+			panic(err)
+		}
 	}
 	next(w, r)
 }
 func (csrf *Csrf) generateToken() (string, error) {
-	bytes := make([]byte, csrf.Tokenlength)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return "", err
-	}
-	return base64.URLEncoding.EncodeToString(bytes), err
+	return csrf.TokenGenerater()
+}
+
+func DefaultTokenGenerater() (string, error) {
+	return strconv.FormatInt(time.Now().UnixNano(), 10), nil
 }
 
 // New return a new Csrf Component with default values.
@@ -140,11 +147,13 @@ func New() *Csrf {
 		FormField:         defaultFormField,
 		FailStatus:        defaultFailStatus,
 		RequestContextKey: defaultRequestContextKey,
+		Enabled:           true,
+		TokenGenerater:    DefaultTokenGenerater,
 	}
 	return &c
 }
 
-//Csrf is the cimponents provide csrf function.
+//Csrf is the components provide csrf function.
 //You can use Csrf.SetCsrfTokenMiddleware,Csrf.VerifyFormMiddleware,Csrf.VerifyHeaderMiddleware or Csrf.CsrfInput to protected your web app.
 //All value can be change after creation.
 type Csrf struct {
@@ -155,4 +164,6 @@ type Csrf struct {
 	FormField         string     //Field name of post form which the token stroed in.Default value is ""X-CSRF-TOKEN".
 	FailStatus        int        //Http status code returned when csrf verify failed.Default value is  http.StatusBadRequest (int 400).
 	RequestContextKey ContextKey //Context key of requst which token stored in.Default value is csrf.ContextKey("herb-csrf-token").
+	Enabled           bool
+	TokenGenerater    func() (string, error)
 }
