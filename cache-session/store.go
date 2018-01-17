@@ -46,7 +46,6 @@ type Driver interface {
 	Load(v *Session) error
 	Save(t *Session, ttl time.Duration) error
 	Delete(token string) error
-	SearchByPrefix(prefix string) (Tokens []string, err error)
 	Close() error
 }
 type Store struct {
@@ -61,13 +60,11 @@ type Store struct {
 	DefaultSessionFlag   Flag          //Default flag when creating session.
 }
 
-func NewStore(d Driver, TokenLifetime time.Duration) *Store {
+func New() *Store {
 	return &Store{
-		Driver:               d,
 		TokenContextName:     defaultTokenContextName,
 		CookieName:           defaultCookieName,
 		CookiePath:           defaultCookiePath,
-		TokenLifetime:        TokenLifetime,
 		UpdateActiveInterval: defaultUpdateActiveInterval,
 		TokenMaxLifetime:     defaultTokenMaxLifetime,
 	}
@@ -77,13 +74,9 @@ func NewStore(d Driver, TokenLifetime time.Duration) *Store {
 func (s *Store) Close() error {
 	return s.Driver.Close()
 }
-
-//SearchByPrefix Search all token with given prefix.
-//return all tokens start with the prefix.
-//ErrFeatureNotSupported will raised if store dont support this feature.
-//Return all tokens and any error if raised.
-func (s *Store) SearchByPrefix(prefix string) (Tokens []string, err error) {
-	return s.Driver.SearchByPrefix(prefix)
+func (s *Store) Init(d Driver, TokenLifetime time.Duration) {
+	s.Driver = d
+	s.TokenLifetime = TokenLifetime
 }
 
 //GenerateToken generate new token name with given prefix.
@@ -383,4 +376,8 @@ func (s Store) MustRegenerateRequestToken(r *http.Request, owner string) *Sessio
 		panic(err)
 	}
 	return v
+}
+
+func (s Store) IsNotFound(err error) bool {
+	return err == ErrDataNotFound
 }

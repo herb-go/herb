@@ -3,6 +3,8 @@ package user
 type ProfileIndex string
 
 const ProfileIndexName = ProfileIndex("Name")
+const ProfileIndexFirstName = ProfileIndex("FirstName")
+const ProfileIndexLastName = ProfileIndex("LastName")
 const ProfileIndexEmail = ProfileIndex("Email")
 const ProfileIndexNickname = ProfileIndex("Nickname")
 const ProfileIndexAvatar = ProfileIndex("Avatar")
@@ -13,7 +15,7 @@ const ProfileIndexCompany = ProfileIndex("Company")
 const ProfileIndexID = ProfileIndex("ID")
 const ProfileIndexLocation = ProfileIndex("Location")
 const ProfileIndexWebsite = ProfileIndex("Website")
-
+const ProfileIndexLocale = ProfileIndex("Locale")
 const ProfileGenderMale = "M"
 const ProfileGenderFemale = "F"
 

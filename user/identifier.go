@@ -50,9 +50,17 @@ func (lr *LoginRedirector) ClearSource(w http.ResponseWriter, r *http.Request) (
 		return "", err
 	}
 	url := cookie.Value
-	cookie.Value = ""
-	cookie.Expires = time.Unix(0, 0)
-	http.SetCookie(w, cookie)
+	newCookie := &http.Cookie{
+		Name:     lr.Cookie.Name,
+		Path:     lr.Cookie.Path,
+		Domain:   lr.Cookie.Domain,
+		Value:    "",
+		MaxAge:   lr.Cookie.MaxAge,
+		Secure:   lr.Cookie.Secure,
+		HttpOnly: lr.Cookie.HttpOnly,
+		Expires:  time.Unix(0, 0),
+	}
+	http.SetCookie(w, newCookie)
 	return url, nil
 }
 func (lr *LoginRedirector) MustClearSource(w http.ResponseWriter, r *http.Request) string {

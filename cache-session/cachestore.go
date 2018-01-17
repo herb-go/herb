@@ -28,13 +28,15 @@ func defaultTokenGenerater(s *CacheStore, prefix string) (token string, err erro
 	return
 }
 
-//New New create a new token store with given cache and token lifetime.
+//NewCacheStore New create a new token store with given cache and token lifetime.
 //Cache is the cache which dates stored in.
 //TokenLifeTime is the token initial expired tome.
 //Return a new token store.
 //All other property of the store can be set after creation.
-func New(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
-	return NewStore(NewCacheDriver(Cache), TokenLifetime)
+func NewCacheStore(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
+	s := New()
+	s.Init(NewCacheDriver(Cache), TokenLifetime)
+	return s
 }
 
 func NewCacheDriver(Cache *cache.Cache) *CacheStore {
@@ -53,14 +55,6 @@ type CacheStore struct {
 //Close Close cachestore and return any error if raised
 func (s *CacheStore) Close() error {
 	return s.Cache.Close()
-}
-
-//SearchByPrefix Search all token with given prefix.
-//return all tokens start with the prefix.
-//ErrFeatureNotSupported will raised if store dont support this feature.
-//Return all tokens and any error if raised.
-func (s *CacheStore) SearchByPrefix(prefix string) (Tokens []string, err error) {
-	return nil, ErrFeatureNotSupported
 }
 
 //GenerateToken generate new token name with given prefix.

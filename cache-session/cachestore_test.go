@@ -24,7 +24,7 @@ func getStore(ttl time.Duration) *Store {
 	if err != nil {
 		panic(err)
 	}
-	s := New(c, ttl)
+	s := NewCacheStore(c, ttl)
 	return s
 }
 
@@ -38,7 +38,7 @@ func getTimeoutStore(ttl time.Duration, UpdateActiveInterval time.Duration) *Sto
 	if err != nil {
 		panic(err)
 	}
-	s := New(c, ttl)
+	s := NewCacheStore(c, ttl)
 	s.UpdateActiveInterval = UpdateActiveInterval
 	return s
 }

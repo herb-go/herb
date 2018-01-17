@@ -48,7 +48,8 @@ func getBase64ClientStore(ttl time.Duration) *Store {
 		return nil
 
 	}
-	s := NewStore(d, ttl)
+	s := New()
+	s.Init(d, ttl)
 	return s
 }
 func TestClientKey(t *testing.T) {

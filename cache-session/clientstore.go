@@ -57,7 +57,9 @@ type ClientStore struct {
 //All other property of the store can be set after creation.
 
 func NewClientStore(key []byte, TokenLifetime time.Duration) *Store {
-	return NewStore(NewClientDriver(key), TokenLifetime)
+	s := New()
+	s.Init(NewClientDriver(key), TokenLifetime)
+	return s
 }
 
 func NewClientDriver(key []byte) *ClientStore {
@@ -80,14 +82,6 @@ func (s *ClientStore) GetSessionToken(ts *Session) (token string, err error) {
 func (s *ClientStore) GenerateToken(prefix string) (token string, err error) {
 	return clientStoreNewToken, nil
 
-}
-
-//SearchByPrefix Search all token with given prefix.
-//return all tokens start with the prefix.
-//ErrFeatureNotSupported will raised if store dont support this feature.
-//Return all tokens and any error if raised.
-func (s *ClientStore) SearchByPrefix(prefix string) (Tokens []string, err error) {
-	return nil, ErrFeatureNotSupported
 }
 
 //Load Load Session form the Session.token.
