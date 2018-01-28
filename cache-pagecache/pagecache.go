@@ -46,7 +46,7 @@ func (p *PageCache) serve(key string, ttl time.Duration, w http.ResponseWriter, 
 	err := p.Cache.Load(key, &page, ttl, func(v interface{}) error {
 		cw := cacheResponseWriter{
 			writer: *(bytes.NewBuffer([]byte{})),
-			header: w.Header(),
+			header: http.Header{},
 			status: 0,
 		}
 		next(&cw, r)

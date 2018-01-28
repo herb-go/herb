@@ -23,7 +23,7 @@ func NewLoginRedirector(loginurl string, cookiename string) *LoginRedirector {
 		LoginURL: loginurl,
 		Cookie: &http.Cookie{
 			Name:     cookiename,
-			HttpOnly: true,
+			HttpOnly: false,
 			Path:     "/",
 		},
 	}
