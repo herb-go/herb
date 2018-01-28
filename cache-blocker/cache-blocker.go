@@ -1,4 +1,4 @@
-package ipblocker
+package blocker
 
 import (
 	"net"
@@ -13,12 +13,12 @@ import (
 const StatusAny = 0
 const defaultBlockedStatus = http.StatusTooManyRequests
 
-func New(name string, cache cache.Cacheable) *Blocker {
+func New(cache cache.Cacheable, Identifier func(r *http.Request) (string, error)) *Blocker {
 	return &Blocker{
 		config:        map[int]statusConfig{},
 		Cache:         cache,
 		StatusBlocked: defaultBlockedStatus,
-		Name:          name,
+		Identifier:    Identifier,
 	}
 }
 
@@ -31,29 +31,26 @@ type Blocker struct {
 	config        map[int]statusConfig
 	Cache         cache.Cacheable
 	StatusBlocked int
-	Name          string
+	Identifier    func(r *http.Request) (string, error)
 }
 
-func (b *Blocker) Flush() error {
-	return b.Cache.Flush()
-}
 func (b *Blocker) Block(status int, max int64, ttl time.Duration) {
 	ttlSecond := int64(ttl / time.Second)
 	b.config[status] = statusConfig{
 		max:            max,
 		ttlSecond:      ttlSecond,
-		cacheKeyPrefix: b.Name + "-" + strconv.Itoa(status) + "-" + strconv.FormatInt(ttlSecond, 10) + "-",
+		cacheKeyPrefix: strconv.Itoa(status) + cache.KeyPrefix + strconv.FormatInt(ttlSecond, 10) + cache.KeyPrefix,
 	}
 }
-func (b *Blocker) buildCacheKey(ip string, status int, config statusConfig) string {
+func (b *Blocker) buildCacheKey(id string, status int, config statusConfig) string {
 	timeHash := int64(time.Now().Unix() / config.ttlSecond)
-	return config.cacheKeyPrefix + ip + "-" + strconv.FormatInt(timeHash, 10)
+	return config.cacheKeyPrefix + cache.KeyPrefix + id + cache.KeyPrefix + strconv.FormatInt(timeHash, 10)
 }
-func (b *Blocker) isIpBlocked(ip string) bool {
+func (b *Blocker) isBlocked(id string) bool {
 	for k := range b.config {
 		config, ok := b.config[k]
 		if ok == true {
-			key := b.buildCacheKey(ip, k, config)
+			key := b.buildCacheKey(id, k, config)
 			count, err := b.Cache.GetCounter(key)
 			if err != cache.ErrNotFound {
 				if err != nil {
@@ -80,9 +77,16 @@ func (b *Blocker) incr(ip string, status int) {
 		}
 	}
 }
-func (b *Blocker) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func IpIdentifier(r *http.Request) (string, error) {
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-	if b.isIpBlocked(ip) {
+	return ip, nil
+}
+func (b *Blocker) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	id, err := b.Identifier(r)
+	if err != nil {
+		panic(err)
+	}
+	if b.isBlocked(id) {
 		http.Error(w, http.StatusText(b.StatusBlocked), b.StatusBlocked)
 		return
 	}
@@ -91,7 +95,7 @@ func (b *Blocker) ServeMiddleware(w http.ResponseWriter, r *http.Request, next h
 		200,
 	}
 	next(&writer, r)
-	b.incr(ip, writer.status)
+	b.incr(id, writer.status)
 }
 
 type blockWriter struct {
