@@ -236,12 +236,6 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	return err
 }
 
-//SearchByPrefix Search All key start with given prefix.
-//Return All matched key and any error raised.
-func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
-	return nil, cache.ErrFeatureNotSupported
-}
-
 //Config Cache driver config.
 type Config struct {
 	Size int //Cache memory usage limie.
