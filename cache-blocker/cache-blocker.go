@@ -10,6 +10,7 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
+//StatusAny stand for any status
 const StatusAny = 0
 const defaultBlockedStatus = http.StatusTooManyRequests
 
@@ -77,7 +78,7 @@ func (b *Blocker) incr(ip string, status int) {
 		}
 	}
 }
-func IpIdentifier(r *http.Request) (string, error) {
+func IPIdentifier(r *http.Request) (string, error) {
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 	return ip, nil
 }
