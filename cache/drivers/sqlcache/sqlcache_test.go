@@ -248,21 +248,6 @@ func TestSearchUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-func TestSearchByPrefix(t *testing.T) {
-	defaultTTL := int64(1)
-	var testPrefix = "prefix"
-	var testPrefix2 = "prefix"
-	c := newTestCache(defaultTTL)
-	defer c.Close()
-	_, err := c.SearchByPrefix(testPrefix)
-	if err != cache.ErrFeatureNotSupported {
-		t.Fatal(err)
-	}
-	_, err = c.SearchCounterByPrefix(testPrefix2)
-	if err != cache.ErrFeatureNotSupported {
-		t.Fatal(err)
-	}
-}
 func TestCounter(t *testing.T) {
 	defaultTTL := int64(1)
 	testKey := "testKey"

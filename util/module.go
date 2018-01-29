@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -8,6 +9,8 @@ type Module struct {
 	Name    string
 	Handler func()
 }
+
+var PrintModuleInitLog = false
 
 type modulelist []Module
 
@@ -32,6 +35,9 @@ func RegisteModule(name string, handler func()) Module {
 func InitModulesOrderByName() {
 	sort.Sort(Modules)
 	for k := range Modules {
+		if PrintModuleInitLog {
+			fmt.Println("Util: Init module " + Modules[k].Name)
+		}
 		Modules[k].Handler()
 	}
 }

@@ -53,11 +53,6 @@ func (c *Cache) getVersionTx(tx *sql.Tx) ([]byte, error) {
 	return version, err
 }
 
-//SearchByPrefix Search All key start with given prefix.
-//Return All matched key and any error raised.
-func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
-	return nil, cache.ErrFeatureNotSupported
-}
 func (c *Cache) gc() error {
 	var keys []string
 

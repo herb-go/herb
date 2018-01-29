@@ -27,12 +27,6 @@ type Config struct {
 	Remote cache.Config
 }
 
-//SearchByPrefix Search All key start with given prefix.
-//Return All matched key and any error raised.
-func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
-	return nil, cache.ErrFeatureNotSupported
-}
-
 //Flush Flush not supported.
 func (c *Cache) Flush() error {
 	var finalErr error

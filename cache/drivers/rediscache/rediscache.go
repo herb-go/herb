@@ -87,12 +87,6 @@ func (c *Cache) getKey(key string) string {
 	return c.name + c.Separtor + key
 }
 
-//SearchByPrefix Search All key start with given prefix.
-//Return All matched key and any error raised.
-func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
-	return nil, cache.ErrFeatureNotSupported
-}
-
 //Flush Flush not supported.
 func (c *Cache) Flush() error {
 	return cache.ErrFeatureNotSupported

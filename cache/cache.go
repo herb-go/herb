@@ -55,7 +55,6 @@ type Driver interface {
 	UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error        //Update bytes data to cache by given key only if the cache exist.
 	GetBytesValue(key string) ([]byte, error)                                  //Get bytes data from cache by given key.
 	Del(key string) error                                                      //Delete data in cache by given key.
-	SearchByPrefix(prefix string) ([]string, error)                            //Search All key start with given prefix.
 	IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) //Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
 	SetCounter(key string, v int64, ttl time.Duration) error                   //Set int val in cache by given key.Count cache and data cache are in two independent namespace.
 	GetCounter(key string) (int64, error)                                      //Get int val from cache by given key.Count cache and data cache are in two independent namespace.
@@ -190,13 +189,6 @@ func (c *Cache) Get(key string, v interface{}) error {
 	return c.Driver.Get(c.getKey(key), v)
 }
 
-//SearchByPrefix Search All key start with given prefix.
-//Return All matched key and any error raised.
-func (c *Cache) SearchByPrefix(prefix string) ([]string, error) {
-
-	return c.Driver.SearchByPrefix(prefix)
-}
-
 //SetBytesValue Set bytes data to cache by given key.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
@@ -311,12 +303,6 @@ func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 		ttl = c.TTL
 	}
 	return c.Driver.SetCounter(c.getIntKey(key), v, ttl)
-}
-
-//SearchCounterByPrefix Search All key start with given prefix.Count cache and data cache are in two independent namespace.
-//Return All matched key and any error raised.
-func (c *Cache) SearchCounterByPrefix(prefix string) ([]string, error) {
-	return c.Driver.SearchByPrefix(c.getIntKey(prefix))
 }
 
 //GetCounter Get int val from cache by given key.Count cache and data cache are in two independent namespace.
