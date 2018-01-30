@@ -16,11 +16,11 @@ func (i *identifier) IdentifyRequest(r *http.Request) (string, error) {
 	return r.Header.Get(i.Headername), nil
 }
 
-type roleservice struct {
+type roleProvider struct {
 	Prefix string
 }
 
-func (s *roleservice) Roles(uid string) (*Roles, error) {
+func (s *roleProvider) Roles(uid string) (*Roles, error) {
 	return NewRoles(s.Prefix + uid), nil
 }
 
@@ -28,7 +28,7 @@ func TestServuce(t *testing.T) {
 	var testRule = "test"
 	var testHeader = "testheader"
 	var service = Service{
-		RoleService: &roleservice{},
+		RoleProvider: &roleProvider{},
 		Identifier: &identifier{
 			Headername: testHeader,
 		},

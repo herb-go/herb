@@ -6,16 +6,16 @@ import (
 	"github.com/herb-go/herb/user"
 )
 
-type RuleService interface {
+type RuleProvider interface {
 	Rule(*http.Request) (Rule, error)
 }
-type RoleService interface {
+type RoleProvider interface {
 	Roles(uid string) (*Roles, error)
 }
 
 type Authorizer struct {
-	Service     *Service
-	RuleService RuleService
+	Service      *Service
+	RuleProvider RuleProvider
 }
 
 func (a *Authorizer) Authorize(r *http.Request) (bool, error) {
@@ -26,14 +26,14 @@ func (a *Authorizer) Authorize(r *http.Request) (bool, error) {
 	if uid == "" {
 		return false, nil
 	}
-	roles, err := a.Service.RoleService.Roles(uid)
+	roles, err := a.Service.RoleProvider.Roles(uid)
 	if err != nil {
 		return false, err
 	}
 	if roles == nil {
 		return false, err
 	}
-	rm, err := a.RuleService.Rule(r)
+	rm, err := a.RuleProvider.Rule(r)
 	if err != nil {
 		return false, err
 	}
@@ -41,17 +41,17 @@ func (a *Authorizer) Authorize(r *http.Request) (bool, error) {
 }
 
 type Service struct {
-	RoleService RoleService
-	Identifier  user.Identifier
+	RoleProvider RoleProvider
+	Identifier   user.Identifier
 }
 
-func (s *Service) Authorizer(rs RuleService) *Authorizer {
+func (s *Service) Authorizer(rs RuleProvider) *Authorizer {
 	return &Authorizer{
-		Service:     s,
-		RuleService: rs,
+		Service:      s,
+		RuleProvider: rs,
 	}
 }
-func (s *Service) AuthorizeMiddleware(rs RuleService, unauthorizedAction http.HandlerFunc) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (s *Service) AuthorizeMiddleware(rs RuleProvider, unauthorizedAction http.HandlerFunc) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return user.AuthorizeMiddleware(s.Authorizer(rs), unauthorizedAction)
 }
 
