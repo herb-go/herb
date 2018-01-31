@@ -2,25 +2,40 @@ package forwarded
 
 import "net/http"
 
+//StatusDisabled status stands for disable this middleware.
 const StatusDisabled = 0
 
 func defaultTokenFailedAction(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 }
 
+//Middleware main middleware struct.
 type Middleware struct {
-	Status               int
-	ForwardedForHeader   string
-	ForwardedHostHeader  string
+	//Status if this middleware is enabled.
+	Status int
+	//ForwardedForHeader request header name which stores real ip.
+	//If set to empty string,this feature will be disabeld.
+	ForwardedForHeader string
+	//ForwardedHostHeader request header name which stores real host.
+	//If set to empty string,this feature will be disabeld.
+	ForwardedHostHeader string
+	//ForwardedProtoHeader request header name which stores real proto.
+	//If set to empty string,this feature will be disabeld.
 	ForwardedProtoHeader string
+	//ForwardedTokenHeader request header name which stores token.
+	//If set to empty string,this feature will be disabeld.
 	ForwardedTokenHeader string
-	ForwardedTokenValue  string
-	tokenFailedAction    http.HandlerFunc
+	//ForwardedTokenValue value which request header must equal.
+	ForwardedTokenValue string
+	tokenFailedAction   http.HandlerFunc
 }
 
+//SetTokenFailedAction set action which will execute when token verification fail
 func (m *Middleware) SetTokenFailedAction(action func(w http.ResponseWriter, r *http.Request)) {
 	m.tokenFailedAction = action
 }
+
+//ServeMiddleware return middleware.
 func (m *Middleware) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	if m.Status == StatusDisabled {
 		next(w, r)

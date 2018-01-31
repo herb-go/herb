@@ -133,11 +133,13 @@ func (csrf *Csrf) generateToken() (string, error) {
 	return csrf.TokenGenerater()
 }
 
+//DefaultTokenGenerater default csrf token generater.
+//Return current timestamp string and any error if raised.
 func DefaultTokenGenerater() (string, error) {
 	return strconv.FormatInt(time.Now().UnixNano(), 10), nil
 }
 
-// New return a new Csrf Component with default values.
+//New return a new Csrf Component with default values.
 func New() *Csrf {
 	c := Csrf{
 		Tokenlength:       defaultTokenlength,
@@ -157,13 +159,13 @@ func New() *Csrf {
 //You can use Csrf.SetCsrfTokenMiddleware,Csrf.VerifyFormMiddleware,Csrf.VerifyHeaderMiddleware or Csrf.CsrfInput to protected your web app.
 //All value can be change after creation.
 type Csrf struct {
-	Tokenlength       int        //Length of csrf token.Default value is 64.Generaged tokenbytes will convert to base64encoded,so actual length will be longer than TokenValue.
-	CookieName        string     //Name of cookie which the token stored in.Default value is "herb-csrf-token".
-	CookiePath        string     //Path of cookie the token stored in.Default value is "/".
-	HeaderName        string     //Name of Header which the token stroed in.Default value is ""X-CSRF-TOKEN".
-	FormField         string     //Field name of post form which the token stroed in.Default value is ""X-CSRF-TOKEN".
-	FailStatus        int        //Http status code returned when csrf verify failed.Default value is  http.StatusBadRequest (int 400).
-	RequestContextKey ContextKey //Context key of requst which token stored in.Default value is csrf.ContextKey("herb-csrf-token").
-	Enabled           bool
-	TokenGenerater    func() (string, error)
+	Tokenlength       int                    //Length of csrf token.Default value is 64.Generaged tokenbytes will convert to base64encoded,so actual length will be longer than TokenValue.
+	CookieName        string                 //Name of cookie which the token stored in.Default value is "herb-csrf-token".
+	CookiePath        string                 //Path of cookie the token stored in.Default value is "/".
+	HeaderName        string                 //Name of Header which the token stroed in.Default value is ""X-CSRF-TOKEN".
+	FormField         string                 //Field name of post form which the token stroed in.Default value is ""X-CSRF-TOKEN".
+	FailStatus        int                    //Http status code returned when csrf verify failed.Default value is  http.StatusBadRequest (int 400).
+	RequestContextKey ContextKey             //Context key of requst which token stored in.Default value is csrf.ContextKey("herb-csrf-token").
+	Enabled           bool                   //Enabled if this middleware if enabled.
+	TokenGenerater    func() (string, error) //TokenGenerater func to create csrf token.
 }
