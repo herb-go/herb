@@ -36,7 +36,7 @@ func InitModulesOrderByName() {
 	sort.Sort(Modules)
 	for k := range Modules {
 		if PrintModuleInitLog {
-			fmt.Println("Util: Init module " + Modules[k].Name)
+			fmt.Println("Herb-go util debug: Init module " + Modules[k].Name)
 		}
 		Modules[k].Handler()
 	}
