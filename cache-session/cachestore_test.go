@@ -103,6 +103,7 @@ func TestField(t *testing.T) {
 	mux.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) { s.HeaderMiddleware(testHeaderName)(w, r, ActionGetField) })
 	mux.HandleFunc("/set", func(w http.ResponseWriter, r *http.Request) { s.HeaderMiddleware(testHeaderName)(w, r, ActionSetField) })
 	hs := httptest.NewServer(mux)
+	defer hs.Close()
 	c := &http.Client{}
 	GetRequest, err := http.NewRequest("POST", hs.URL+"/get", nil)
 	GetRequest.Header.Set(testHeaderName, ts.MustToken())
@@ -602,6 +603,7 @@ func TestRequest(t *testing.T) {
 	mux.HandleFunc("/loginstatus", actionHeaderLoginStatus)
 	mux.HandleFunc("/cookie/loginstatus", actionCookieLoginStatus)
 	hs := httptest.NewServer(mux)
+	defer hs.Close()
 	c := &http.Client{}
 	LoginStatusRequest, err := http.NewRequest("POST", hs.URL+"/loginstatus", nil)
 	if err != nil {

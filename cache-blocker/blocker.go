@@ -10,10 +10,11 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-//StatusAny stand for any status
+//StatusAny stand for any status when block.
 const StatusAny = 0
 const defaultBlockedStatus = http.StatusTooManyRequests
 
+//New create blocker with given cache and http request udentifier
 func New(cache cache.Cacheable, Identifier func(r *http.Request) (string, error)) *Blocker {
 	return &Blocker{
 		config:        map[int]statusConfig{},
@@ -28,13 +29,20 @@ type statusConfig struct {
 	max            int64
 	cacheKeyPrefix string
 }
+
+//Blocker blocker struct.
 type Blocker struct {
-	config        map[int]statusConfig
-	Cache         cache.Cacheable
+	config map[int]statusConfig
+	//Cache cache which store blcok data
+	Cache cache.Cacheable
+	//StatusBlocked error status which will returned when request blcoker.Default value is 429.
 	StatusBlocked int
-	Identifier    func(r *http.Request) (string, error)
+	//Identifier http request identifier
+	Identifier func(r *http.Request) (string, error)
 }
 
+//Block block config method.
+//Requester request for morethan param max request which response staus is param status in param ttl will be blocked.
 func (b *Blocker) Block(status int, max int64, ttl time.Duration) {
 	ttlSecond := int64(ttl / time.Second)
 	b.config[status] = statusConfig{
@@ -78,10 +86,14 @@ func (b *Blocker) incr(ip string, status int) {
 		}
 	}
 }
+
+//IPIdentifier identify http request by ip address.
 func IPIdentifier(r *http.Request) (string, error) {
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 	return ip, nil
 }
+
+//ServeMiddleware serve blocker as a middleware.
 func (b *Blocker) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	id, err := b.Identifier(r)
 	if err != nil {

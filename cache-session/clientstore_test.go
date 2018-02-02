@@ -409,6 +409,7 @@ func TestClientRequest(t *testing.T) {
 	mux.HandleFunc("/loginstatus", actionHeaderLoginStatus)
 	mux.HandleFunc("/cookie/loginstatus", actionCookieLoginStatus)
 	hs := httptest.NewServer(mux)
+	defer hs.Close()
 	c := &http.Client{}
 	LoginStatusRequest, err := http.NewRequest("POST", hs.URL+"/loginstatus", nil)
 	if err != nil {
