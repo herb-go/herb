@@ -6,7 +6,6 @@ func TestRole(t *testing.T) {
 	var rolename = "editor"
 	var rolename2 = "admin"
 	var rulenameNotOwned1 = "no1"
-	// var rolenameNotOwned2 = "no2"
 	var fieldname1 = "country"
 	var roleDataUS = "US"
 	var roleDataCN = "CN"
