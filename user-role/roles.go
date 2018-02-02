@@ -2,6 +2,7 @@ package role
 
 import "net/http"
 
+//Roles type role list
 type Roles []Role
 
 func getValueMapCache(roles Roles) map[int]map[string]map[string]bool {
@@ -21,9 +22,16 @@ func getValueMapCache(roles Roles) map[int]map[string]map[string]bool {
 	}
 	return valuemap
 }
+
+//Rule implement rule provdier interface.
 func (rules *Roles) Rule(*http.Request) (Rule, error) {
 	return rules, nil
 }
+
+//Execute execute role as rule provider.
+//If rule data if empty,any role with same name will success.
+//Otherwise,only roles with data which covers all rule data will success.
+//Method will suceess if All rules success.
 func (rules *Roles) Execute(roles ...Role) (bool, error) {
 	if len(*rules) == 0 {
 		return true, nil
@@ -63,6 +71,8 @@ func (rules *Roles) Execute(roles ...Role) (bool, error) {
 	return false, nil
 }
 
+//NewRoles create new roles with given rolesnames.
+//You can't use this method to create roles with data.
 func NewRoles(rolenames ...string) *Roles {
 	var roles = make(Roles, len(rolenames))
 	for k := range rolenames {

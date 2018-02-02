@@ -27,12 +27,9 @@ func (s *roleProvider) Roles(uid string) (*Roles, error) {
 func TestServuce(t *testing.T) {
 	var testRule = "test"
 	var testHeader = "testheader"
-	var service = Service{
-		RoleProvider: &roleProvider{},
-		Identifier: &identifier{
-			Headername: testHeader,
-		},
-	}
+	var service = NewService(&roleProvider{}, &identifier{
+		Headername: testHeader,
+	})
 	var app = middleware.New()
 	app.
 		Use(service.RolesAuthorizeOrForbiddenMiddleware(testRule)).
