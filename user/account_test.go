@@ -5,7 +5,7 @@ import (
 )
 
 func TestUserAccount(t *testing.T) {
-	account1, err := CaseInsensitiveAcountType.NewAccount("testaccount", "account1")
+	account1, err := CaseSensitiveAcountType.NewAccount("testaccount", "account1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,5 +44,37 @@ func TestUserAccount(t *testing.T) {
 	}
 	if !accounts.Exists(account2) {
 		t.Error(account2)
+	}
+	err = accounts.Unbind(account2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if accounts.Exists(account2) {
+		t.Error(account2)
+	}
+}
+
+func TestCIAccountType(t *testing.T) {
+	account1cs, err := CaseSensitiveAcountType.NewAccount("testaccount", "account1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	Account1cs, err := CaseSensitiveAcountType.NewAccount("testaccount", "Account1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if account1cs.Equal(Account1cs) {
+		t.Error(Account1cs)
+	}
+	account1ci, err := CaseInsensitiveAcountType.NewAccount("testaccount", "account1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	Account1ci, err := CaseInsensitiveAcountType.NewAccount("testaccount", "Account1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !account1ci.Equal(Account1ci) {
+		t.Error(Account1cs)
 	}
 }
