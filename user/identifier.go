@@ -9,7 +9,7 @@ type Identifier interface {
 	IdentifyRequest(r *http.Request) (string, error)
 }
 
-type LogoutService interface {
+type LogoutProvider interface {
 	Logout(r *http.Request) error
 }
 
@@ -90,7 +90,7 @@ func LoginRequiredMiddleware(s Identifier, unauthorizedAction http.HandlerFunc) 
 		next(w, r)
 	}
 }
-func LogoutMiddleware(s LogoutService) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func LogoutMiddleware(s LogoutProvider) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		err := s.Logout(r)
 		if err != nil {

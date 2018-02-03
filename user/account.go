@@ -11,7 +11,7 @@ func (a *UserAccount) Equal(account *UserAccount) bool {
 	return a.Keyword == account.Keyword && a.Account == account.Account
 }
 
-type UserAccounts []UserAccount
+type UserAccounts []*UserAccount
 
 func (a *UserAccounts) Exists(account *UserAccount) bool {
 	for k := range *a {
@@ -27,7 +27,7 @@ func (a *UserAccounts) Bind(account *UserAccount) error {
 			return ErrAccountBindExists
 		}
 	}
-	*a = append(*a, *account)
+	*a = append(*a, account)
 	return nil
 }
 
