@@ -45,7 +45,7 @@ func (f *Field) IdentifyRequest(r *http.Request) (string, error) {
 	return id, err
 }
 
-func (f *Field) Login(r *http.Request, id string) error {
+func (f *Field) Login(w http.ResponseWriter, r *http.Request, id string) error {
 	s, err := f.Store.GetRequestSession(r)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (f *Field) LoginSession(id string) (*Session, error) {
 	}
 	return s, nil
 }
-func (f *Field) Logout(r *http.Request) error {
+func (f *Field) Logout(w http.ResponseWriter, r *http.Request) error {
 	s, err := f.Store.GetRequestSession(r)
 	if err != nil {
 		return err

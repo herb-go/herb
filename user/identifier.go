@@ -10,9 +10,11 @@ type Identifier interface {
 }
 
 type LogoutProvider interface {
-	Logout(r *http.Request) error
+	Logout(w http.ResponseWriter, r *http.Request) error
 }
-
+type loginProvider interface {
+	Login(w http.ResponseWriter, r *http.Request, id string) error
+}
 type LoginRedirector struct {
 	LoginURL string
 	Cookie   *http.Cookie
@@ -92,7 +94,7 @@ func LoginRequiredMiddleware(s Identifier, unauthorizedAction http.HandlerFunc) 
 }
 func LogoutMiddleware(s LogoutProvider) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		err := s.Logout(r)
+		err := s.Logout(w, r)
 		if err != nil {
 			panic(err)
 		}
