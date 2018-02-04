@@ -2,18 +2,24 @@ package user
 
 import "strings"
 
-type UserAccount struct {
+//Account user account struct
+type Account struct {
+	//User accont keyword
 	Keyword string
+	//user account name
 	Account string
 }
 
-func (a *UserAccount) Equal(account *UserAccount) bool {
+//Equal check if an account is euqal to another.
+func (a *Account) Equal(account *Account) bool {
 	return a.Keyword == account.Keyword && a.Account == account.Account
 }
 
-type UserAccounts []*UserAccount
+//Accounts type account list
+type Accounts []*Account
 
-func (a *UserAccounts) Exists(account *UserAccount) bool {
+//Exists check if an account is in account list.
+func (a *Accounts) Exists(account *Account) bool {
 	for k := range *a {
 		if (*a)[k].Equal(account) {
 			return true
@@ -21,7 +27,11 @@ func (a *UserAccounts) Exists(account *UserAccount) bool {
 	}
 	return false
 }
-func (a *UserAccounts) Bind(account *UserAccount) error {
+
+//Bind add account to accountlist.
+//Return any error if raised.
+//If account exists in account list,error ErrAccountBindExists will be raised.
+func (a *Accounts) Bind(account *Account) error {
 	for k := range *a {
 		if (*a)[k].Equal(account) {
 			return ErrAccountBindExists
@@ -31,7 +41,10 @@ func (a *UserAccounts) Bind(account *UserAccount) error {
 	return nil
 }
 
-func (a *UserAccounts) Unbind(account *UserAccount) error {
+//Unbind remove account from accountlist.
+//Return any error if raised.
+//If account not exists in account list,error ErrAccountUnbindNotExists will be raised.
+func (a *Accounts) Unbind(account *Account) error {
 	for k := range *a {
 		if (*a)[k].Equal(account) {
 			(*a) = append((*a)[:k], (*a)[k+1:]...)
@@ -41,31 +54,38 @@ func (a *UserAccounts) Unbind(account *UserAccount) error {
 	return ErrAccountUnbindNotExists
 }
 
-type AccountType interface {
-	NewAccount(keyword string, account string) (*UserAccount, error)
+//AccountProvider account provider interface
+type AccountProvider interface {
+	//NewAccount create new account with keyword and account
+	NewAccount(keyword string, account string) (*Account, error)
 }
 
-type PlainAccountType struct {
+//PlainAccountProvider plain account provider.
+type PlainAccountProvider struct {
 	Prefix          string
 	CaseInsensitive bool
 }
 
-func (s *PlainAccountType) NewAccount(keyword string, account string) (*UserAccount, error) {
+//NewAccount create new account
+//is CaseInsensitive is true,account name will be convert to lower
+func (s *PlainAccountProvider) NewAccount(keyword string, account string) (*Account, error) {
 	if s.CaseInsensitive {
 		account = strings.ToLower(account)
 	}
-	return &UserAccount{
+	return &Account{
 		Keyword: keyword,
 		Account: account,
 	}, nil
 }
 
-var CaseInsensitiveAcountType = &PlainAccountType{
+//CaseInsensitiveAcountProvider plain account provider which case insensitive
+var CaseInsensitiveAcountProvider = &PlainAccountProvider{
 	Prefix:          "",
 	CaseInsensitive: true,
 }
 
-var CaseSensitiveAcountType = &PlainAccountType{
+//CaseSensitiveAcountProvider plain account provider which case sensitive
+var CaseSensitiveAcountProvider = &PlainAccountProvider{
 	Prefix:          "",
 	CaseInsensitive: false,
 }

@@ -70,7 +70,7 @@ func TestLoginRequired(t *testing.T) {
 		})
 	})
 	mux.HandleFunc("/id2", func(w http.ResponseWriter, r *http.Request) {
-		ForbiddenExceptForUsers(Identifier, []string{"id2"})(w, r, func(w http.ResponseWriter, r *http.Request) {
+		MiddlewareForbiddenExceptForUsers(Identifier, []string{"id2"})(w, r, func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("ok"))
 		})
 	})
