@@ -181,4 +181,5 @@ func (a *App) UseApp(apps ...*App) *App {
 	return a
 }
 
+//Middleware middleware interface
 type Middleware func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
