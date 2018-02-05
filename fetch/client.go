@@ -17,7 +17,7 @@ var DefaultMaxIdleConns = 100
 var DefaultIdleConnTimeout = 120 * time.Second
 var DefaultTLSHandshakeTimeout = 30 * time.Second
 
-type Service struct {
+type Fetcher struct {
 	TimeoutInSecond     int
 	MaxIdleConns        int
 	IdleConnTimeout     int
@@ -26,13 +26,13 @@ type Service struct {
 	proxyCache          map[string]func(*http.Request) (*url.URL, error)
 }
 
-var DefaultService = &Service{}
+var DefaultFetcher = &Fetcher{}
 
-func (s *Service) getProxy(index string) func(*http.Request) (*url.URL, error) {
+func (fetcher *Fetcher) getProxy(index string) func(*http.Request) (*url.URL, error) {
 	if index == "" {
 		return http.ProxyFromEnvironment
 	}
-	p, ok := s.proxyCache[index]
+	p, ok := fetcher.proxyCache[index]
 	if ok == false {
 		url, err := url.Parse(index)
 		if err != nil {
@@ -43,12 +43,12 @@ func (s *Service) getProxy(index string) func(*http.Request) (*url.URL, error) {
 	}
 	return p
 }
-func (s *Service) Client() *Client {
-	var cs *Service
-	if s != nil {
-		cs = s
+func (fetcher *Fetcher) Client() *Client {
+	var cs *Fetcher
+	if fetcher != nil {
+		cs = fetcher
 	} else {
-		cs = DefaultService
+		cs = DefaultFetcher
 	}
 
 	timeout := cs.TimeoutInSecond
@@ -56,33 +56,33 @@ func (s *Service) Client() *Client {
 		timeout = DefaultTimeout
 	}
 	c := http.Client{
-		Transport: s.getTransport(),
+		Transport: fetcher.getTransport(),
 		Timeout:   time.Duration(cs.TimeoutInSecond) * time.Second,
 	}
 	return &Client{Client: &c}
 }
-func (s *Service) getTransport() *http.Transport {
-	var maxIdleCoons = s.MaxIdleConns
+func (fetcher *Fetcher) getTransport() *http.Transport {
+	var maxIdleCoons = fetcher.MaxIdleConns
 	if maxIdleCoons == 0 {
 		maxIdleCoons = DefaultMaxIdleConns
 	}
-	var idleConnTimeout = time.Duration(s.IdleConnTimeout) * time.Second
+	var idleConnTimeout = time.Duration(fetcher.IdleConnTimeout) * time.Second
 	if idleConnTimeout == 0 {
 		idleConnTimeout = DefaultIdleConnTimeout
 	}
-	var tlsHandshakeTimeout = time.Duration(s.TLSHandshakeTimeout) * time.Second
+	var tlsHandshakeTimeout = time.Duration(fetcher.TLSHandshakeTimeout) * time.Second
 	if tlsHandshakeTimeout == 0 {
 		tlsHandshakeTimeout = DefaultTLSHandshakeTimeout
 	}
 	return &http.Transport{
-		Proxy:               s.getProxy(s.ProxyURL),
+		Proxy:               fetcher.getProxy(fetcher.ProxyURL),
 		MaxIdleConns:        maxIdleCoons,
 		IdleConnTimeout:     idleConnTimeout,
 		TLSHandshakeTimeout: tlsHandshakeTimeout,
 	}
 }
-func (s *Service) Fetch(req *http.Request) (*Result, error) {
-	return s.Client().Fetch(req)
+func (fetcher *Fetcher) Fetch(req *http.Request) (*Result, error) {
+	return fetcher.Client().Fetch(req)
 }
 
 type Client struct {

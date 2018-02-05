@@ -1,18 +1,12 @@
 package httprouter
 
 import (
-	"errors"
 	"net/http"
 
-	"context"
-
 	"github.com/herb-go/herb/middleware"
+	"github.com/herb-go/herb/middleware-router"
 	"github.com/julienschmidt/httprouter"
 )
-
-type Contextkey string
-
-const ContextParamsKey = Contextkey("httprouterParams")
 
 type Router struct {
 	router *httprouter.Router
@@ -49,14 +43,14 @@ func (router *Router) Handlers() []func(w http.ResponseWriter, r *http.Request, 
 	return []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){router.ServeMiddleware}
 }
 
-func GetParams(r *http.Request) *httprouter.Params {
-	p := r.Context().Value(ContextParamsKey)
-	params, _ := p.(httprouter.Params)
-	return &params
+func GetParams(r *http.Request) *router.Params {
+	return router.GetParams(r)
 }
 func SetParams(r *http.Request, params httprouter.Params) {
-	ctx := context.WithValue(r.Context(), ContextParamsKey, params)
-	*r = *r.WithContext(ctx)
+	p := router.GetParams(r)
+	for k := range params {
+		p.Set(params[k].Key, params[k].Value)
+	}
 }
 
 func (r *Router) GET(path string) *middleware.App {
@@ -113,12 +107,7 @@ func (r *Router) StripPrefix(path string) *middleware.App {
 }
 
 func stripPrefixfunc(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	params := r.Context().Value(ContextParamsKey)
-	p, ok := params.(httprouter.Params)
-	if ok {
-		r.URL.Path = p.ByName("filepath")
-		next(w, r)
-		return
-	}
-	panic(errors.New("Strip prefix Error"))
+	params := router.GetParams(r)
+	r.URL.Path = params.Get("filepath")
+	next(w, r)
 }

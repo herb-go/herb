@@ -108,58 +108,62 @@ func TestMiddleware(t *testing.T) {
 	data, statusCode = doRequest(t, nil)
 	if statusCode != http.StatusOK {
 		t.Fatal(statusCode)
-		if strings.Split(data["RemoteAddr"], ":")[0] != addr {
-			t.Error(data["RemoteAddr"])
-		}
 	}
+	if strings.Split(data["RemoteAddr"], ":")[0] != addr {
+		t.Error(data["RemoteAddr"])
+	}
+
 	var forwardedIP = "1234567"
 	data, statusCode = doRequest(t, map[string][]string{
 		xForwardedForHeader: []string{forwardedIP},
 	})
 	if statusCode != http.StatusOK {
 		t.Fatal(statusCode)
-		if strings.Split(data["RemoteAddr"], ":")[0] != forwardedIP {
-			t.Error(data["RemoteAddr"])
-		}
+	}
+	if strings.Split(data["RemoteAddr"], ":")[0] != forwardedIP {
+		t.Error(data["RemoteAddr"])
 	}
 
 	middleware.ForwardedHostHeader = xForwardedHostHeader
 	data, statusCode = doRequest(t, nil)
 	if statusCode != http.StatusOK {
 		t.Fatal(statusCode)
-		if data["Host"] != host {
-			t.Error(data["Host"])
-		}
 	}
+	if data["Host"] != host {
+		t.Error(data["Host"])
+	}
+
 	var forwardedHost = "github.com"
 	data, statusCode = doRequest(t, map[string][]string{
 		xForwardedHostHeader: []string{forwardedHost},
 	})
 	if statusCode != http.StatusOK {
 		t.Fatal(statusCode)
-		if data["Host"] != forwardedHost {
-			t.Error(data["Host"])
-		}
+	}
+	if data["Host"] != forwardedHost {
+		t.Error(data["Host"])
 	}
 
 	middleware.ForwardedProtoHeader = xForwardedProtoHeader
 	data, statusCode = doRequest(t, nil)
 	if statusCode != http.StatusOK {
 		t.Fatal(statusCode)
-		if data["Scheme"] != "" {
-			t.Error(data["Scheme"])
-		}
+
+	}
+	if data["Scheme"] != "" {
+		t.Error(data["Scheme"])
 	}
 	var forwardedScheme = "https"
 	data, statusCode = doRequest(t, map[string][]string{
-		xForwardedHostHeader: []string{forwardedHost},
+		xForwardedProtoHeader: []string{forwardedScheme},
 	})
 	if statusCode != http.StatusOK {
 		t.Fatal(statusCode)
-		if data["Scheme"] != forwardedScheme {
-			t.Error(data["Scheme"])
-		}
 	}
+	if data["Scheme"] != forwardedScheme {
+		t.Error(data["Scheme"])
+	}
+
 	var forwardedToken = "X-Forwarded-Token"
 	var forwardedTokenWrong = "wrongtoken"
 	var forwardedValue = "value"
