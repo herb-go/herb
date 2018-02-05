@@ -96,7 +96,6 @@ func WrapFunc(handlerFunc http.HandlerFunc) func(w http.ResponseWriter, r *http.
 
 // Wrap : Wrap http.Handler to middleware.
 // Next will be called after handlerFunc finish .
-
 func Wrap(f http.Handler) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		f.ServeHTTP(w, r)
@@ -147,13 +146,15 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleFunc : Use http HandlerFunc as last middleware.
-func (a *App) HandleFunc(HandlerFunc http.HandlerFunc) {
+func (a *App) HandleFunc(HandlerFunc http.HandlerFunc) *App {
 	Use(a, WrapFunc(HandlerFunc))
+	return a
 }
 
 // Handle : Use http Handler as last middleware.
-func (a *App) Handle(Handler http.Handler) {
+func (a *App) Handle(Handler http.Handler) *App {
 	Use(a, Wrap(Handler))
+	return a
 }
 
 // Use : Append middlewares to app.
@@ -171,7 +172,6 @@ func (a *App) Chain(src ...HandlerSlice) *App {
 
 // UseApp : Append apps as middlewares to app.
 // App will change when new middleware appended to apps.
-
 func (a *App) UseApp(apps ...*App) *App {
 	funcs := make([]func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc), len(apps))
 	for k := range apps {
