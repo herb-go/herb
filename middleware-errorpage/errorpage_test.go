@@ -10,7 +10,7 @@ import (
 	"github.com/herb-go/herb/middleware"
 )
 
-func Testerrorpage(t *testing.T) {
+func TestErrorPage(t *testing.T) {
 	app := middleware.New()
 	mux := http.NewServeMux()
 	errorpage := New()

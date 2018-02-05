@@ -29,10 +29,14 @@ func (e *ErrorPage) disable(r *http.Request) {
 	ctx := context.WithValue(r.Context(), contextNameDisable, true)
 	*r = *r.WithContext(ctx)
 }
+
+//MiddlewareDisable middleware which disable previous installed error page middleware
 func (e *ErrorPage) MiddlewareDisable(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	e.disable(r)
 	next(w, r)
 }
+
+//ServeMiddleware serve middleware
 func (e *ErrorPage) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	newWriter := e.newResponseWriter(w, r)
 	next(&newWriter, r)
@@ -54,14 +58,20 @@ func (e *ErrorPage) getStatusHandler(status int) func(w http.ResponseWriter, r *
 	}
 	return nil
 }
+
+//OnError configure  default error page when statuscode >399 and statuscode <600
 func (e *ErrorPage) OnError(f func(w http.ResponseWriter, r *http.Request, status int)) *ErrorPage {
 	e.errorHandler = f
 	return e
 }
+
+//OnStatus configure error page by status code.
 func (e *ErrorPage) OnStatus(status int, f func(w http.ResponseWriter, r *http.Request, status int)) *ErrorPage {
 	e.statusHandlers[status] = f
 	return e
 }
+
+//IgnoreStatus configure ignore given status.
 func (e *ErrorPage) IgnoreStatus(status int) *ErrorPage {
 	e.ignoredStatus[status] = true
 	return e
