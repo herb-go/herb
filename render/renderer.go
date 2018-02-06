@@ -145,15 +145,15 @@ func (r *Renderer) GetView(ViewName string) *NamedView {
 	}
 }
 
-func (r *Renderer) Execute(viewname string, data interface{}) (string, error) {
+func (r *Renderer) Execute(viewname string, data interface{}) ([]byte, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 	var cv, err = r.view(viewname)
 	if err != nil {
-		return "", NewViewError(viewname, err)
+		return nil, NewViewError(viewname, err)
 	}
 	if cv == nil {
-		return "", NewViewError(viewname, ErrorViewNotExist)
+		return nil, NewViewError(viewname, ErrorViewNotExist)
 	}
 	return cv.Execute(data)
 
@@ -171,7 +171,7 @@ func (r *Renderer) NewView(ViewName string, viewFiles ...string) *NamedView {
 }
 
 type CompiledView interface {
-	Execute(data interface{}) (string, error)
+	Execute(data interface{}) ([]byte, error)
 }
 
 type Engine interface {

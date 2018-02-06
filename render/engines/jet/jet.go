@@ -14,7 +14,7 @@ type View struct {
 	template *jet.Template
 }
 
-func (v *View) Execute(data interface{}) (string, error) {
+func (v *View) Execute(data interface{}) ([]byte, error) {
 	var err error
 	writer := bytes.NewBuffer([]byte{})
 	d, ok := data.(render.Data)
@@ -29,9 +29,9 @@ func (v *View) Execute(data interface{}) (string, error) {
 	}
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(writer.Bytes()), nil
+	return writer.Bytes(), nil
 }
 
 type JetEngine struct {

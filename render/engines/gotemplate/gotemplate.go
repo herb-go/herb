@@ -23,15 +23,15 @@ func New() *GoTemplateEngine {
 
 type GoTemplateView template.Template
 
-func (v *GoTemplateView) Execute(data interface{}) (string, error) {
+func (v *GoTemplateView) Execute(data interface{}) ([]byte, error) {
 
 	writer := bytes.NewBuffer([]byte{})
 	t := template.Template(*v)
 	err := t.Execute(writer, data)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(writer.Bytes()), nil
+	return writer.Bytes(), nil
 }
 
 type GoTemplateEngine struct {
