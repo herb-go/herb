@@ -3,14 +3,15 @@ package misc
 import (
 	"net/http"
 	"os"
+	"path"
 	"strings"
 )
 
-type justFilesFilesystem struct {
+type fileFilesystem struct {
 	Fs http.FileSystem
 }
 
-func (fs justFilesFilesystem) Open(name string) (http.File, error) {
+func (fs fileFilesystem) Open(name string) (http.File, error) {
 	f, err := fs.Fs.Open(name)
 	if err != nil {
 		return nil, err
@@ -22,13 +23,13 @@ func (fs justFilesFilesystem) Open(name string) (http.File, error) {
 		if err != nil {
 			return nil, err
 		}
-		return nil, os.ErrNotExist
+		return fs.Open(path.Join(name, "index.html"))
 	}
 
 	return f, nil
 }
 func ServePrefixedFiles(prefix string, root http.FileSystem) http.HandlerFunc {
-	fs := justFilesFilesystem{
+	fs := fileFilesystem{
 		Fs: root,
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -49,11 +50,18 @@ func ServeFile(path string) http.HandlerFunc {
 		http.ServeFile(w, r, path)
 	}
 }
-func ServeFolder(root http.FileSystem) http.HandlerFunc {
-	fs := justFilesFilesystem{
-		Fs: root,
-	}
+func ServeFolder(root string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		http.FileServer(fs).ServeHTTP(w, r)
+		file := path.Join(root, r.URL.Path)
+		fi, err := os.Stat(file)
+		if err == nil {
+			if fi.IsDir() {
+				ii, err := os.Stat(path.Join(file, "index.html"))
+				if err != nil || ii.IsDir() {
+					http.Error(w, http.StatusText(403), 403)
+				}
+			}
+		}
+		http.ServeFile(w, r, file)
 	}
 }
