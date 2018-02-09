@@ -58,8 +58,10 @@ func (p *PageCache) serve(key string, ttl time.Duration, w http.ResponseWriter, 
 		}
 		return cache.ErrNotCacheable
 	})
-	if err != nil && err != cache.ErrEntryTooLarge {
-		panic(err)
+	if err != nil {
+		if err != cache.ErrEntryTooLarge && err != cache.ErrNotCacheable {
+			panic(err)
+		}
 	}
 	h := w.Header()
 	for k, v := range page.Header {
