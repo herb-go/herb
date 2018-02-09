@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/herb-go/herb/middleware"
-	"github.com/herb-go/herb/middleware-router"
+	"github.com/herb-go/herb/middleware/router"
 	"github.com/julienschmidt/httprouter"
 )
 
