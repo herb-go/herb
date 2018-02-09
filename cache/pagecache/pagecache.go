@@ -30,7 +30,7 @@ type PageCache struct {
 	StatusValidator func(status int) bool
 }
 
-var defaultKeyPrefix = "PageCache-"
+var defaultKeyPrefix = ""
 
 func defualtStatusValidator(status int) bool {
 	return status < 500
