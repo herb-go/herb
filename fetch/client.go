@@ -10,29 +10,50 @@ import (
 	"time"
 )
 
+//ErrMsgLengthLimit max error message length
 var ErrMsgLengthLimit = 512
 
+//DefaultTimeout default client timeout
 var DefaultTimeout = 120
-var DefaultMaxIdleConns = 100
+
+//DefaultMaxIdleConns default client max idle conns
+var DefaultMaxIdleConns = 20
+
+//DefaultIdleConnTimeout default client idle conn timeout.
 var DefaultIdleConnTimeout = 120 * time.Second
+
+//DefaultTLSHandshakeTimeout default client tls handshake time out.
 var DefaultTLSHandshakeTimeout = 30 * time.Second
 
-type Fetcher struct {
-	TimeoutInSecond     int
-	MaxIdleConns        int
-	IdleConnTimeout     int
-	TLSHandshakeTimeout int
-	ProxyURL            string
-	proxyCache          map[string]func(*http.Request) (*url.URL, error)
+//Clients fetch clients struct.
+type Clients struct {
+	//TimeoutInSecond timeout in secound
+	//Default value is 120.
+	TimeoutInSecond int
+	//MaxIdleConns max idel conns.
+	//Default value is 20
+	MaxIdleConns int
+	//IdleConnTimeoutInSecond idel conn timeout in second.
+	//Default value is 120
+	IdleConnTimeoutInSecond int
+	//TLSHandshakeTimeoutInSecond tls handshake timeout in secound.
+	//default value is 30.
+	TLSHandshakeTimeoutInSecond int
+	//ProxyURL proxy url.
+	//If set to empty string,clients will not use proxy.
+	//Default value is empty string.
+	ProxyURL   string
+	proxyCache map[string]func(*http.Request) (*url.URL, error)
 }
 
-var DefaultFetcher = &Fetcher{}
+//DefaultClients default fetch clients.
+var DefaultClients = &Clients{}
 
-func (fetcher *Fetcher) getProxy(index string) func(*http.Request) (*url.URL, error) {
+func (clients *Clients) getProxy(index string) func(*http.Request) (*url.URL, error) {
 	if index == "" {
 		return http.ProxyFromEnvironment
 	}
-	p, ok := fetcher.proxyCache[index]
+	p, ok := clients.proxyCache[index]
 	if ok == false {
 		url, err := url.Parse(index)
 		if err != nil {
@@ -43,12 +64,16 @@ func (fetcher *Fetcher) getProxy(index string) func(*http.Request) (*url.URL, er
 	}
 	return p
 }
-func (fetcher *Fetcher) Client() *Client {
-	var cs *Fetcher
-	if fetcher != nil {
-		cs = fetcher
+
+//Client get a client from fetch clients.
+//This client has all method than http.Client has.
+//This client can use fetch method to get a fetch result.
+func (clients *Clients) Client() *Client {
+	var cs *Clients
+	if clients != nil {
+		cs = clients
 	} else {
-		cs = DefaultFetcher
+		cs = DefaultClients
 	}
 
 	timeout := cs.TimeoutInSecond
@@ -56,39 +81,47 @@ func (fetcher *Fetcher) Client() *Client {
 		timeout = DefaultTimeout
 	}
 	c := http.Client{
-		Transport: fetcher.getTransport(),
+		Transport: cs.getTransport(),
 		Timeout:   time.Duration(cs.TimeoutInSecond) * time.Second,
 	}
 	return &Client{Client: &c}
 }
-func (fetcher *Fetcher) getTransport() *http.Transport {
-	var maxIdleCoons = fetcher.MaxIdleConns
+func (clients *Clients) getTransport() *http.Transport {
+	var maxIdleCoons = clients.MaxIdleConns
 	if maxIdleCoons == 0 {
 		maxIdleCoons = DefaultMaxIdleConns
 	}
-	var idleConnTimeout = time.Duration(fetcher.IdleConnTimeout) * time.Second
+	var idleConnTimeout time.Duration
 	if idleConnTimeout == 0 {
 		idleConnTimeout = DefaultIdleConnTimeout
+	} else {
+		idleConnTimeout = time.Duration(clients.IdleConnTimeoutInSecond) * time.Second
 	}
-	var tlsHandshakeTimeout = time.Duration(fetcher.TLSHandshakeTimeout) * time.Second
+	var tlsHandshakeTimeout time.Duration
 	if tlsHandshakeTimeout == 0 {
 		tlsHandshakeTimeout = DefaultTLSHandshakeTimeout
+	} else {
+		tlsHandshakeTimeout = time.Duration(clients.TLSHandshakeTimeoutInSecond) * time.Second
 	}
 	return &http.Transport{
-		Proxy:               fetcher.getProxy(fetcher.ProxyURL),
+		Proxy:               clients.getProxy(clients.ProxyURL),
 		MaxIdleConns:        maxIdleCoons,
 		IdleConnTimeout:     idleConnTimeout,
 		TLSHandshakeTimeout: tlsHandshakeTimeout,
 	}
 }
-func (fetcher *Fetcher) Fetch(req *http.Request) (*Result, error) {
-	return fetcher.Client().Fetch(req)
+
+//Fetch fetch a fetch result.
+func (clients *Clients) Fetch(req *http.Request) (*Result, error) {
+	return clients.Client().Fetch(req)
 }
 
+//Client Fetch client
 type Client struct {
 	*http.Client
 }
 
+//Fetch fetch a fetch result.
 func (c *Client) Fetch(req *http.Request) (*Result, error) {
 	resp, err := c.Client.Do(req)
 	if err != nil {
@@ -106,17 +139,26 @@ func (c *Client) Fetch(req *http.Request) (*Result, error) {
 	return &result, nil
 }
 
+//Result fetch result.
+//Result will read all bytes form body,store data in BodyContent field,and close the body.
+//Result can be used as error directly.
 type Result struct {
 	*http.Response
 	BodyContent []byte
 }
 
-func (r *Result) UnmarshalJSON(v interface{}) error {
+//UnmarshalAsJSON unmarshal body content as JSON.
+func (r *Result) UnmarshalAsJSON(v interface{}) error {
 	return json.Unmarshal(r.BodyContent, v)
 }
-func (r *Result) UnmarshalXML(v interface{}) error {
+
+//UnmarshalAsXML unmarshal body content as XML.
+func (r *Result) UnmarshalAsXML(v interface{}) error {
 	return xml.Unmarshal(r.BodyContent, v)
 }
+
+//Error result can used as a error which return request url,request status,request content.
+//Error max length is ErrMsgLengthLimit.
 func (r Result) Error() string {
 	msg := fmt.Sprintf("http error [ %s ] %s : %s", r.Response.Request.URL.String(), r.Status, string(r.BodyContent))
 	if len(msg) > ErrMsgLengthLimit {
@@ -125,18 +167,27 @@ func (r Result) Error() string {
 	return msg
 }
 
+//NewAPICodeErr make a api code error  which contains a error code.
 func (r *Result) NewAPICodeErr(code interface{}) *APICodeErr {
 	return NewAPICodeErr(r.Response.Request.URL.String(), code, r.BodyContent)
 
 }
+
+//GetErrorStatusCode get status code form response error.
+//Return 0 if error is not a fetch error.
 func GetErrorStatusCode(err error) int {
-	r, ok := err.(Result)
+	r, ok := err.(*Result)
 	if ok {
 		return r.StatusCode
+	}
+	r2, ok := err.(Result)
+	if ok {
+		return r2.StatusCode
 	}
 	return 0
 }
 
+//NewAPICodeErr create a new api code error with given url,code,and content.
 func NewAPICodeErr(url string, code interface{}, content []byte) *APICodeErr {
 	return &APICodeErr{
 		URI:     url,
@@ -145,29 +196,42 @@ func NewAPICodeErr(url string, code interface{}, content []byte) *APICodeErr {
 	}
 }
 
+//APICodeErr api code error struct.
 type APICodeErr struct {
-	URI     string
-	Code    string
+	//URI api uri.
+	URI string
+	//Code api error code.
+	Code string
+	//Content api response.
 	Content []byte
 }
 
+//Error used as a error which return request url,request status,erro code,request content.
+//Error max length is ErrMsgLengthLimit.
 func (r APICodeErr) Error() string {
-	msg := fmt.Sprintf("api error [ %s] code %d : %s", r.URI, r.Code, string(r.Content))
+	msg := fmt.Sprintf("api error [ %s] code %s : %s", r.URI, r.Code, string(r.Content))
 	if len(msg) > ErrMsgLengthLimit {
 		msg = msg[:ErrMsgLengthLimit]
 	}
 	return msg
 }
 
+//GetAPIErrCode get api error code form error.
+//Return empty string if err is not an ApiCodeErr
 func GetAPIErrCode(err error) string {
 	r, ok := err.(APICodeErr)
 	if ok {
 		return r.Code
 	}
+	r2, ok := err.(*APICodeErr)
+	if ok {
+		return r2.Code
+	}
 	return ""
 
 }
 
-func CompareApiErrCode(err error, code interface{}) bool {
+//CompareAPIErrCode if check error is an ApiCodeErr with given api err code.
+func CompareAPIErrCode(err error, code interface{}) bool {
 	return GetAPIErrCode(err) == fmt.Sprint(code)
 }

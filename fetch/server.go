@@ -8,11 +8,15 @@ import (
 	"net/url"
 )
 
+//Server api server struct
 type Server struct {
-	Host    string
+	//Host server base host
+	Host string
+	//Headers headers which will be sent every request.
 	Headers http.Header
 }
 
+//EndPoint create a new api server endpoint with given method and path
 func (s *Server) EndPoint(method string, path string) *EndPoint {
 	return &EndPoint{
 		Server: s,
@@ -20,6 +24,8 @@ func (s *Server) EndPoint(method string, path string) *EndPoint {
 		Path:   path,
 	}
 }
+
+//NewRequest create a new http.request with given method,path,params,and body.
 func (s *Server) NewRequest(method string, path string, params url.Values, body []byte) (*http.Request, error) {
 	u, err := url.Parse(s.Host + path)
 	if err != nil {
@@ -48,6 +54,7 @@ func (s *Server) NewRequest(method string, path string, params url.Values, body 
 	return req, nil
 }
 
+//NewJSONRequest create a new http.request with given method,path,params,and body encode by JSON.
 func (s *Server) NewJSONRequest(method string, path string, params url.Values, v interface{}) (*http.Request, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -56,6 +63,7 @@ func (s *Server) NewJSONRequest(method string, path string, params url.Values, v
 	return s.NewRequest(method, path, params, b)
 }
 
+//NewXMLRequest create a new http.request with given method,path,params,and body encode by XML.
 func (s *Server) NewXMLRequest(method string, path string, params url.Values, v interface{}) (*http.Request, error) {
 	b, err := xml.Marshal(v)
 	if err != nil {
@@ -64,28 +72,25 @@ func (s *Server) NewXMLRequest(method string, path string, params url.Values, v 
 	return s.NewRequest(method, path, params, b)
 }
 
+//EndPoint api server endpoint struct
+//Endpoint should be created by api server's EndPoint method
 type EndPoint struct {
 	Server *Server
 	Path   string
 	Method string
 }
 
+//NewRequest create a new http.request to end point with given params,and body.
 func (e *EndPoint) NewRequest(params url.Values, body []byte) (*http.Request, error) {
 	return e.Server.NewRequest(e.Method, e.Path, params, body)
 }
 
+//NewJSONRequest create a new http.request to end point with given params,and body encode by JSON.
 func (e *EndPoint) NewJSONRequest(params url.Values, v interface{}) (*http.Request, error) {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-	return e.NewRequest(params, b)
+	return e.Server.NewJSONRequest(e.Method, e.Path, params, v)
 }
 
+//NewXMLRequest create a new http.request to end point with given params,and body encode by XML.
 func (e *EndPoint) NewXMLRequest(params url.Values, v interface{}) (*http.Request, error) {
-	b, err := xml.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-	return e.NewRequest(params, b)
+	return e.Server.NewXMLRequest(e.Method, e.Path, params, v)
 }
