@@ -32,8 +32,11 @@ func (v *testView) Execute(data interface{}) ([]byte, error) {
 
 func TestEngine(t *testing.T) {
 	engine := &testEngine{}
-	render := New(engine, "")
-	render.SetEngine(render.Engine(), "")
+	render := New()
+	render.Init(engine, "")
+	if render.Engine() != engine {
+		t.Error(render.Engine())
+	}
 	render.MustLoadViews("./testdata/testconfig.json")
 	ViewTest := render.GetView("test")
 	ViewTestNew := render.NewView("testnew", "testnew.view")

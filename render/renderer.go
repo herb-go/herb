@@ -12,13 +12,10 @@ type ViewConfig struct {
 	Views []string
 }
 
-//New create renderer with given render egine and view root path.
-func New(e Engine, viewRoot string) *Renderer {
+//New create new renderer
+func New() *Renderer {
 	r := Renderer{}
-	r.engine = e
-	if e != nil {
-		r.engine.SetViewRoot(viewRoot)
-	}
+	r.engine = nil
 	r.Views = map[string]CompiledView{}
 	r.ViewFiles = map[string][]string{}
 	return &r
@@ -39,8 +36,8 @@ func (r *Renderer) Engine() Engine {
 	return r.engine
 }
 
-//SetEngine set engine to renderer.
-func (r *Renderer) SetEngine(e Engine, viewRoot string) {
+//Init set engine to renderer.
+func (r *Renderer) Init(e Engine, viewRoot string) {
 	r.engine = e
 	e.SetViewRoot(viewRoot)
 }

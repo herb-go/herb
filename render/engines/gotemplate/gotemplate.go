@@ -15,7 +15,7 @@ func unescaped(x string) interface{} { return template.HTML(x) }
 func New() *GoTemplateEngine {
 	e := GoTemplateEngine{
 		FuncMap: template.FuncMap{
-			"Raw": unescaped,
+			"raw": unescaped,
 		},
 	}
 	return &e

@@ -8,7 +8,7 @@ import (
 )
 
 func TestRenderer(t *testing.T) {
-	renderer := New(nil, "")
+	renderer := New()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/json", func(w http.ResponseWriter, r *http.Request) {
 		renderer.MustJSON(w, "ok", 200)
