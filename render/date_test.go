@@ -52,5 +52,9 @@ func TestNilData(t *testing.T) {
 	if data1.Get("test2").(string) != "test2value" {
 		t.Error(data1.Get("test2"))
 	}
-
+	data1 = new(Data)
+	data2.Merge(data1)
+	if data2.Get("test2").(string) != "test2value" {
+		t.Error(data2.Get("test2"))
+	}
 }

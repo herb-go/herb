@@ -18,6 +18,7 @@ func New(e Engine, viewRoot string) *Renderer {
 		r.engine.SetViewRoot(viewRoot)
 	}
 	r.Views = map[string]CompiledView{}
+	r.ViewFiles = map[string][]string{}
 	return &r
 }
 
@@ -84,7 +85,7 @@ func (r *Renderer) Error(w http.ResponseWriter, status int) (int, error) {
 	return Error(w, status)
 }
 func (r *Renderer) MustError(w http.ResponseWriter, status int) int {
-	result, err := Error(w, status)
+	result, err := r.Error(w, status)
 	if err != nil {
 		panic(err)
 	}
@@ -94,35 +95,24 @@ func (r *Renderer) MustError(w http.ResponseWriter, status int) int {
 func (r *Renderer) view(name string) (CompiledView, error) {
 	var err error
 	var view CompiledView
-	if r.ViewFiles == nil {
-		return nil, NewViewError(name, ErrorViewNotExist)
-	}
-	if r.Views != nil {
-		view = r.Views[name]
-	}
+	view = r.Views[name]
 	if view == nil {
-		vf := r.ViewFiles[name]
-		if vf == nil {
+		vf, ok := r.ViewFiles[name]
+		if ok == false {
 			return nil, NewViewError(name, ErrorViewNotExist)
 		}
 		view, err = r.engine.Compile(vf...)
 		if err != nil {
-			return nil, err
+			return nil, NewViewError(name, err)
 		}
 		r.setView(name, view)
 	}
 	return view, nil
 }
 func (r *Renderer) setView(name string, view CompiledView) {
-	if r.Views == nil {
-		r.Views = map[string]CompiledView{}
-	}
 	r.Views[name] = view
 }
 func (r *Renderer) setViewFiles(name string, viewFiles []string) {
-	if r.ViewFiles == nil {
-		r.ViewFiles = map[string][]string{}
-	}
 	r.ViewFiles[name] = viewFiles
 }
 func (r *Renderer) LoadViews(configpath string) (map[string]*NamedView, error) {
@@ -135,15 +125,9 @@ func (r *Renderer) LoadViews(configpath string) (map[string]*NamedView, error) {
 	if err != nil {
 		return nil, err
 	}
-	if data == nil {
-		return nil, nil
-	}
 	var loadedNamedViews = make(map[string]*NamedView, len(data))
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if r.Views == nil {
-		r.Views = make(map[string]CompiledView, len(data))
-	}
 	for k, v := range data {
 		delete(r.Views, k)
 		r.setViewFiles(k, v.Views)
@@ -173,10 +157,7 @@ func (r *Renderer) Execute(viewname string, data interface{}) ([]byte, error) {
 	defer r.lock.RUnlock()
 	var cv, err = r.view(viewname)
 	if err != nil {
-		return nil, NewViewError(viewname, err)
-	}
-	if cv == nil {
-		return nil, NewViewError(viewname, ErrorViewNotExist)
+		return nil, err
 	}
 	return cv.Execute(data)
 

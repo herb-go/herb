@@ -14,7 +14,7 @@ func (ve *ViewError) Error() string {
 	return fmt.Sprintf("View %s error: %s", ve.ViewName, ve.err.Error())
 }
 
-func NewViewError(ViewName string, err error) error {
+func NewViewError(ViewName string, err error) *ViewError {
 	return &ViewError{
 		ViewName: ViewName,
 		err:      err,
