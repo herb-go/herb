@@ -39,26 +39,44 @@ func (r *Renderer) WriteJSON(w http.ResponseWriter, data []byte, status int) (in
 	return WriteJSON(w, data, status)
 }
 func (r *Renderer) MustWriteJSON(w http.ResponseWriter, data []byte, status int) int {
-	return MustWriteJSON(w, data, status)
+	result, err := r.WriteJSON(w, data, status)
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
 
 func (r *Renderer) HTMLFile(w http.ResponseWriter, path string, status int) (int, error) {
 	return HTMLFile(w, path, status)
 }
 func (r *Renderer) MustHTMLFile(w http.ResponseWriter, path string, status int) int {
-	return MustHTMLFile(w, path, status)
+	result, err := r.HTMLFile(w, path, status)
+	if err != nil {
+		panic(err)
+	}
+	return result
+
 }
 func (r *Renderer) WriteHTML(w http.ResponseWriter, data []byte, status int) (int, error) {
-	return r.WriteHTML(w, data, status)
+	return WriteHTML(w, data, status)
 }
 func (r *Renderer) MustWriteHTML(w http.ResponseWriter, data []byte, status int) int {
-	return r.MustWriteHTML(w, data, status)
+	result, err := r.WriteHTML(w, data, status)
+	if err != nil {
+		panic(err)
+	}
+	return result
+
 }
 func (r *Renderer) JSON(w http.ResponseWriter, data interface{}, status int) (int, error) {
 	return JSON(w, data, status)
 }
 func (r *Renderer) MustJSON(w http.ResponseWriter, data interface{}, status int) int {
-	return MustJSON(w, data, status)
+	result, err := r.JSON(w, data, status)
+	if err != nil {
+		panic(err)
+	}
+	return result
 
 }
 
@@ -66,7 +84,12 @@ func (r *Renderer) Error(w http.ResponseWriter, status int) (int, error) {
 	return Error(w, status)
 }
 func (r *Renderer) MustError(w http.ResponseWriter, status int) int {
-	return MustError(w, status)
+	result, err := Error(w, status)
+	if err != nil {
+		panic(err)
+	}
+	return result
+
 }
 func (r *Renderer) view(name string) (CompiledView, error) {
 	var err error

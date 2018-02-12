@@ -52,9 +52,7 @@ func WriteHTML(w http.ResponseWriter, data []byte, status int) (int, error) {
 }
 
 func MustWriteHTML(w http.ResponseWriter, data []byte, status int) int {
-	w.Header().Set(ContentType, ContentHTML)
-	w.WriteHeader(status)
-	result, err := w.Write(data)
+	result, err := WriteHTML(w, data, status)
 	if err != nil {
 		panic(err)
 	}
