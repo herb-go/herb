@@ -1,7 +1,9 @@
 package render
 
+//Data render data struct.
 type Data map[string]interface{}
 
+//Set set data field value by key.
 func (d *Data) Set(key string, data interface{}) {
 	if *d == nil {
 		data := Data(map[string]interface{}{})
@@ -10,6 +12,7 @@ func (d *Data) Set(key string, data interface{}) {
 	(*d)[key] = data
 }
 
+//Del delete data field value by key.
 func (d *Data) Del(key string) {
 	if *d == nil {
 		return
@@ -17,6 +20,7 @@ func (d *Data) Del(key string) {
 	delete(*d, key)
 }
 
+//Get Get data field value by key.
 func (d *Data) Get(key string) interface{} {
 	if *d == nil {
 		return nil
@@ -27,6 +31,8 @@ func (d *Data) Get(key string) interface{} {
 	}
 	return data
 }
+
+//Merge merger two render data.
 func (d *Data) Merge(data *Data) {
 	if *d == nil {
 		data := Data(map[string]interface{}{})

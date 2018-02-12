@@ -58,7 +58,7 @@ func TestEngine(t *testing.T) {
 		data.Set("data", []byte("testnotexistdata"))
 		_, err := ViewNotExist.Render(w, data)
 		e, ok := err.(*ViewError)
-		if ok && e.err == ErrorViewNotExist {
+		if ok && e.err == ErrViewNotExist {
 			http.Error(w, err.Error(), 400)
 			return
 		}

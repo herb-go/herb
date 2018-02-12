@@ -31,13 +31,21 @@ const (
 	defaultCharset = "UTF-8"
 )
 
+//ErrTooManyViewFiles error rasied when too many view files is given.
+//raised by render engine.
 var ErrTooManyViewFiles = errors.New("error too many view files")
 
+//WriteJSON write json data to response.
+//Return bytes length wrote and any error if raised.
 func WriteJSON(w http.ResponseWriter, data []byte, status int) (int, error) {
 	w.Header().Set(ContentType, ContentJSON)
 	w.WriteHeader(status)
 	return w.Write(data)
 }
+
+//MustWriteJSON write json data to response.
+//Return bytes length wrote.
+//Panic if any error raised.
 func MustWriteJSON(w http.ResponseWriter, data []byte, status int) int {
 	result, err := WriteJSON(w, data, status)
 	if err != nil {
@@ -45,12 +53,18 @@ func MustWriteJSON(w http.ResponseWriter, data []byte, status int) int {
 	}
 	return result
 }
+
+//WriteHTML write html data to response.
+//Return bytes length wrote and any error if raised.
 func WriteHTML(w http.ResponseWriter, data []byte, status int) (int, error) {
 	w.Header().Set(ContentType, ContentHTML)
 	w.WriteHeader(status)
 	return w.Write(data)
 }
 
+//MustWriteHTML write html data to response.
+//Return bytes length wrote.
+//Panic if any error raised.
 func MustWriteHTML(w http.ResponseWriter, data []byte, status int) int {
 	result, err := WriteHTML(w, data, status)
 	if err != nil {
@@ -59,13 +73,8 @@ func MustWriteHTML(w http.ResponseWriter, data []byte, status int) int {
 	return result
 }
 
-func MustHTMLFile(w http.ResponseWriter, path string, status int) int {
-	result, err := HTMLFile(w, path, status)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
+//HTMLFile write content of given file to response as html.
+//Return bytes length wrote and any error if raised.
 func HTMLFile(w http.ResponseWriter, path string, status int) (int, error) {
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -73,6 +82,20 @@ func HTMLFile(w http.ResponseWriter, path string, status int) (int, error) {
 	}
 	return WriteHTML(w, bytes, status)
 }
+
+//MustHTMLFile write content of given file to response as html.
+//Return bytes length wrote.
+//Panic if any error raised.
+func MustHTMLFile(w http.ResponseWriter, path string, status int) int {
+	result, err := HTMLFile(w, path, status)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+//JSON marshal data as json and write to response
+//Return bytes length wrote and any error if raised.
 func JSON(w http.ResponseWriter, data interface{}, status int) (int, error) {
 	bytes, err := json.Marshal(data)
 	if err != nil {
@@ -80,6 +103,10 @@ func JSON(w http.ResponseWriter, data interface{}, status int) (int, error) {
 	}
 	return WriteJSON(w, bytes, status)
 }
+
+//MustJSON marshal data as json and write to response
+//Return bytes length wrote.
+//Panic if any error raised.
 func MustJSON(w http.ResponseWriter, data interface{}, status int) int {
 	result, err := JSON(w, data, status)
 	if err != nil {
@@ -87,12 +114,19 @@ func MustJSON(w http.ResponseWriter, data interface{}, status int) int {
 	}
 	return result
 }
+
+//Error write a http error to response
+//Return bytes length wrote.
+//Panic if any error raised.
 func Error(w http.ResponseWriter, status int) (int, error) {
 	w.Header().Set(ContentType, ContentText)
 	w.WriteHeader(status)
 	return w.Write([]byte(http.StatusText(status)))
 }
 
+//MustError write a http error to response
+//Return bytes length wrote.
+//Panic if any error raised.
 func MustError(w http.ResponseWriter, status int) int {
 	result, err := Error(w, status)
 	if err != nil {
