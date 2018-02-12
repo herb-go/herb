@@ -8,7 +8,7 @@ import (
 )
 
 func TestTemplate(t *testing.T) {
-	engine := New()
+	engine := Engine
 	var b64 = func(data string) (string, error) {
 		d := base64.RawStdEncoding.EncodeToString([]byte(data))
 		return d, nil

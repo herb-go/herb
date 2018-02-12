@@ -12,8 +12,9 @@ import (
 
 func unescaped(x string) interface{} { return template.HTML(x) }
 
-func New() *GoTemplateEngine {
-	e := GoTemplateEngine{
+//New create new go template engine
+func New() *RenderEngine {
+	e := RenderEngine{
 		FuncMap: template.FuncMap{
 			"raw": unescaped,
 		},
@@ -21,10 +22,12 @@ func New() *GoTemplateEngine {
 	return &e
 }
 
-type GoTemplateView template.Template
+//View go template view
+type View template.Template
 
-func (v *GoTemplateView) Execute(data interface{}) ([]byte, error) {
-
+//Execute execute view with given render data.
+//Return render result as []byte and any error if raised.
+func (v *View) Execute(data interface{}) ([]byte, error) {
 	writer := bytes.NewBuffer([]byte{})
 	t := template.Template(*v)
 	err := t.Execute(writer, data)
@@ -34,15 +37,21 @@ func (v *GoTemplateView) Execute(data interface{}) ([]byte, error) {
 	return writer.Bytes(), nil
 }
 
-type GoTemplateEngine struct {
-	FuncMap  template.FuncMap
+//RenderEngine render engine main struct
+type RenderEngine struct {
+	//FuncMap buildin func map
+	FuncMap template.FuncMap
+	//ViewRoot view root path
 	ViewRoot string
 }
 
-func (e *GoTemplateEngine) SetViewRoot(path string) {
+//SetViewRoot set view root path
+func (e *RenderEngine) SetViewRoot(path string) {
 	e.ViewRoot = path
 }
-func (e *GoTemplateEngine) Compile(viewFiles ...string) (render.CompiledView, error) {
+
+//Compile complie view files to complied view.
+func (e *RenderEngine) Compile(viewFiles ...string) (render.CompiledView, error) {
 	var absFiles = make([]string, len(viewFiles))
 
 	for k, v := range viewFiles {
@@ -60,8 +69,9 @@ func (e *GoTemplateEngine) Compile(viewFiles ...string) (render.CompiledView, er
 	if err != nil {
 		return nil, err
 	}
-	tv := GoTemplateView(*t)
+	tv := View(*t)
 	return &tv, nil
 }
 
+//Engine default go template render engine
 var Engine = New()

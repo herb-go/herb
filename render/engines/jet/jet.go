@@ -10,10 +10,13 @@ import (
 	"github.com/herb-go/herb/render"
 )
 
+//View jet template view
 type View struct {
 	template *jet.Template
 }
 
+//Execute execute view with given render data.
+//Return render result as []byte and any error if raised.
 func (v *View) Execute(data interface{}) ([]byte, error) {
 	var err error
 	writer := bytes.NewBuffer([]byte{})
@@ -25,15 +28,19 @@ func (v *View) Execute(data interface{}) ([]byte, error) {
 	return writer.Bytes(), nil
 }
 
-type JetEngine struct {
+//RenderEngine jet render engine main struct.
+type RenderEngine struct {
 	Set      *jet.Set
 	ViewRoot string
 }
 
-func (e *JetEngine) AddGlobal(Name string, fn interface{}) {
+//AddGlobal add buildin func.
+func (e *RenderEngine) AddGlobal(Name string, fn interface{}) {
 	(*e.Set).AddGlobal(Name, fn)
 }
-func (e *JetEngine) Compile(viewFiles ...string) (render.CompiledView, error) {
+
+//Compile complie view files to complied view.
+func (e *RenderEngine) Compile(viewFiles ...string) (render.CompiledView, error) {
 	if len(viewFiles) > 1 {
 		return nil, render.ErrTooManyViewFiles
 	}
@@ -44,20 +51,24 @@ func (e *JetEngine) Compile(viewFiles ...string) (render.CompiledView, error) {
 	tv := View{t}
 	return &tv, nil
 }
-func (e *JetEngine) SetViewRoot(path string) {
+
+//SetViewRoot set view root path
+func (e *RenderEngine) SetViewRoot(path string) {
 	e.ViewRoot = path
 }
 
+//Engine default jet template render engine
 var Engine = New()
 
-func New() *JetEngine {
-	var e = &JetEngine{}
+//New create new jet template render engine.
+func New() *RenderEngine {
+	var e = &RenderEngine{}
 	e.Set = jet.NewHTMLSetLoader(newLoader(e))
 	return e
 }
 
 type loader struct {
-	engine *JetEngine
+	engine *RenderEngine
 }
 
 func (l *loader) Open(name string) (io.ReadCloser, error) {
@@ -73,7 +84,7 @@ func (l *loader) Exists(name string) (string, bool) {
 
 }
 
-func newLoader(e *JetEngine) *loader {
+func newLoader(e *RenderEngine) *loader {
 	return &loader{
 		engine: e,
 	}

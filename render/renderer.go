@@ -228,7 +228,7 @@ func (r *Renderer) NewView(ViewName string, viewFiles ...string) *NamedView {
 
 //CompiledView complied view interface.
 type CompiledView interface {
-	//Execute execute view  with given render data.
+	//Execute execute view with given render data.
 	//Return render result as []byte and any error if raised.
 	Execute(data interface{}) ([]byte, error)
 }
