@@ -42,8 +42,8 @@ func (csrf *Csrf) Verify(r *http.Request, token string) (bool, error) {
 	return c.Value == token, nil
 }
 
-//VerifyFormMiddleware The middleware check if the token in post form is equal to token value save in cookie
-func (csrf *Csrf) VerifyFormMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+//ServeVerifyFormMiddleware The middleware check if the token in post form is equal to token value save in cookie
+func (csrf *Csrf) ServeVerifyFormMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	success, err := csrf.Verify(r, r.FormValue(csrf.FormField))
 	if err != nil {
 		panic(nil)
@@ -56,8 +56,8 @@ func (csrf *Csrf) VerifyFormMiddleware(w http.ResponseWriter, r *http.Request, n
 
 }
 
-//VerifyHeaderMiddleware The middleware check if the token in post form is equal to token value save in cookie
-func (csrf *Csrf) VerifyHeaderMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+//ServeVerifyHeaderMiddleware The middleware check if the token in post form is equal to token value save in cookie
+func (csrf *Csrf) ServeVerifyHeaderMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	success, err := csrf.Verify(r, r.Header.Get(csrf.HeaderName))
 
 	if err != nil {
@@ -119,8 +119,8 @@ func (csrf *Csrf) SetCsrfToken(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-//SetCsrfTokenMiddleware The middleware set a random token in cookie which is used in later verification if the cookie does not exist.
-func (csrf *Csrf) SetCsrfTokenMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+//ServeSetCsrfTokenMiddleware The middleware set a random token in cookie which is used in later verification if the cookie does not exist.
+func (csrf *Csrf) ServeSetCsrfTokenMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	if csrf.Enabled {
 		err := csrf.SetCsrfToken(w, r)
 		if err != nil {

@@ -16,12 +16,12 @@ func TestHeader(t *testing.T) {
 	Csrf := New()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Csrf.SetCsrfTokenMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
+		Csrf.ServeSetCsrfTokenMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(successMsg))
 		})
 	})
 	mux.HandleFunc("/header", func(w http.ResponseWriter, r *http.Request) {
-		Csrf.VerifyHeaderMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
+		Csrf.ServeVerifyHeaderMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(successMsg))
 		})
 	})
@@ -85,12 +85,12 @@ func TestForm(t *testing.T) {
 	Csrf := New()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Csrf.SetCsrfTokenMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
+		Csrf.ServeSetCsrfTokenMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(successMsg))
 		})
 	})
 	mux.HandleFunc("/form", func(w http.ResponseWriter, r *http.Request) {
-		Csrf.VerifyFormMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
+		Csrf.ServeVerifyFormMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(successMsg))
 		})
 	})
