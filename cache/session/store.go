@@ -60,6 +60,10 @@ type Store struct {
 	DefaultSessionFlag   Flag          //Default flag when creating session.
 }
 
+func Init(s *Store, i Initializer) error {
+	return i.Init(s)
+}
+
 func New() *Store {
 	return &Store{
 		TokenContextName:     defaultTokenContextName,
@@ -69,14 +73,14 @@ func New() *Store {
 		TokenMaxLifetime:     defaultTokenMaxLifetime,
 	}
 }
+func NewAndInit(i Initializer) (*Store, error) {
+	s := New()
+	return s, Init(s, i)
+}
 
 //Close Close cachestore and return any error if raised
 func (s *Store) Close() error {
 	return s.Driver.Close()
-}
-func (s *Store) Init(d Driver, TokenLifetime time.Duration) {
-	s.Driver = d
-	s.TokenLifetime = TokenLifetime
 }
 
 //GenerateToken generate new token name with given prefix.

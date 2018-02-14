@@ -12,7 +12,7 @@ const clientStoreNewToken = "."
 
 //AESTokenMarshaler token marshaler which crypt data with AES
 //Return error if raised
-func AESTokenMarshaler(s *ClientStore, ts *Session) (err error) {
+func AESTokenMarshaler(s *ClientDriver, ts *Session) (err error) {
 	var data []byte
 
 	ts.Nonce = make([]byte, clientStoreNonceSize)
@@ -30,7 +30,7 @@ func AESTokenMarshaler(s *ClientStore, ts *Session) (err error) {
 
 //AESTokenUnmarshaler token unmarshaler which crypt data with AES
 //Return error if raised
-func AESTokenUnmarshaler(s *ClientStore, v *Session) (err error) {
+func AESTokenUnmarshaler(s *ClientDriver, v *Session) (err error) {
 	var data []byte
 	data, err = security.AESNonceDecryptBase64(v.token, s.Key)
 	if err != nil {
@@ -43,11 +43,11 @@ func AESTokenUnmarshaler(s *ClientStore, v *Session) (err error) {
 	return nil
 }
 
-//ClientStore ClientStore is the stuct store token data in Client side.
-type ClientStore struct {
-	Key              []byte                             //Crypt key
-	TokenMarshaler   func(*ClientStore, *Session) error //Marshler data to Session.token
-	TokenUnmarshaler func(*ClientStore, *Session) error //Unmarshler data from Session.token
+//ClientDriver ClientDriver is the stuct store token data in Client side.
+type ClientDriver struct {
+	Key              []byte                              //Crypt key
+	TokenMarshaler   func(*ClientDriver, *Session) error //Marshler data to Session.token
+	TokenUnmarshaler func(*ClientDriver, *Session) error //Unmarshler data from Session.token
 }
 
 //New New create a new client side token store with given key and token lifetime.
@@ -56,37 +56,49 @@ type ClientStore struct {
 //Return a new token store.
 //All other property of the store can be set after creation.
 
-func NewClientStore(key []byte, TokenLifetime time.Duration) *Store {
-	s := New()
-	s.Init(NewClientDriver(key), TokenLifetime)
-	return s
-}
-
-func NewClientDriver(key []byte) *ClientStore {
-	return &ClientStore{
-		Key:              key,
+func NewClientDriver() *ClientDriver {
+	return &ClientDriver{
 		TokenMarshaler:   AESTokenMarshaler,
 		TokenUnmarshaler: AESTokenUnmarshaler,
 	}
 }
+func InitClientDriver(i ClientDriverInitializer, d *ClientDriver) error {
+	return i.Init(d)
+}
+func NewClientDriverAndInit(i ClientDriverInitializer) (*ClientDriver, error) {
+	d := NewClientDriver()
+	return d, InitClientDriver(i, d)
+}
+
+func MustClientStore(key []byte, TokenLifetime time.Duration) *Store {
+	driver, err := NewClientDriverAndInit(ClientDriverOption(key))
+	if err != nil {
+		panic(err)
+	}
+	store, err := NewAndInit(Option(driver, TokenLifetime))
+	if err != nil {
+		panic(err)
+	}
+	return store
+}
 
 //GetSessionToken Get the token string from token data.
 //Return token and any error raised.
-func (s *ClientStore) GetSessionToken(ts *Session) (token string, err error) {
+func (s *ClientDriver) GetSessionToken(ts *Session) (token string, err error) {
 	err = ts.Save()
 	return ts.token, err
 }
 
 //GenerateToken generate new token name with given prefix.
 //Return the new token name and error.
-func (s *ClientStore) GenerateToken(prefix string) (token string, err error) {
+func (s *ClientDriver) GenerateToken(prefix string) (token string, err error) {
 	return clientStoreNewToken, nil
 
 }
 
 //Load Load Session form the Session.token.
 //Return any error if raised
-func (s *ClientStore) Load(v *Session) (err error) {
+func (s *ClientDriver) Load(v *Session) (err error) {
 	err = s.TokenUnmarshaler(s, v)
 	if err != nil {
 		return err
@@ -96,7 +108,7 @@ func (s *ClientStore) Load(v *Session) (err error) {
 
 //Save Save Session if necessary.
 //Return any error raised.
-func (s *ClientStore) Save(ts *Session, ttl time.Duration) (err error) {
+func (s *ClientDriver) Save(ts *Session, ttl time.Duration) (err error) {
 	ts.oldToken = ts.token
 	err = s.TokenMarshaler(s, ts)
 	if err != nil {
@@ -110,11 +122,11 @@ func (s *ClientStore) Save(ts *Session, ttl time.Duration) (err error) {
 
 //Delete delete the token with given name.
 //Return any error if raised.
-func (s *ClientStore) Delete(token string) error {
+func (s *ClientDriver) Delete(token string) error {
 	return nil
 }
 
 //Close Close cachestore and return any error if raised
-func (s *ClientStore) Close() error {
+func (s *ClientDriver) Close() error {
 	return nil
 }

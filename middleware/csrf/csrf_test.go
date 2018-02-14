@@ -16,7 +16,7 @@ func TestHeader(t *testing.T) {
 	Csrf := New()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Csrf.ServeSetCsrfTokenMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
+		Csrf.ServeSetCsrfTokenNw, r, func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(successMsg))
 		})
 	})

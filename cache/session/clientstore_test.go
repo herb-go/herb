@@ -14,19 +14,22 @@ import (
 	_ "github.com/herb-go/herb/cache/drivers/freecache"
 )
 
-func getClientStore(ttl time.Duration) *Store {
-	s := NewClientStore([]byte("getClientStore"), ttl)
+func getClientDriver(ttl time.Duration) *Store {
+	s := MustClientStore([]byte("getClientDriver"), ttl)
 	return s
 }
 
-func getTimeoutClientStore(ttl time.Duration, UpdateActiveInterval time.Duration) *Store {
-	s := NewClientStore([]byte("getTimeoutClientStore"), ttl)
+func getTimeoutClientDriver(ttl time.Duration, UpdateActiveInterval time.Duration) *Store {
+	s := MustClientStore([]byte("getTimeoutClientDriver"), ttl)
 	s.UpdateActiveInterval = UpdateActiveInterval
 	return s
 }
-func getBase64ClientStore(ttl time.Duration) *Store {
-	d := NewClientDriver([]byte("getClientStore"))
-	d.TokenMarshaler = func(s *ClientStore, ts *Session) (err error) {
+func getBase64ClientDriver(ttl time.Duration) *Store {
+	d, err := NewClientDriverAndInit(ClientDriverOption([]byte("getClientDriver")))
+	if err != nil {
+		panic(err)
+	}
+	d.TokenMarshaler = func(s *ClientDriver, ts *Session) (err error) {
 		var data []byte
 		data, err = ts.Marshal()
 		if err != nil {
@@ -35,7 +38,7 @@ func getBase64ClientStore(ttl time.Duration) *Store {
 		ts.token = base64.StdEncoding.EncodeToString(data)
 		return err
 	}
-	d.TokenUnmarshaler = func(s *ClientStore, v *Session) (err error) {
+	d.TokenUnmarshaler = func(s *ClientDriver, v *Session) (err error) {
 		var data []byte
 		data, err = base64.StdEncoding.DecodeString(v.token)
 		if err != nil {
@@ -48,13 +51,15 @@ func getBase64ClientStore(ttl time.Duration) *Store {
 		return nil
 
 	}
-	s := New()
-	s.Init(d, ttl)
+	s, err := NewAndInit(Option(d, ttl))
+	if err != nil {
+		panic(err)
+	}
 	return s
 }
 func TestClientKey(t *testing.T) {
-	s := getClientStore(-1)
-	s2 := getTimeoutClientStore(-1, -1)
+	s := getClientDriver(-1)
+	s2 := getTimeoutClientDriver(-1, -1)
 	model := "123456"
 	var result string
 	testKey := "testkey"
@@ -93,7 +98,7 @@ func TestClientKey(t *testing.T) {
 }
 func TestClientTD(t *testing.T) {
 	var err error
-	s := getClientStore(-1)
+	s := getClientDriver(-1)
 	defer s.Close()
 	model := "123456"
 	var result string
@@ -293,7 +298,7 @@ func TestClientTD(t *testing.T) {
 
 func TestClientRequest(t *testing.T) {
 	var err error
-	s := getClientStore(-1)
+	s := getClientDriver(-1)
 	defer s.Close()
 	model := "123456"
 	modelAfterSet := "set"
@@ -536,9 +541,9 @@ func TestClientRequest(t *testing.T) {
 }
 
 func TestClientTimeout(t *testing.T) {
-	sforever := getTimeoutClientStore(-1, -1)
-	s3second := getTimeoutClientStore(3*time.Second, -1)
-	s3secondwithAutoRefresh := getTimeoutClientStore(3*time.Second, 1*time.Second)
+	sforever := getTimeoutClientDriver(-1, -1)
+	s3second := getTimeoutClientDriver(3*time.Second, -1)
+	s3secondwithAutoRefresh := getTimeoutClientDriver(3*time.Second, 1*time.Second)
 	testOwner := "testowner"
 	model := "123456"
 	var result string

@@ -45,7 +45,7 @@ type Config struct {
 	TTL    int64
 }
 
-//Driver : Cache driver interface.Should Never not be used directly/
+//Driver : Cache driver interface.Should Never used directly
 type Driver interface {
 	New(cacheConfig json.RawMessage) (Driver, error)                           //Create new cache with given config.
 	Set(key string, v interface{}, ttl time.Duration) error                    //Set data model to cache by given key.

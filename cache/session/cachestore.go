@@ -18,7 +18,7 @@ var (
 	defaultCookiePath = "/"
 )
 
-func defaultTokenGenerater(s *CacheStore, prefix string) (token string, err error) {
+func defaultTokenGenerater(s *CacheDriver, prefix string) (token string, err error) {
 	t, err := cache.RandMaskedBytes(cache.TokenMask, 256)
 	if err != nil {
 		return
@@ -27,44 +27,50 @@ func defaultTokenGenerater(s *CacheStore, prefix string) (token string, err erro
 	token = url.PathEscape(prefix) + "-" + string(t)
 	return
 }
-
-//NewCacheStore New create a new token store with given cache and token lifetime.
-//Cache is the cache which dates stored in.
-//TokenLifeTime is the token initial expired tome.
-//Return a new token store.
-//All other property of the store can be set after creation.
-func NewCacheStore(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
-	s := New()
-	s.Init(NewCacheDriver(Cache), TokenLifetime)
-	return s
-}
-
-func NewCacheDriver(Cache *cache.Cache) *CacheStore {
-	return &CacheStore{
-		Cache:          Cache,
+func NewCacheDriver() *CacheDriver {
+	return &CacheDriver{
 		TokenGenerater: defaultTokenGenerater,
 	}
 }
+func InitCacheDriver(i CacheDriverInitializer, s *CacheDriver) error {
+	return i.Init(s)
+}
+func NewCacheDriverAndInit(i CacheDriverInitializer) (*CacheDriver, error) {
+	store := NewCacheDriver()
+	return store, InitCacheDriver(i, store)
+}
 
-//CacheStore CacheStore is the stuct store token data in cache.
-type CacheStore struct {
-	Cache          *cache.Cache                                                 //Cache which stores token data
-	TokenGenerater func(s *CacheStore, prefix string) (token string, err error) //Token name generate func
+func MustCacheStore(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
+	driver, err := NewCacheDriverAndInit(CacheDriverOption(Cache))
+	if err != nil {
+		panic(err)
+	}
+	store, err := NewAndInit(Option(driver, TokenLifetime))
+	if err != nil {
+		panic(err)
+	}
+	return store
+}
+
+//CacheDriver CacheDriver is the stuct store token data in cache.
+type CacheDriver struct {
+	Cache          *cache.Cache                                                  //Cache which stores token data
+	TokenGenerater func(s *CacheDriver, prefix string) (token string, err error) //Token name generate func
 }
 
 //Close Close cachestore and return any error if raised
-func (s *CacheStore) Close() error {
+func (s *CacheDriver) Close() error {
 	return s.Cache.Close()
 }
 
 //GenerateToken generate new token name with given prefix.
 //Return the new token name and error.
-func (s *CacheStore) GenerateToken(prefix string) (token string, err error) {
+func (s *CacheDriver) GenerateToken(prefix string) (token string, err error) {
 	return s.TokenGenerater(s, prefix)
 }
 
 //Load load a given session with token from store.
-func (s *CacheStore) Load(v *Session) (err error) {
+func (s *CacheDriver) Load(v *Session) (err error) {
 	token := v.token
 	bytes, err := s.Cache.GetBytesValue(token)
 	if err == cache.ErrNotFound {
@@ -81,7 +87,7 @@ func (s *CacheStore) Load(v *Session) (err error) {
 	return
 }
 
-func (s *CacheStore) Save(ts *Session, ttl time.Duration) (err error) {
+func (s *CacheDriver) Save(ts *Session, ttl time.Duration) (err error) {
 	bytes, err := ts.Marshal()
 	if err != nil {
 		return err
@@ -96,12 +102,12 @@ func (s *CacheStore) Save(ts *Session, ttl time.Duration) (err error) {
 
 //Delete delete the token with given name.
 //Return any error if raised.
-func (s *CacheStore) Delete(token string) error {
+func (s *CacheDriver) Delete(token string) error {
 	return s.Cache.Del(token)
 }
 
 //GetSessionToken Get the token string from token data.
 //Return token and any error raised.
-func (s *CacheStore) GetSessionToken(ts *Session) (token string, err error) {
+func (s *CacheDriver) GetSessionToken(ts *Session) (token string, err error) {
 	return ts.token, nil
 }
