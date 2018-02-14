@@ -13,7 +13,7 @@ import _ "github.com/go-sql-driver/mysql"
 
 func newTestCache(ttl int64) *cache.Cache {
 	c := cache.New()
-	err := c.Open("sqlcache", json.RawMessage(testConfig), ttl)
+	err := cache.Init(c, cache.Option("sqlcache", json.RawMessage(testConfig), ttl))
 	if err != nil {
 		panic(err)
 	}

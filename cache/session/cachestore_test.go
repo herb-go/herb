@@ -16,7 +16,7 @@ import (
 
 func getStore(ttl time.Duration) *Store {
 	c := cache.New()
-	err := c.OpenJSON([]byte(testCache))
+	err := cache.ConfigJSON([]byte(testCache)).Init(c)
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +30,7 @@ func getStore(ttl time.Duration) *Store {
 
 func getTimeoutStore(ttl time.Duration, UpdateActiveInterval time.Duration) *Store {
 	c := cache.New()
-	err := c.OpenJSON([]byte(testCache))
+	err := cache.ConfigJSON([]byte(testCache)).Init(c)
 	if err != nil {
 		panic(err)
 	}

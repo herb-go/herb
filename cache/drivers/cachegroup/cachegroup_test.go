@@ -14,7 +14,7 @@ import (
 
 func newTestCache(ttl int64) *cache.Cache {
 	c := cache.New()
-	err := c.Open("cachegroup", json.RawMessage(testConfig), ttl)
+	err := cache.Init(c, cache.Option("cachegroup", json.RawMessage(testConfig), ttl))
 	if err != nil {
 		panic(err)
 	}

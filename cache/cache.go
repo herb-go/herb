@@ -4,7 +4,6 @@ package cache
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -43,6 +42,10 @@ type Config struct {
 	Driver string
 	Config json.RawMessage
 	TTL    int64
+}
+
+func (config *Config) Init(cache *Cache) error {
+	return Option(config.Driver, config.Config, config.TTL)(cache)
 }
 
 //Driver : Cache driver interface.Should Never used directly
@@ -111,42 +114,19 @@ func New() *Cache {
 	return &Cache{}
 }
 
+func Init(cache *Cache, i Initializer) error {
+	return i.Init(cache)
+}
+
+func NewAndInit(i Initializer) (*Cache, error) {
+	cache := New()
+	return cache, i.Init(cache)
+}
+
 //Cache Cache stores the cache Driver and default ttl.
 type Cache struct {
 	Driver
 	TTL time.Duration
-}
-
-//Open Load config with given Driver,config,ttl to initialize cache.
-func (c *Cache) Open(driverName string, cacheConfig json.RawMessage, ttlInSecond int64) error {
-	driversMu.RLock()
-	driveri, ok := drivers[driverName]
-	driversMu.RUnlock()
-	if !ok {
-		return fmt.Errorf("cache: unknown driver %q (forgotten import?)", driverName)
-	}
-	driver, err := driveri.New(cacheConfig)
-	if err != nil {
-		return err
-	}
-	c.Driver = driver
-	c.TTL = time.Duration(ttlInSecond * int64(time.Second))
-	return nil
-}
-
-//OpenConfig Load config in config variable to initialize cache.
-func (c *Cache) OpenConfig(config Config) error {
-	return c.Open(config.Driver, config.Config, config.TTL)
-}
-
-//OpenJSON Load config in Json bytes to initialize cache.
-func (c *Cache) OpenJSON(data []byte) error {
-	var config Config
-	err := json.Unmarshal(data, &config)
-	if err != nil {
-		return err
-	}
-	return c.OpenConfig(config)
 }
 
 func (c *Cache) getKey(key string) string {

@@ -381,13 +381,13 @@ func (_ *Cache) New(bytes json.RawMessage) (cache.Driver, error) {
 	}
 	cc := Cache{}
 	localcache := cache.New()
-	err = localcache.OpenConfig(config.Local)
+	err = config.Local.Init(localcache)
 	if err != nil {
 		return &cc, err
 	}
 	cc.Local = localcache
 	remotecache := cache.New()
-	err = remotecache.OpenConfig(config.Remote)
+	err = config.Remote.Init(remotecache)
 	if err != nil {
 		return &cc, err
 	}

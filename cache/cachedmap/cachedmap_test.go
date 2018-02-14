@@ -12,7 +12,7 @@ import (
 func newTestCache(ttl int64) *cache.Cache {
 	config := json.RawMessage("{\"Size\": 10000000}")
 	c := cache.New()
-	err := c.Open("freecache", config, ttl)
+	err := cache.Init(c, cache.Option("freecache", config, ttl))
 	if err != nil {
 		panic(err)
 	}

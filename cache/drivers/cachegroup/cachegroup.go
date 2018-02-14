@@ -68,7 +68,7 @@ func (c *Cache) New(bytes json.RawMessage) (cache.Driver, error) {
 	cc.SubCaches = make([]*cache.Cache, len(config))
 	for k, v := range config {
 		subcache := cache.New()
-		err := subcache.OpenConfig(v)
+		err := v.Init(subcache)
 		if err != nil {
 			return &cc, err
 		}
