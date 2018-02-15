@@ -40,7 +40,7 @@ func TestEngine(t *testing.T) {
 	if render.Engine() != engine {
 		t.Error(render.Engine())
 	}
-	render.MustLoadViews("./testdata/testconfig.json")
+	render.MustInitViews(ViewsConf("./testdata/testconfig.json"))
 	ViewTest := render.GetView("test")
 	ViewTestNew := render.NewView("testnew", "testnew.view")
 	ViewNotExist := render.GetView("testnotexist")

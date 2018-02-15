@@ -1,8 +1,6 @@
 package render
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"sync"
 )
@@ -153,37 +151,12 @@ func (r *Renderer) setViewFiles(name string, viewFiles []string) {
 	r.ViewFiles[name] = viewFiles
 }
 
-//LoadViews load views form given file path in json format.
-//Return loaded views and any error if raised.
-func (r *Renderer) LoadViews(configpath string) (map[string]*NamedView, error) {
-	var data map[string]ViewConfig
-	bytes, err := ioutil.ReadFile(configpath)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(bytes, &data)
-	if err != nil {
-		return nil, err
-	}
-	var loadedNamedViews = make(map[string]*NamedView, len(data))
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	for k, v := range data {
-		delete(r.Views, k)
-		r.setViewFiles(k, v.Views)
-		loadedNamedViews[k] = &NamedView{
-			Name:     k,
-			Renderer: r,
-		}
-	}
-	return loadedNamedViews, nil
+func (r *Renderer) InitViews(option ViewsOption) (map[string]*NamedView, error) {
+	return option.ApplyTo(r)
 }
 
-//MustLoadViews load views form given file path in json format.
-//Return loaded views.
-//Panic if any error raised.
-func (r *Renderer) MustLoadViews(configpath string) map[string]*NamedView {
-	vs, err := r.LoadViews(configpath)
+func (r *Renderer) MustInitViews(option ViewsOption) map[string]*NamedView {
+	vs, err := r.InitViews(option)
 	if err != nil {
 		panic(err)
 	}
