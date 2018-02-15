@@ -31,6 +31,10 @@ type Renderer struct {
 	lock  sync.RWMutex
 }
 
+func (r *Renderer) Init(option Option) error {
+	return option.ApplyTo(r)
+}
+
 //Engine return engine of renderer.
 func (r *Renderer) Engine() Engine {
 	return r.engine

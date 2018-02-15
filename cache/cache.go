@@ -44,8 +44,8 @@ type Config struct {
 	TTL    int64
 }
 
-func (config *Config) Init(cache *Cache) error {
-	return Option(config.Driver, config.Config, config.TTL)(cache)
+func (config *Config) ApplyTo(cache *Cache) error {
+	return OptionCommon(config.Driver, config.Config, config.TTL)(cache)
 }
 
 //Driver : Cache driver interface.Should Never used directly
@@ -122,6 +122,9 @@ type Cache struct {
 
 func (c *Cache) getKey(key string) string {
 	return KeyPrefix + key
+}
+func (c *Cache) Init(option Option) error {
+	return option.ApplyTo(c)
 }
 
 //Set Set data model to cache by given key.

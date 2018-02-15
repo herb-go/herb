@@ -70,6 +70,10 @@ func New() *Store {
 	}
 }
 
+func (s *Store) Init(option Option) error {
+	return option.ApplyTo(s)
+}
+
 //Close Close cachestore and return any error if raised
 func (s *Store) Close() error {
 	return s.Driver.Close()

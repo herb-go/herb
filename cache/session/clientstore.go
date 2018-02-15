@@ -62,21 +62,15 @@ func NewClientDriver() *ClientDriver {
 		TokenUnmarshaler: AESTokenUnmarshaler,
 	}
 }
-func InitClientDriver(i ClientDriverInitializer, d *ClientDriver) error {
-	return i.Init(d)
-}
-func NewClientDriverAndInit(i ClientDriverInitializer) (*ClientDriver, error) {
-	d := NewClientDriver()
-	return d, InitClientDriver(i, d)
-}
 
 func MustClientStore(key []byte, TokenLifetime time.Duration) *Store {
-	driver, err := NewClientDriverAndInit(ClientDriverOption(key))
+	driver := NewClientDriver()
+	err := driver.Init(ClientDriverOptionCommon(key))
 	if err != nil {
 		panic(err)
 	}
 	store := New()
-	err = Option(driver, TokenLifetime).Init(store)
+	err = store.Init(OptionCommon(driver, TokenLifetime))
 	if err != nil {
 		panic(err)
 	}
@@ -88,6 +82,10 @@ func MustClientStore(key []byte, TokenLifetime time.Duration) *Store {
 func (s *ClientDriver) GetSessionToken(ts *Session) (token string, err error) {
 	err = ts.Save()
 	return ts.token, err
+}
+
+func (s *ClientDriver) Init(option ClientDriverOption) error {
+	return option.ApplyTo(s)
 }
 
 //GenerateToken generate new token name with given prefix.

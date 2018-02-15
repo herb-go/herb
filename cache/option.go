@@ -6,16 +6,16 @@ import (
 	"time"
 )
 
-type Initializer interface {
-	Init(*Cache) error
+type Option interface {
+	ApplyTo(*Cache) error
 }
 
-type InitializerFunc func(*Cache) error
+type OptionFunc func(*Cache) error
 
-func (i InitializerFunc) Init(cache *Cache) error {
+func (i OptionFunc) ApplyTo(cache *Cache) error {
 	return i(cache)
 }
-func Option(driverName string, cacheConfig json.RawMessage, ttlInSecond int64) InitializerFunc {
+func OptionCommon(driverName string, cacheConfig json.RawMessage, ttlInSecond int64) OptionFunc {
 	return func(cache *Cache) error {
 		driversMu.RLock()
 		driveri, ok := drivers[driverName]
@@ -36,11 +36,11 @@ func Option(driverName string, cacheConfig json.RawMessage, ttlInSecond int64) I
 
 type ConfigJSON []byte
 
-func (c ConfigJSON) Init(cache *Cache) error {
+func (c ConfigJSON) ApplyTo(cache *Cache) error {
 	var config Config
 	err := json.Unmarshal(c, &config)
 	if err != nil {
 		return err
 	}
-	return Option(config.Driver, config.Config, config.TTL)(cache)
+	return OptionCommon(config.Driver, config.Config, config.TTL)(cache)
 }

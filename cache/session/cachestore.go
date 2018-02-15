@@ -32,21 +32,15 @@ func NewCacheDriver() *CacheDriver {
 		TokenGenerater: defaultTokenGenerater,
 	}
 }
-func InitCacheDriver(i CacheDriverInitializer, s *CacheDriver) error {
-	return i.Init(s)
-}
-func NewCacheDriverAndInit(i CacheDriverInitializer) (*CacheDriver, error) {
-	store := NewCacheDriver()
-	return store, InitCacheDriver(i, store)
-}
 
 func MustCacheStore(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
-	driver, err := NewCacheDriverAndInit(CacheDriverOption(Cache))
+	driver := NewCacheDriver()
+	err := driver.Init(CacheDriverOptionCommon(Cache))
 	if err != nil {
 		panic(err)
 	}
 	store := New()
-	err = Option(driver, TokenLifetime).Init(store)
+	err = store.Init(OptionCommon(driver, TokenLifetime))
 	if err != nil {
 		panic(err)
 	}
@@ -57,6 +51,10 @@ func MustCacheStore(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
 type CacheDriver struct {
 	Cache          *cache.Cache                                                  //Cache which stores token data
 	TokenGenerater func(s *CacheDriver, prefix string) (token string, err error) //Token name generate func
+}
+
+func (s *CacheDriver) Init(option CacheDriverOption) error {
+	return option.ApplyTo(s)
 }
 
 //Close Close cachestore and return any error if raised

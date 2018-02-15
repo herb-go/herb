@@ -25,7 +25,8 @@ func getTimeoutClientDriver(ttl time.Duration, UpdateActiveInterval time.Duratio
 	return s
 }
 func getBase64ClientDriver(ttl time.Duration) *Store {
-	d, err := NewClientDriverAndInit(ClientDriverOption([]byte("getClientDriver")))
+	d := NewClientDriver()
+	err := d.Init(ClientDriverOptionCommon([]byte("getClientDriver")))
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +53,7 @@ func getBase64ClientDriver(ttl time.Duration) *Store {
 
 	}
 	s := New()
-	err = Option(d, ttl).Init(s)
+	err = s.Init(OptionCommon(d, ttl))
 	if err != nil {
 		panic(err)
 	}
