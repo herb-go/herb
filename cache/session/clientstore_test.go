@@ -51,7 +51,8 @@ func getBase64ClientDriver(ttl time.Duration) *Store {
 		return nil
 
 	}
-	s, err := NewAndInit(Option(d, ttl))
+	s := New()
+	err = Option(d, ttl).Init(s)
 	if err != nil {
 		panic(err)
 	}

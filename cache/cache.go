@@ -114,15 +114,6 @@ func New() *Cache {
 	return &Cache{}
 }
 
-func Init(cache *Cache, i Initializer) error {
-	return i.Init(cache)
-}
-
-func NewAndInit(i Initializer) (*Cache, error) {
-	cache := New()
-	return cache, i.Init(cache)
-}
-
 //Cache Cache stores the cache Driver and default ttl.
 type Cache struct {
 	Driver

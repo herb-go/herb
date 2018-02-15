@@ -60,10 +60,6 @@ type Store struct {
 	DefaultSessionFlag   Flag          //Default flag when creating session.
 }
 
-func Init(s *Store, i Initializer) error {
-	return i.Init(s)
-}
-
 func New() *Store {
 	return &Store{
 		TokenContextName:     defaultTokenContextName,
@@ -72,10 +68,6 @@ func New() *Store {
 		UpdateActiveInterval: defaultUpdateActiveInterval,
 		TokenMaxLifetime:     defaultTokenMaxLifetime,
 	}
-}
-func NewAndInit(i Initializer) (*Store, error) {
-	s := New()
-	return s, Init(s, i)
 }
 
 //Close Close cachestore and return any error if raised

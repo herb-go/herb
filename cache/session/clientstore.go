@@ -75,7 +75,8 @@ func MustClientStore(key []byte, TokenLifetime time.Duration) *Store {
 	if err != nil {
 		panic(err)
 	}
-	store, err := NewAndInit(Option(driver, TokenLifetime))
+	store := New()
+	err = Option(driver, TokenLifetime).Init(store)
 	if err != nil {
 		panic(err)
 	}

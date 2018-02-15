@@ -20,14 +20,6 @@ func New() *Renderer {
 	r.ViewFiles = map[string][]string{}
 	return &r
 }
-func Init(r *Renderer, i Initializer) error {
-	return i.Init(r)
-}
-
-func NewAndInit(i Initializer) (*Renderer, error) {
-	r := New()
-	return r, i.Init(r)
-}
 
 //Renderer renderer main struct
 type Renderer struct {
