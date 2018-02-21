@@ -1,7 +1,7 @@
 package cache
 
 import "testing"
-import "encoding/json"
+
 import "time"
 
 func TestDummyCache(t *testing.T) {
@@ -13,7 +13,7 @@ func TestDummyCache(t *testing.T) {
 	testIncrement := int64(1)
 	testIntValue := int64(2)
 	var model string
-	err := c.Init(OptionCommon("dummycache", json.RawMessage(""), int64(testTTL)))
+	err := c.Init(ConfigJSON{"dummycache", nil, int64(testTTL)})
 	if err != nil {
 		t.Fatal(err)
 	}

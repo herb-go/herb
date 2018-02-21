@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"encoding/binary"
-	"encoding/json"
 
 	"sync"
 
@@ -241,20 +240,15 @@ type Config struct {
 	Size int //Cache memory usage limie.
 }
 
-//New Create new cache driver with given json bytes.
-//Return new driver and any error raised.
-func (c *Cache) New(config json.RawMessage) (cache.Driver, error) {
-	cf := Config{}
-	err := json.Unmarshal(config, &cf)
-	if err != nil {
-		return nil, err
-	}
+func (config *Config) Create() (cache.Driver, error) {
 	cache := Cache{
-		freecache: freecache.NewCache(cf.Size),
+		freecache: freecache.NewCache(config.Size),
 	}
 	return &cache, nil
 }
 
 func init() {
-	cache.Register("freecache", &Cache{})
+	cache.Register("freecache", func() cache.DriverConfig {
+		return &Config{}
+	})
 }

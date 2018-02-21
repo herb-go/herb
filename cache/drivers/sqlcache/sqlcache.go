@@ -627,14 +627,8 @@ type Config struct {
 	GCLimit  int64  ////Max delete limit in every gc call.Default value is 100.
 }
 
-//New Create new cache driver with given json bytes.
-//Return new driver and any error raised.
-func (c *Cache) New(config json.RawMessage) (cache.Driver, error) {
-	cf := Config{}
-	err := json.Unmarshal(config, &cf)
-	if err != nil {
-		return nil, err
-	}
+func (cf *Config) Create() (cache.Driver, error) {
+	var err error
 	cache := Cache{}
 	cache.DB, err = sql.Open(cf.Driver, cf.Conn)
 	if err != nil {
@@ -678,5 +672,7 @@ func (c *Cache) New(config json.RawMessage) (cache.Driver, error) {
 }
 
 func init() {
-	cache.Register("sqlcache", &Cache{})
+	cache.Register("sqlcache", func() cache.DriverConfig {
+		return &Config{}
+	})
 }

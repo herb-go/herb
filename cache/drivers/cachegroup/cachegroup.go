@@ -4,7 +4,6 @@ package cachegroup
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"time"
 
 	"github.com/herb-go/herb/cache"
@@ -15,6 +14,20 @@ const modeUpdate = 1
 
 //Config Cache driver list of all sub cache driver.
 type Config []cache.Config
+
+func (config *Config) Create() (cache.Driver, error) {
+	cc := Cache{}
+	cc.SubCaches = make([]*cache.Cache, len(*config))
+	for k, v := range *config {
+		subcache := cache.New()
+		err := subcache.Init(v)
+		if err != nil {
+			return &cc, err
+		}
+		cc.SubCaches[k] = subcache
+	}
+	return &cc, nil
+}
 
 //Cache The group cache driver.
 type Cache struct {
@@ -54,27 +67,6 @@ func (e *entry) Get() ([]byte, int64, error) {
 	copy(buf, b[8:])
 	return buf, expired, nil
 
-}
-
-//New Create new cache driver with given json bytes.
-//Return new driver and any error raised.
-func (c *Cache) New(bytes json.RawMessage) (cache.Driver, error) {
-	config := Config{}
-	err := json.Unmarshal(bytes, &config)
-	if err != nil {
-		return nil, err
-	}
-	cc := Cache{}
-	cc.SubCaches = make([]*cache.Cache, len(config))
-	for k, v := range config {
-		subcache := cache.New()
-		err := v.Init(subcache)
-		if err != nil {
-			return &cc, err
-		}
-		cc.SubCaches[k] = subcache
-	}
-	return &cc, nil
 }
 
 //Set Set data model to cache by given key.
@@ -329,5 +321,7 @@ func (c *Cache) Flush() error {
 }
 
 func init() {
-	cache.Register("cachegroup", &Cache{})
+	cache.Register("cachegroup", func() cache.DriverConfig {
+		return &Config{}
+	})
 }

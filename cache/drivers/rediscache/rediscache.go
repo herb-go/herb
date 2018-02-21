@@ -3,7 +3,6 @@
 package rediscache
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 
@@ -42,20 +41,6 @@ type Cache struct {
 	readTimeout    time.Duration
 	writeTimeout   time.Duration
 	Separtor       string //Separtor in redis key.
-}
-
-//Config Cache driver config.
-type Config struct {
-	Network     string //Network string of redis conn.
-	Address     string //Redis server address.
-	Name        string ////Redis server username.
-	Password    string //Redis server password.
-	Db          int    //Redis server database id.
-	MaxIdle     int    //Max idle conn in redis pool.
-	MaxAlive    int    //Max Alive conn in redis pool.
-	IdleTimeout int    //Idel comm time.
-	GCPeriod    int64  //Period of gc.Default value is 30 second.
-	GCLimit     int64  //Max delete limit in every gc call.Default value is 100.
 }
 
 func (c *Cache) dial() (redis.Conn, error) {
@@ -329,14 +314,21 @@ func (c *Cache) SetGCErrHandler(f func(err error)) {
 	return
 }
 
-//New Create new cache driver with given json bytes.
-//Return new driver and any error raised.
-func (_ *Cache) New(config json.RawMessage) (cache.Driver, error) {
-	c := Config{}
-	err := json.Unmarshal(config, &c)
-	if err != nil {
-		return nil, err
-	}
+//Config Cache driver config.
+type Config struct {
+	Network     string //Network string of redis conn.
+	Address     string //Redis server address.
+	Name        string ////Redis server username.
+	Password    string //Redis server password.
+	Db          int    //Redis server database id.
+	MaxIdle     int    //Max idle conn in redis pool.
+	MaxAlive    int    //Max Alive conn in redis pool.
+	IdleTimeout int    //Idel comm time.
+	GCPeriod    int64  //Period of gc.Default value is 30 second.
+	GCLimit     int64  //Max delete limit in every gc call.Default value is 100.
+}
+
+func (c *Config) Create() (cache.Driver, error) {
 	cache := Cache{}
 	cache.name = c.Name
 	cache.network = c.Network
@@ -362,12 +354,14 @@ func (_ *Cache) New(config json.RawMessage) (cache.Driver, error) {
 	}
 	cache.Pool.Wait = true
 	cache.quit = make(chan int)
-	err = cache.start()
+	err := cache.start()
 	if err != nil {
 		return &cache, err
 	}
 	return &cache, nil
 }
 func init() {
-	cache.Register("rediscache", &Cache{})
+	cache.Register("rediscache", func() cache.DriverConfig {
+		return &Config{}
+	})
 }

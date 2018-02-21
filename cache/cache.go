@@ -2,8 +2,8 @@
 package cache
 
 import (
-	"encoding/json"
 	"errors"
+	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -37,20 +37,13 @@ var (
 	intKeyPrefix = string([]byte{69, 0})
 )
 
-//Config :The cache config struct
-type Config struct {
-	Driver string
-	Config json.RawMessage
-	TTL    int64
+type DriverConfig interface {
+	Create() (Driver, error)
 }
-
-func (config *Config) ApplyTo(cache *Cache) error {
-	return OptionCommon(config.Driver, config.Config, config.TTL)(cache)
-}
+type Factory func() DriverConfig
 
 //Driver : Cache driver interface.Should Never used directly
 type Driver interface {
-	New(cacheConfig json.RawMessage) (Driver, error)                           //Create new cache with given config.
 	Set(key string, v interface{}, ttl time.Duration) error                    //Set data model to cache by given key.
 	Update(key string, v interface{}, ttl time.Duration) error                 //Update data model to cache by given key only if the cache exist.
 	Get(key string, v interface{}) error                                       //Get data model from cache by given key.
@@ -72,41 +65,51 @@ type Driver interface {
 }
 
 var (
-	driversMu sync.RWMutex
-	drivers   = make(map[string]Driver)
+	factorysMu sync.RWMutex
+	factories  = make(map[string]Factory)
 )
 
-// Register makes a database driver available by the provided name.
+// Register makes a driver creator available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
 // it panics.
-func Register(name string, driver Driver) {
-	driversMu.Lock()
-	defer driversMu.Unlock()
-	if driver == nil {
-		panic("cache: Register driver is nil")
+func Register(name string, f Factory) {
+	factorysMu.Lock()
+	defer factorysMu.Unlock()
+	if f == nil {
+		panic("cache: Register cache factory is nil")
 	}
-	if _, dup := drivers[name]; dup {
-		panic("cache: Register called twice for driver " + name)
+	if _, dup := factories[name]; dup {
+		panic("cache: Register called twice for factory " + name)
 	}
-	drivers[name] = driver
+	factories[name] = f
 }
-func unregisterAllDrivers() {
-	driversMu.Lock()
-	defer driversMu.Unlock()
+func unregisterAll() {
+	factorysMu.Lock()
+	defer factorysMu.Unlock()
 	// For tests.
-	drivers = make(map[string]Driver)
+	factories = make(map[string]Factory)
 }
 
-// Drivers returns a sorted list of the names of the registered drivers.
-func Drivers() []string {
-	driversMu.RLock()
-	defer driversMu.RUnlock()
+//Factories returns a sorted list of the names of the registered factories.
+func Factories() []string {
+	factorysMu.RLock()
+	defer factorysMu.RUnlock()
 	var list []string
-	for name := range drivers {
+	for name := range factories {
 		list = append(list, name)
 	}
 	sort.Strings(list)
 	return list
+}
+
+func NewDriverConfig(name string) (DriverConfig, error) {
+	factorysMu.RLock()
+	factoryi, ok := factories[name]
+	factorysMu.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("cache: unknown driver %q (forgotten import?)", name)
+	}
+	return factoryi(), nil
 }
 
 //New :Create a empty cache.

@@ -2,7 +2,6 @@ package cache
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -15,15 +14,17 @@ type OptionFunc func(*Cache) error
 func (i OptionFunc) ApplyTo(cache *Cache) error {
 	return i(cache)
 }
-func OptionCommon(driverName string, cacheConfig json.RawMessage, ttlInSecond int64) OptionFunc {
+func OptionJSON(driverName string, creatorjson json.RawMessage, ttlInSecond int64) OptionFunc {
 	return func(cache *Cache) error {
-		driversMu.RLock()
-		driveri, ok := drivers[driverName]
-		driversMu.RUnlock()
-		if !ok {
-			return fmt.Errorf("cache: unknown driver %q (forgotten import?)", driverName)
+		config, err := NewDriverConfig(driverName)
+		if err != nil {
+			return err
 		}
-		driver, err := driveri.New(cacheConfig)
+		err = json.Unmarshal(creatorjson, config)
+		if err != nil {
+			return err
+		}
+		driver, err := config.Create()
 		if err != nil {
 			return err
 		}
@@ -34,13 +35,16 @@ func OptionCommon(driverName string, cacheConfig json.RawMessage, ttlInSecond in
 	}
 }
 
-type ConfigJSON []byte
+//Config :The cache config json format struct
+type Config struct {
+	Driver string
+	Config json.RawMessage
+	TTL    int64
+}
 
-func (c ConfigJSON) ApplyTo(cache *Cache) error {
-	var config Config
-	err := json.Unmarshal(c, &config)
-	if err != nil {
-		return err
+func (c Config) ApplyTo(cache *Cache) error {
+	if len(c.Config) == 0 || c.Config == nil {
+		c.Config = json.RawMessage("{}")
 	}
-	return OptionCommon(config.Driver, config.Config, config.TTL)(cache)
+	return OptionJSON(c.Driver, c.Config, c.TTL)(cache)
 }

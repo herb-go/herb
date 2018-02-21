@@ -1,7 +1,6 @@
 package hashcache
 
 import (
-	"encoding/json"
 	"errors"
 	"strconv"
 	"time"
@@ -19,12 +18,6 @@ var ErrHashFormatWrong = errors.New("error hash format wrong")
 type Cache struct {
 	Local  *cache.Cache
 	Remote *cache.Cache
-}
-
-//Config Cache driver config.
-type Config struct {
-	Local  cache.Config
-	Remote cache.Config
 }
 
 //Flush Flush not supported.
@@ -371,23 +364,24 @@ func (c *Cache) SetGCErrHandler(f func(err error)) {
 	return
 }
 
+//Config Cache driver config.
+type Config struct {
+	Local  cache.Config
+	Remote cache.Config
+}
+
 //New Create new cache driver with given json bytes.
 //Return new driver and any error raised.
-func (_ *Cache) New(bytes json.RawMessage) (cache.Driver, error) {
-	config := Config{}
-	err := json.Unmarshal(bytes, &config)
-	if err != nil {
-		return nil, err
-	}
+func (config *Config) Create() (cache.Driver, error) {
 	cc := Cache{}
 	localcache := cache.New()
-	err = config.Local.Init(localcache)
+	err := localcache.Init(config.Local)
 	if err != nil {
 		return &cc, err
 	}
 	cc.Local = localcache
 	remotecache := cache.New()
-	err = config.Remote.Init(remotecache)
+	err = remotecache.Init(config.Remote)
 	if err != nil {
 		return &cc, err
 	}
@@ -395,5 +389,7 @@ func (_ *Cache) New(bytes json.RawMessage) (cache.Driver, error) {
 	return &cc, nil
 }
 func init() {
-	cache.Register("hashcache", &Cache{})
+	cache.Register("hashcache", func() cache.DriverConfig {
+		return &Config{}
+	})
 }

@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -10,9 +9,7 @@ import (
 type DummyCache struct {
 }
 
-//New Create new dummy cache driver.
-//Return dummy cach driver and nil.
-func (c *DummyCache) New(cacheConfig json.RawMessage) (Driver, error) {
+func (c *DummyCache) Create() (Driver, error) {
 	return &DummyCache{}, nil
 }
 
@@ -121,5 +118,7 @@ func (c *DummyCache) ExpireCounter(key string, ttl time.Duration) error {
 }
 
 func init() {
-	Register("dummycache", &DummyCache{})
+	Register("dummycache", func() DriverConfig {
+		return &DummyCache{}
+	})
 }

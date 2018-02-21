@@ -12,7 +12,7 @@ import (
 
 func newTestCache(ttl int64) *cache.Cache {
 	c := cache.New()
-	err := cache.Init(c, cache.Option("redisluacache", json.RawMessage(testConfig), ttl))
+	err := c.Init(cache.OptionJSON("redisluacache", json.RawMessage(testConfig), ttl))
 	if err != nil {
 		panic(err)
 	}

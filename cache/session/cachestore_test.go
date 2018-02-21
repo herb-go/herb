@@ -2,6 +2,7 @@ package session
 
 import (
 	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -16,7 +17,12 @@ import (
 
 func getStore(ttl time.Duration) *Store {
 	c := cache.New()
-	err := cache.ConfigJSON([]byte(testCache)).Init(c)
+	config := &cache.Config{}
+	err := json.Unmarshal([]byte(testCache), config)
+	if err != nil {
+		panic(err)
+	}
+	err = c.Init(config)
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +36,12 @@ func getStore(ttl time.Duration) *Store {
 
 func getTimeoutStore(ttl time.Duration, UpdateActiveInterval time.Duration) *Store {
 	c := cache.New()
-	err := cache.ConfigJSON([]byte(testCache)).Init(c)
+	config := &cache.Config{}
+	err := json.Unmarshal([]byte(testCache), config)
+	if err != nil {
+		panic(err)
+	}
+	err = c.Init(config)
 	if err != nil {
 		panic(err)
 	}
