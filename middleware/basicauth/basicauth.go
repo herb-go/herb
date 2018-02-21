@@ -5,8 +5,11 @@ import (
 	"net/http"
 )
 
+//ContextName basicauth context name type.
 type ContextName string
 
+//IdentifyRequest indentify request by basic auth user.
+//Return uesrname and any error if raised.
 func (c ContextName) IdentifyRequest(r *http.Request) (string, error) {
 	var username string
 	u := r.Context().Value(c)
@@ -16,18 +19,41 @@ func (c ContextName) IdentifyRequest(r *http.Request) (string, error) {
 	return username, nil
 }
 
+//Username context name for username.
 var Username = ContextName("Username")
 
+//Authorizer interface for basicauth authorizer.
 type Authorizer interface {
 	GetRealm() (string, error)
 	Authorize(Username string, Password string) (bool, error)
 }
+
+//SingleUser single user authorizer.
 type SingleUser struct {
-	Realm    string
+	//Realm basic auth realm.
+	Realm string
+	//Username basic auth username.
 	Username string
+	//Password basic auth password.
 	Password string
 }
 
+//GetRealm return basic auth realm.
+//return realm and any error if raised.
+func (c *SingleUser) GetRealm() (string, error) {
+	return c.Realm, nil
+}
+
+//Authorize authorize user with username and password.
+//return authorize result and any error if raised.
+func (c *SingleUser) Authorize(Username string, Password string) (bool, error) {
+	if c.Username != Username || c.Password != Password {
+		return false, nil
+	}
+	return true, nil
+}
+
+//GetUsername get basic auth user name from request.
 func GetUsername(r *http.Request) string {
 	var username string
 	u := r.Context().Value(Username)
@@ -36,19 +62,14 @@ func GetUsername(r *http.Request) string {
 	}
 	return username
 }
+
+//SetUsername set username to request context.
 func SetUsername(r *http.Request, username string) {
 	ctx := context.WithValue(r.Context(), Username, username)
 	*r = *r.WithContext(ctx)
 }
-func (c *SingleUser) GetRealm() (string, error) {
-	return c.Realm, nil
-}
-func (c *SingleUser) Authorize(Username string, Password string) (bool, error) {
-	if c.Username != Username || c.Password != Password {
-		return false, nil
-	}
-	return true, nil
-}
+
+//Middleware use authorizer as basic auth middleware.
 func Middleware(c Authorizer) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	realm, err := c.GetRealm()
 	if err != nil {
