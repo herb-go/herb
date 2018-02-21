@@ -36,7 +36,7 @@ func (e *ErrorPage) MiddlewareDisable(w http.ResponseWriter, r *http.Request, ne
 	next(w, r)
 }
 
-//ServeMiddleware serve middleware
+//ServeMiddleware serve as middleware
 func (e *ErrorPage) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	newWriter := e.newResponseWriter(w, r)
 	next(&newWriter, r)
