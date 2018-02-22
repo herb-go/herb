@@ -73,5 +73,12 @@ func (e *RenderEngine) Compile(viewFiles ...string) (render.CompiledView, error)
 	return &tv, nil
 }
 
+//RegisterFunc register func to engine
+//Return true if func register successful.
+func (e *RenderEngine) RegisterFunc(name string, fn interface{}) error {
+	e.FuncMap[name] = fn
+	return nil
+}
+
 //Engine default go template render engine
 var Engine = New()

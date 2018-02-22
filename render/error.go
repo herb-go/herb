@@ -24,3 +24,6 @@ func NewViewError(ViewName string, err error) *ViewError {
 		err:      err,
 	}
 }
+
+//ErrRegisterFuncNotSupported raised when register func is not supported by engine.
+var ErrRegisterFuncNotSupported = errors.New("render:error register func not supported")

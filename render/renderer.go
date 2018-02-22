@@ -210,4 +210,7 @@ type Engine interface {
 	SetViewRoot(string)
 	//Compile complie view files to complied view.
 	Compile(viewFiles ...string) (CompiledView, error)
+	//RegisterFunc register func to engine
+	//Return any error if raised.
+	RegisterFunc(name string, fn interface{}) error
 }

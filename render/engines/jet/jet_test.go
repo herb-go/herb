@@ -9,12 +9,12 @@ import (
 
 func TestTemplate(t *testing.T) {
 	engine := Engine
-	var b64 = func(data string) (string, error) {
+	var b64 = func(data string) string {
 		d := base64.RawStdEncoding.EncodeToString([]byte(data))
-		return d, nil
+		return d
 	}
 	engine.SetViewRoot("./testdata")
-	engine.AddGlobal("b64", b64)
+	engine.RegisterFunc("b64", b64)
 
 	view, err := engine.Compile("test.jet")
 	if err != nil {

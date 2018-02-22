@@ -1,6 +1,7 @@
 package render
 
 import (
+	"encoding/base64"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -18,6 +19,9 @@ func (e *testEngine) Compile(viewFiles ...string) (CompiledView, error) {
 	return &testView{
 		Files: viewFiles,
 	}, nil
+}
+func (e *testEngine) RegisterFunc(name string, fn interface{}) error {
+	return ErrRegisterFuncNotSupported
 }
 
 type testView struct {
@@ -39,6 +43,14 @@ func TestEngine(t *testing.T) {
 	}
 	if render.Engine() != engine {
 		t.Error(render.Engine())
+	}
+	var b64 = func(data string) string {
+		d := base64.RawStdEncoding.EncodeToString([]byte(data))
+		return d
+	}
+	err = engine.RegisterFunc("b64", b64)
+	if err != ErrRegisterFuncNotSupported {
+		t.Error(err)
 	}
 	render.MustInitViews(ViewsConf("./testdata/testconfig.json"))
 	ViewTest := render.GetView("test")

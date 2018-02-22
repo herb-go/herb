@@ -52,6 +52,13 @@ func (e *RenderEngine) Compile(viewFiles ...string) (render.CompiledView, error)
 	return &tv, nil
 }
 
+//RegisterFunc register func to engine
+//Return true if func register successful.
+func (e *RenderEngine) RegisterFunc(name string, fn interface{}) error {
+	e.AddGlobal(name, fn)
+	return nil
+}
+
 //SetViewRoot set view root path
 func (e *RenderEngine) SetViewRoot(path string) {
 	e.ViewRoot = path
