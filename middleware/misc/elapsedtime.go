@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+//ElapsedTime add requset elapsed time to "Elapsed-Time" header of response.
+//Elapsed time is time spent between middleware exetue and data wrote to response.
 func ElapsedTime(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	nw := elapsedTimeResponseWriter{
 		ResponseWriter: w,
