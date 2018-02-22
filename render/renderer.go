@@ -29,6 +29,7 @@ type Renderer struct {
 	lock  sync.RWMutex
 }
 
+//Init init renderer with option.
 func (r *Renderer) Init(option Option) error {
 	return option.ApplyTo(r)
 }
@@ -151,10 +152,15 @@ func (r *Renderer) setViewFiles(name string, viewFiles []string) {
 	r.ViewFiles[name] = viewFiles
 }
 
+//InitViews init renderer views with views option.
+//Return inited views and any error if raised.
 func (r *Renderer) InitViews(option ViewsOption) (map[string]*NamedView, error) {
 	return option.ApplyTo(r)
 }
 
+//MustInitViews init renderer views with views option.
+//Return inited views.
+//Panic if any error raised.
 func (r *Renderer) MustInitViews(option ViewsOption) map[string]*NamedView {
 	vs, err := r.InitViews(option)
 	if err != nil {
