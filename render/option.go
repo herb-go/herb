@@ -59,5 +59,5 @@ func (o ViewsConf) ApplyTo(r *Renderer) (map[string]*NamedView, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ViewsOptionCommon(data)(r)
+	return ViewsOptionCommon(data).ApplyTo(r)
 }
