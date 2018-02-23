@@ -96,9 +96,8 @@ func (model *Model) ValidateFieldf(validated bool, field string, msg string) *Va
 func (model *Model) Errors() []FieldError {
 	if model.errors == nil {
 		return []FieldError{}
-	} else {
-		return model.errors
 	}
+	return model.errors
 }
 
 func (model *Model) HasError() bool {

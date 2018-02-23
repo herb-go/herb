@@ -15,11 +15,8 @@ type DataMapper interface {
 	DBTableName() string
 }
 
-func NewDB(db *sql.DB, prefix string) *PrefixDB {
-	return &PrefixDB{
-		db:     db,
-		prefix: prefix,
-	}
+func NewDB() *PrefixDB {
+	return &PrefixDB{}
 }
 
 type PrefixDB struct {
@@ -27,6 +24,9 @@ type PrefixDB struct {
 	prefix string
 }
 
+func (d *PrefixDB) Init(o PrefixDBOption) error {
+	return o.Apply(d)
+}
 func (d *PrefixDB) SetDB(db *sql.DB) {
 	d.db = db
 }
@@ -46,6 +46,7 @@ func (d *PrefixDB) Prefix() string {
 func (d *PrefixDB) TableName(tableName string) string {
 	return d.prefix + tableName
 }
+
 func New(db DB, table string) *TableDataMapper {
 	return &TableDataMapper{
 		db:    db,
