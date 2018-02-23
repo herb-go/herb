@@ -11,6 +11,9 @@ func (m *Messages) GetMessage(key string) string {
 }
 func (m *Messages) HasMessage(key string) (string, bool) {
 	value, ok := (*m)[key]
+	if ok == false {
+		value = key
+	}
 	return value, ok
 }
 
@@ -32,7 +35,7 @@ func (m *MessageChain) HasMessage(key string) (string, bool) {
 			return value, ok
 		}
 	}
-	return "", false
+	return key, false
 }
 
 func (m *MessageChain) Use(Messages ...ModelMessages) *MessageChain {

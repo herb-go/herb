@@ -1,13 +1,8 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 )
-
-const MsgBadRequest = "Bad request."
 
 type FieldError struct {
 	Field string
@@ -16,68 +11,26 @@ type FieldError struct {
 }
 type ValidatedResult struct {
 	Validated bool
-	Model     *ModelErrors
+	Model     *Model
 }
-type ModelErrors struct {
+type Model struct {
 	errors      []FieldError
 	messages    ModelMessages
-	badRequest  bool
 	fieldLabels map[string]string
 }
 
-func MustValidate(m Model) bool {
+func MustValidate(m Validator) bool {
 	err := m.Validate()
 	if err != nil {
 		panic(err)
 	}
 	return !m.HasError()
 }
-func MustValidateJSONPost(r *http.Request, m HttpModel) bool {
-	var body, err = ioutil.ReadAll(r.Body)
-	if err != nil {
-		panic(err)
-	}
-	if len(body) > 0 {
-		err = json.Unmarshal(body, &m)
-		if err != nil {
-			m.SetBadRequest(true)
-			m.AddErrorf("", MsgBadRequest)
-			return false
-		}
-	}
-	err = m.InitWithRequest(r)
-	if err != nil {
-		panic(err)
-	}
-	return MustValidate(m)
 
-}
-func MustRenderErrors(w http.ResponseWriter, m Model) {
-	if m.BadRequest() {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(422)
-	bytes, err := json.Marshal(m.Errors())
-	if err != nil {
-		panic(err)
-	}
-	_, err = w.Write(bytes)
-	if err != nil {
-		panic(err)
-	}
-}
-func (model *ModelErrors) SetMessages(m *Messages) {
+func (model *Model) SetMessages(m *Messages) {
 	model.messages = m
 }
-func (model *ModelErrors) BadRequest() bool {
-	return model.badRequest
-}
-func (model *ModelErrors) SetBadRequest(v bool) {
-	model.badRequest = v
-}
-func (model *ModelErrors) getMessageText(msg string) string {
+func (model *Model) getMessageText(msg string) string {
 	var msgtext string
 	if model.messages != nil {
 		msgtext = model.messages.GetMessage(msg)
@@ -88,11 +41,11 @@ func (model *ModelErrors) getMessageText(msg string) string {
 	}
 	return msgtext
 }
-func (model *ModelErrors) getMessageTextf(field, msg string) string {
+func (model *Model) getMessageTextf(field, msg string) string {
 	msg = model.getMessageText(msg)
 	return fmt.Sprintf("%[3]s"+msg, model.GetFieldLabel(field), field, "")
 }
-func (model *ModelErrors) AddPlainError(field string, msg string) {
+func (model *Model) AddPlainError(field string, msg string) {
 	f := FieldError{
 		Field: field,
 		Label: model.GetFieldLabel(field),
@@ -100,10 +53,10 @@ func (model *ModelErrors) AddPlainError(field string, msg string) {
 	}
 	model.errors = append(model.Errors(), f)
 }
-func (model *ModelErrors) SetFieldLabels(labels map[string]string) {
+func (model *Model) SetFieldLabels(labels map[string]string) {
 	model.fieldLabels = labels
 }
-func (model *ModelErrors) GetFieldLabel(field string) string {
+func (model *Model) GetFieldLabel(field string) string {
 	if model.fieldLabels == nil {
 		return field
 	}
@@ -113,13 +66,13 @@ func (model *ModelErrors) GetFieldLabel(field string) string {
 	}
 	return label
 }
-func (model *ModelErrors) AddError(field string, msg string) {
+func (model *Model) AddError(field string, msg string) {
 	model.AddPlainError(field, model.getMessageText(msg))
 }
-func (model *ModelErrors) AddErrorf(field string, msg string) {
+func (model *Model) AddErrorf(field string, msg string) {
 	model.AddPlainError(field, model.getMessageTextf(field, msg))
 }
-func (model *ModelErrors) ValidateField(validated bool, field string, msg string) *ValidatedResult {
+func (model *Model) ValidateField(validated bool, field string, msg string) *ValidatedResult {
 	if !validated {
 		model.AddError(field, msg)
 	}
@@ -128,7 +81,7 @@ func (model *ModelErrors) ValidateField(validated bool, field string, msg string
 		Model:     model,
 	}
 }
-func (model *ModelErrors) ValidateFieldf(validated bool, field string, msg string) *ValidatedResult {
+func (model *Model) ValidateFieldf(validated bool, field string, msg string) *ValidatedResult {
 	if !validated {
 		model.AddErrorf(field, msg)
 	}
@@ -137,32 +90,25 @@ func (model *ModelErrors) ValidateFieldf(validated bool, field string, msg strin
 		Model:     model,
 	}
 }
-func (model *ModelErrors) Errors() []FieldError {
+func (model *Model) Errors() []FieldError {
 	if model.errors == nil {
 		return []FieldError{}
 	} else {
 		return model.errors
 	}
 }
-func (model *ModelErrors) InitWithRequest(*http.Request) error {
+
+func (model *Model) HasError() bool {
+	return len(model.Errors()) != 0
+}
+func (model *Model) Validate() error {
 	return nil
 }
 
-func (model *ModelErrors) HasError() bool {
-	return model.badRequest || len(model.Errors()) != 0
-}
-
-type Model interface {
+type Validator interface {
 	HasError() bool
 	Errors() []FieldError
 	AddError(field string, msg string)
 	AddErrorf(field string, msg string)
-	BadRequest() bool
-	SetBadRequest(bool)
 	Validate() error
-}
-
-type HttpModel interface {
-	Model
-	InitWithRequest(*http.Request) error
 }

@@ -13,7 +13,7 @@ func ServeFile(path string) http.HandlerFunc {
 	}
 }
 
-//ServeFolder serve  file in root path as http resopnse.
+//ServeFolder serve files in root path as http resopnse.
 //Request folder with index.html will serve as index.html.
 //Request folder without index.html will raise a http forbidden error(403).
 func ServeFolder(root string) http.HandlerFunc {
