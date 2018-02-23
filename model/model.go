@@ -1,8 +1,11 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 )
+
+var ErrNoValidateModel = errors.New("error no validate method for model.")
 
 type FieldError struct {
 	Field string
@@ -11,7 +14,7 @@ type FieldError struct {
 }
 type ValidatedResult struct {
 	Validated bool
-	Model     *Model
+	Model     Validator
 }
 type Model struct {
 	errors      []FieldError
@@ -27,7 +30,7 @@ func MustValidate(m Validator) bool {
 	return !m.HasError()
 }
 
-func (model *Model) SetMessages(m *Messages) {
+func (model *Model) SetMessages(m Messages) {
 	model.messages = m
 }
 func (model *Model) getMessageText(msg string) string {
@@ -43,7 +46,7 @@ func (model *Model) getMessageText(msg string) string {
 }
 func (model *Model) getMessageTextf(field, msg string) string {
 	msg = model.getMessageText(msg)
-	return fmt.Sprintf("%[3]s"+msg, model.GetFieldLabel(field), field, "")
+	return fmt.Sprintf(msg+"%[3]s", model.GetFieldLabel(field), field, "")
 }
 func (model *Model) AddPlainError(field string, msg string) {
 	f := FieldError{
@@ -58,7 +61,7 @@ func (model *Model) SetFieldLabels(labels map[string]string) {
 }
 func (model *Model) GetFieldLabel(field string) string {
 	if model.fieldLabels == nil {
-		return field
+		return DefaultMessages.GetMessage(field)
 	}
 	label, ok := model.fieldLabels[field]
 	if ok == false {
@@ -102,7 +105,7 @@ func (model *Model) HasError() bool {
 	return len(model.Errors()) != 0
 }
 func (model *Model) Validate() error {
-	return nil
+	return ErrNoValidateModel
 }
 
 type Validator interface {

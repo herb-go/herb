@@ -1,7 +1,6 @@
 package model
 
 import (
-	"net/http"
 	"testing"
 )
 
@@ -70,9 +69,4 @@ func TestMessage(t *testing.T) {
 	if m != "messagetest2" {
 		t.Error(m)
 	}
-}
-
-type HttpModel interface {
-	Model
-	InitWithRequest(*http.Request) error
 }

@@ -2,15 +2,15 @@ package model
 
 type Messages map[string]string
 
-func (m *Messages) GetMessage(key string) string {
-	result, ok := (*m)[key]
+func (m Messages) GetMessage(key string) string {
+	result, ok := m[key]
 	if ok == false {
 		result = key
 	}
 	return result
 }
-func (m *Messages) HasMessage(key string) (string, bool) {
-	value, ok := (*m)[key]
+func (m Messages) HasMessage(key string) (string, bool) {
+	value, ok := m[key]
 	if ok == false {
 		value = key
 	}
