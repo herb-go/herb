@@ -23,7 +23,7 @@ func newTestModel() *testModel {
 func (m *testModel) Validate() error {
 	m.ValidateFieldf(m.Field1 != "", "Field1", "Field1 required.")
 	m.ValidateField(m.Field2 != "", "Field2", "Field2 required.")
-	m.ValidateField(m.Field3 != "", "Field3", "Field3 required")
+	m.ValidateFieldf(m.Field3 != "", "Field3", "Field3 required")
 
 	return nil
 }
@@ -41,11 +41,9 @@ var defaultMessage = Messages{
 	"Field3 required": "test field3",
 }
 
-func init() {
-	DefaultMessages.Use(defaultMessage)
-
-}
 func TestModel(t *testing.T) {
+	DefaultMessages = nil
+	DefaultMessages.Use(defaultMessage)
 	m := newTestModel()
 	MustValidate(m)
 	if !m.HasError() {
@@ -97,6 +95,8 @@ func TestModel(t *testing.T) {
 }
 
 func TestNilMessage(t *testing.T) {
+	DefaultMessages = nil
+	DefaultMessages.Use(defaultMessage)
 	m := &testModel{}
 	MustValidate(m)
 	if !m.HasError() {
@@ -138,7 +138,7 @@ func TestNilMessage(t *testing.T) {
 func TestNoValidate(t *testing.T) {
 	m := testNoValidateModel{}
 	err := m.Validate()
-	if err != ErrNoValidateModel {
+	if err != ErrNoValidateMethod {
 		t.Fatal(err)
 	}
 }

@@ -74,7 +74,7 @@ func (e *RenderEngine) Compile(viewFiles ...string) (render.CompiledView, error)
 }
 
 //RegisterFunc register func to engine
-//Return true if func register successful.
+//Return any error if raised.
 func (e *RenderEngine) RegisterFunc(name string, fn interface{}) error {
 	e.FuncMap[name] = fn
 	return nil
