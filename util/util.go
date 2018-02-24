@@ -107,7 +107,8 @@ func ShutdownHTTP(Server *http.Server) {
 
 }
 func ShutdownHTTPWithTimeout(Server *http.Server, Timeout time.Duration) {
-	ctx, _ := context.WithTimeout(context.Background(), Timeout)
+	ctx, fn := context.WithTimeout(context.Background(), Timeout)
+	fn()
 	ShutdownHTTPWithContext(Server, ctx)
 
 }

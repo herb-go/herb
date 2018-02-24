@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func LoadJson(path string, v interface{}) error {
+func LoadJSON(path string, v interface{}) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return err
@@ -32,8 +32,8 @@ func LoadJson(path string, v interface{}) error {
 	}
 	return nil
 }
-func MustLoadJson(path string, v interface{}) {
-	err := LoadJson(path, v)
+func MustLoadJSON(path string, v interface{}) {
+	err := LoadJSON(path, v)
 	if err != nil {
 		panic(err)
 	}
