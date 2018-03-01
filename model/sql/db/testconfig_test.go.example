@@ -1,0 +1,9 @@
+package db
+
+var ConfigJSON = `
+{
+	"Driver": "mysql",
+	"Conn": "dbuser:dbpass@/db",
+	"Prefix": "test"
+}
+`

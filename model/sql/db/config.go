@@ -1,9 +1,9 @@
-package datamapper
+package db
 
 import "database/sql"
 
-type PrefixDBOption interface {
-	Apply(*PrefixDB) error
+type PlainDBOption interface {
+	Apply(*PlainDB) error
 }
 type DBConfig struct {
 	Driver string
@@ -11,7 +11,7 @@ type DBConfig struct {
 	Prefix string
 }
 
-func (c *DBConfig) Apply(d *PrefixDB) error {
+func (c *DBConfig) Apply(d *PlainDB) error {
 	db, err := sql.Open(c.Driver, c.Conn)
 	if err != nil {
 		return err
