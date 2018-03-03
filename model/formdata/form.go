@@ -1,4 +1,4 @@
-package requestform
+package formdata
 
 import (
 	"encoding/json"
