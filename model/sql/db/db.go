@@ -47,13 +47,13 @@ func (d *PlainDB) Prefix() string {
 }
 
 func (d *PlainDB) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return d.db.Exec(query, args)
+	return d.db.Exec(query, args...)
 }
 func (d *PlainDB) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	return d.db.Query(query, args)
+	return d.db.Query(query, args...)
 }
 func (d *PlainDB) QueryRow(query string, args ...interface{}) *sql.Row {
-	return d.db.QueryRow(query, args)
+	return d.db.QueryRow(query, args...)
 }
 
 func (d *PlainDB) BuildTableName(tableName string) string {
@@ -65,18 +65,18 @@ func (d *PlainDB) Table(tableName string) *PlainTable {
 
 func NewTable(db Database, tableName string) *PlainTable {
 	return &PlainTable{
-		db:    db,
-		table: tableName,
+		Database: db,
+		table:    tableName,
 	}
 }
 
 type PlainTable struct {
-	db    Database
+	Database
 	table string
 }
 
 func (t *PlainTable) DB() *sql.DB {
-	return t.db.DB()
+	return t.Database.DB()
 }
 
 func (t *PlainTable) SetName(table string) {
@@ -88,5 +88,5 @@ func (t *PlainTable) Name() string {
 }
 
 func (t *PlainTable) TableName() string {
-	return t.db.BuildTableName(t.table)
+	return t.Database.BuildTableName(t.table)
 }
