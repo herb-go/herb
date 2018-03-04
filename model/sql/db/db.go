@@ -4,15 +4,18 @@ import (
 	"database/sql"
 )
 
-type DB interface {
+type Database interface {
 	SetDB(db *sql.DB)
 	DB() *sql.DB
-	TableName(string) string
+	BuildTableName(string) string
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
 type Table interface {
-	DB() *sql.DB
-	DBTableName() string
+	Database
+	TableName() string
 }
 
 func New() *PlainDB {
@@ -43,14 +46,24 @@ func (d *PlainDB) Prefix() string {
 	return d.prefix
 }
 
-func (d *PlainDB) TableName(tableName string) string {
+func (d *PlainDB) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return d.db.Exec(query, args)
+}
+func (d *PlainDB) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	return d.db.Query(query, args)
+}
+func (d *PlainDB) QueryRow(query string, args ...interface{}) *sql.Row {
+	return d.db.QueryRow(query, args)
+}
+
+func (d *PlainDB) BuildTableName(tableName string) string {
 	return d.prefix + tableName
 }
 func (d *PlainDB) Table(tableName string) *PlainTable {
 	return NewTable(d, tableName)
 }
 
-func NewTable(db DB, tableName string) *PlainTable {
+func NewTable(db Database, tableName string) *PlainTable {
 	return &PlainTable{
 		db:    db,
 		table: tableName,
@@ -58,7 +71,7 @@ func NewTable(db DB, tableName string) *PlainTable {
 }
 
 type PlainTable struct {
-	db    DB
+	db    Database
 	table string
 }
 
@@ -66,14 +79,14 @@ func (t *PlainTable) DB() *sql.DB {
 	return t.db.DB()
 }
 
-func (t *PlainTable) SetTableName(table string) {
+func (t *PlainTable) SetName(table string) {
 	t.table = table
 }
 
-func (t *PlainTable) TableName() string {
+func (t *PlainTable) Name() string {
 	return t.table
 }
 
-func (t *PlainTable) DBTableName() string {
-	return t.db.TableName(t.table)
+func (t *PlainTable) TableName() string {
+	return t.db.BuildTableName(t.table)
 }

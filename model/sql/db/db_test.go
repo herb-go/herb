@@ -25,14 +25,14 @@ func TestDB(t *testing.T) {
 	if dm.DB() != db.DB() {
 		t.Error("db not equal")
 	}
-	if dm.TableName() != "test" {
+	if dm.Name() != "test" {
+		t.Error(dm.Name())
+	}
+	if dm.TableName() != db.Prefix()+dm.Name() {
 		t.Error(dm.TableName())
 	}
-	if dm.DBTableName() != db.Prefix()+dm.TableName() {
-		t.Error(dm.DBTableName())
-	}
-	dm.SetTableName("testnew")
-	if dm.TableName() != "testnew" {
+	dm.SetName("testnew")
+	if dm.Name() != "testnew" {
 		t.Error(dm.TableName())
 	}
 }
