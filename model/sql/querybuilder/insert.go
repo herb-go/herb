@@ -107,5 +107,5 @@ type Insert struct {
 }
 
 func (i *Insert) Query() *PlainQuery {
-	return i.querybuilder.Lines(i.Insert, i.Other)
+	return i.Builder.Lines(i.Insert, i.Other)
 }

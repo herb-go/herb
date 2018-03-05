@@ -119,7 +119,7 @@ func (s *Select) Result() *SelectResult {
 }
 
 func (s *Select) Query() *PlainQuery {
-	return s.querybuilder.Lines(s.Select, s.From, s.Join, s.Where, s.Other)
+	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.Other)
 }
 func (s *Select) QueryRow(db DB) *sql.Row {
 	q := s.Query()

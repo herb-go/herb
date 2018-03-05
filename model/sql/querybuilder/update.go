@@ -110,5 +110,5 @@ type Update struct {
 }
 
 func (u *Update) Query() *PlainQuery {
-	return u.querybuilder.Lines(u.Update, u.Where, u.Other)
+	return u.Builder.Lines(u.Update, u.Where, u.Other)
 }

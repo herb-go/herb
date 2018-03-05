@@ -65,9 +65,9 @@ func (q *PlainQuery) And(qs ...Query) *PlainQuery {
 		qslice := make([]Query, len(qs)+1)
 		qslice[0] = q
 		copy(qslice[1:], qs)
-		*q = *(q.querybuilder.And(qslice...))
+		*q = *(q.Builder.And(qslice...))
 	} else {
-		*q = *(q.querybuilder.And(qs...))
+		*q = *(q.Builder.And(qs...))
 	}
 	return q
 }
@@ -77,9 +77,9 @@ func (q *PlainQuery) Or(qs ...Query) *PlainQuery {
 		qslice := make([]Query, len(qs)+1)
 		qslice[0] = q
 		copy(qslice[1:], qs)
-		*q = *(q.querybuilder.Or(qslice...))
+		*q = *(q.Builder.Or(qslice...))
 	} else {
-		*q = *(q.querybuilder.Or(qs...))
+		*q = *(q.Builder.Or(qs...))
 	}
 	return q
 }

@@ -58,5 +58,5 @@ type Delete struct {
 }
 
 func (d *Delete) Query() *PlainQuery {
-	return d.querybuilder.Lines(d.Delete, d.Where, d.Other)
+	return d.Builder.Lines(d.Delete, d.Where, d.Other)
 }
