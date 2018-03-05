@@ -1,7 +1,7 @@
 package query
 
-func concatWith(separator string, q ...Query) *PlainQuery {
-	var query = New("")
+func (b *Builder) concatWith(separator string, q ...Query) *PlainQuery {
+	var query = b.New("")
 	for k := range q {
 		if q[k] == nil {
 			continue
@@ -17,32 +17,32 @@ func concatWith(separator string, q ...Query) *PlainQuery {
 	}
 	return query
 }
-func Concat(q ...Query) *PlainQuery {
-	return concatWith(" ", q...)
+func (b *Builder) Concat(q ...Query) *PlainQuery {
+	return b.concatWith(" ", q...)
 }
 
-func Comma(q ...Query) *PlainQuery {
-	return concatWith(" , ", q...)
+func (b *Builder) Comma(q ...Query) *PlainQuery {
+	return b.concatWith(" , ", q...)
 }
-func Lines(q ...Query) *PlainQuery {
-	return concatWith("\n", q...)
+func (b *Builder) Lines(q ...Query) *PlainQuery {
+	return b.concatWith("\n", q...)
 }
-func And(q ...Query) *PlainQuery {
+func (b *Builder) And(q ...Query) *PlainQuery {
 	if (len(q)) == 1 {
-		return New(q[0].QueryCommand(), q[0].QueryArgs()...)
+		return b.New(q[0].QueryCommand(), q[0].QueryArgs()...)
 	}
-	var query = concatWith(" AND ", q...)
+	var query = b.concatWith(" AND ", q...)
 	if query.Command != "" {
 		query.Command = "( " + query.Command + " )"
 	}
 	return query
 }
 
-func Or(q ...Query) *PlainQuery {
+func (b *Builder) Or(q ...Query) *PlainQuery {
 	if (len(q)) == 1 {
-		return New(q[0].QueryCommand(), q[0].QueryArgs()...)
+		return b.New(q[0].QueryCommand(), q[0].QueryArgs()...)
 	}
-	var query = concatWith(" OR ", q...)
+	var query = b.concatWith(" OR ", q...)
 	if query.Command != "" {
 		query.Command = "( " + query.Command + " )"
 	}

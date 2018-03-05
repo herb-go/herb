@@ -5,36 +5,36 @@ import (
 	"strings"
 )
 
-func NewValueList(data ...interface{}) *PlainQuery {
+func (b *Builder) NewValueList(data ...interface{}) *PlainQuery {
 	if len(data) == 0 {
-		return New("")
+		return b.New("")
 	}
 	var command = strings.Repeat("? , ", len(data))
-	return New(command[:len(command)-3], data...)
+	return b.New(command[:len(command)-3], data...)
 }
 
-func In(field string, args interface{}) *PlainQuery {
+func (b *Builder) In(field string, args interface{}) *PlainQuery {
 	var argsvalue = reflect.ValueOf(args)
 	var data = make([]interface{}, argsvalue.Len())
 	for k := range data {
 		data[k] = argsvalue.Index(k).Interface()
 	}
-	var query = NewValueList(data...)
+	var query = b.NewValueList(data...)
 	query.Command = field + " IN ( " + query.Command + " )"
 	return query
 }
 
-func Equal(field string, arg interface{}) *PlainQuery {
-	return New(field+" = ?", arg)
+func (b *Builder) Equal(field string, arg interface{}) *PlainQuery {
+	return b.New(field+" = ?", arg)
 }
-func Search(field string, arg string) *PlainQuery {
+func (b *Builder) Search(field string, arg string) *PlainQuery {
 	if arg == "" || field == "" {
-		return New("")
+		return b.New("")
 	}
-	return New(field+" LIKE ?", "%"+EscapeSearch(arg)+"%")
+	return b.New(field+" LIKE ?", "%"+b.EscapeSearch(arg)+"%")
 }
 
-func EscapeSearch(command string) string {
+func (b *Builder) EscapeSearch(command string) string {
 	command = strings.Replace(command, "\\", "\\\\", -1)
 	command = strings.Replace(command, "_", "\\_", -1)
 	command = strings.Replace(command, "%", "\\%", -1)

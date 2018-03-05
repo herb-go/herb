@@ -7,6 +7,8 @@ import (
 type Database interface {
 	SetDB(db *sql.DB)
 	DB() *sql.DB
+	Driver() string
+	SetDriver(string)
 	BuildTableName(string) string
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	Query(query string, args ...interface{}) (*sql.Rows, error)
@@ -15,6 +17,9 @@ type Database interface {
 
 type Table interface {
 	Database
+	BuildFieldName(name string) string
+	SetAlias(string)
+	Alias() string
 	TableName() string
 }
 
@@ -24,6 +29,7 @@ func New() *PlainDB {
 
 type PlainDB struct {
 	db     *sql.DB
+	driver string
 	prefix string
 }
 
@@ -37,7 +43,13 @@ func (d *PlainDB) SetDB(db *sql.DB) {
 func (d *PlainDB) DB() *sql.DB {
 	return d.db
 }
+func (d *PlainDB) SetDriver(driver string) {
+	d.driver = driver
+}
 
+func (d *PlainDB) Driver() string {
+	return d.driver
+}
 func (d *PlainDB) SetPrefix(prefix string) {
 	d.prefix = prefix
 }
@@ -72,6 +84,7 @@ func NewTable(db Database, tableName string) *PlainTable {
 
 type PlainTable struct {
 	Database
+	alias string
 	table string
 }
 
@@ -89,4 +102,17 @@ func (t *PlainTable) Name() string {
 
 func (t *PlainTable) TableName() string {
 	return t.Database.BuildTableName(t.table)
+}
+
+func (t *PlainTable) BuildFieldName(name string) string {
+	if t.alias == "" {
+		return name
+	}
+	return t.alias + "." + name
+}
+func (t *PlainTable) SetAlias(alias string) {
+	t.alias = alias
+}
+func (t *PlainTable) Alias() string {
+	return t.alias
 }
