@@ -1,4 +1,4 @@
-package builder
+package querybuilder
 
 type Builder struct {
 	Driver string

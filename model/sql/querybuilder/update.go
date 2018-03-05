@@ -1,4 +1,4 @@
-package builder
+package querybuilder
 
 func (b *Builder) NewUpdateQuery(tableName string) *UpdateQuery {
 	return &UpdateQuery{
