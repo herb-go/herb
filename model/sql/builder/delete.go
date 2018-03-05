@@ -1,4 +1,4 @@
-package query
+package builder
 
 type DeleteQuery struct {
 	Builder   *Builder

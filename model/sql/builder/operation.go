@@ -1,4 +1,4 @@
-package query
+package builder
 
 func (b *Builder) concatWith(separator string, q ...Query) *PlainQuery {
 	var query = b.New("")

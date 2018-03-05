@@ -1,4 +1,4 @@
-package query
+package builder
 
 func (b *Builder) NewInsertQuery(tableName string) *InsertQuery {
 	return &InsertQuery{

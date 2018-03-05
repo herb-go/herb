@@ -1,4 +1,4 @@
-package query
+package builder
 
 type Fields map[string]interface{}
 
