@@ -44,12 +44,6 @@ func (b *Builder) NewDelete(TableName string) *Delete {
 	}
 }
 
-func (b *Builder) NewTableDelete(t Table) *Delete {
-	delete := b.NewDelete(t.TableName())
-	delete.Delete.Alias = t.Alias()
-	return delete
-}
-
 type Delete struct {
 	Builder *Builder
 	Delete  *DeleteQuery

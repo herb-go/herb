@@ -15,12 +15,6 @@ func (d *JoinData) Alias(alias string, tableName string) *JoinData {
 	return d
 }
 
-func (d *JoinData) AliasTable(t Table) *JoinData {
-	d.Table[0] = t.TableName()
-	d.Table[1] = t.TableName()
-	return d
-}
-
 func (d *JoinData) On(condition *PlainQuery) *JoinData {
 	d.Condition = condition
 	return d

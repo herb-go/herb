@@ -11,9 +11,6 @@ type FromQuery struct {
 	Tables [][2]string
 }
 
-func (q *FromQuery) AddTable(t Table) *FromQuery {
-	return q.AddAlias(t.Alias(), t.TableName())
-}
 func (q *FromQuery) AddAlias(alias string, tableName string) *FromQuery {
 	q.Tables = append(q.Tables, [2]string{tableName, alias})
 	return q

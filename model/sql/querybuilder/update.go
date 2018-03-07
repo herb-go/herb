@@ -96,12 +96,6 @@ func (b *Builder) NewUpdate(tableName string) *Update {
 	}
 }
 
-func (b *Builder) NewTableUpdate(t Table) *Update {
-	update := b.NewUpdate(t.TableName())
-	update.Update.SetAlias(t.Alias())
-	return update
-}
-
 type Update struct {
 	Builder *Builder
 	Update  *UpdateQuery
