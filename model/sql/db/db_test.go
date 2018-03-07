@@ -8,7 +8,7 @@ import (
 )
 
 func TestDB(t *testing.T) {
-	config := &DBConfig{}
+	config := &Config{}
 	err := json.Unmarshal([]byte(ConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)

@@ -37,9 +37,9 @@ func (d *JoinData) QueryCommand() string {
 	}
 	return command
 }
-func (q *JoinData) QueryArgs() []interface{} {
-	if q.Condition != nil && len(q.UsingColnums) == 0 {
-		return q.Condition.QueryArgs()
+func (d *JoinData) QueryArgs() []interface{} {
+	if d.Condition != nil && len(d.UsingColnums) == 0 {
+		return d.Condition.QueryArgs()
 	}
 	return []interface{}{}
 }
