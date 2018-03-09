@@ -619,12 +619,24 @@ func (c *Cache) Close() error {
 
 //Config Cache driver config.
 type Config struct {
-	Driver   string //Registered sql driver.
-	Conn     string //Conn string of database.``
-	Table    string //Database table name.
-	Name     string //Database cache name.
-	GCPeriod int64  //Period of gc.Default value is 5 minute.
-	GCLimit  int64  ////Max delete limit in every gc call.Default value is 100.
+	//Registered sql driver.
+	Driver string
+	//Conn string of database.
+	Conn string
+	//Database table name.
+	Table string
+	//Database cache name.
+	Name string
+	//MaxIdleConns max idle conns.
+	MaxIdleConns int
+	//ConnMaxLifetimeInSecond conn max Lifetime in second.
+	ConnMaxLifetimeInSecond int64
+	//MaxOpenConns max open conns.
+	MaxOpenConns int
+	//Period of gc.Default value is 5 minute.
+	GCPeriod int64
+	//Max delete limit in every gc call.Default value is 100.
+	GCLimit int64
 }
 
 func (cf *Config) Create() (cache.Driver, error) {
@@ -634,6 +646,16 @@ func (cf *Config) Create() (cache.Driver, error) {
 	if err != nil {
 		return &cache, err
 	}
+	if cf.MaxIdleConns > 0 {
+		cache.DB.SetMaxIdleConns(cf.MaxIdleConns)
+	}
+	if cf.ConnMaxLifetimeInSecond > 0 {
+		cache.DB.SetConnMaxLifetime(time.Duration(cf.ConnMaxLifetimeInSecond) * time.Second)
+	}
+	if cf.MaxOpenConns > 0 {
+		cache.DB.SetMaxOpenConns(cf.MaxOpenConns)
+	}
+
 	cache.table = cf.Table
 	cache.quit = make(chan int)
 	period := time.Duration(cf.GCPeriod)

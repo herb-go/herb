@@ -6,5 +6,8 @@ var testConfig = `{
                     "Driver":"mysql",
                     "Conn":"username:pass@/dbname",
                     "Table":"cache",
-                    "Name":""
+                    "Name":"",
+                    "MaxIdleConns":10,
+                    "ConnMaxLifetimeInSecond":3600,
+                    "MaxOpenConns":10                    
                 }`

@@ -2,7 +2,11 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 )
+
+//ErrSetDriverFromTable error raised when execute SetDriver method of table .
+var ErrSetDriverFromTable = errors.New("herb:sql/db you can't execute set driver method in table interface")
 
 //Database database interface
 type Database interface {
@@ -141,6 +145,11 @@ func (t *PlainTable) Name() string {
 //TableName return table name build with database.
 func (t *PlainTable) TableName() string {
 	return t.Database.BuildTableName(t.table)
+}
+
+//SetDriver painc if execute SetDriver method of  table.
+func (t *PlainTable) SetDriver(driver string) {
+	panic(ErrSetDriverFromTable)
 }
 
 //BuildFieldName build field name with alias.
