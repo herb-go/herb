@@ -23,7 +23,7 @@ func (q *SelectQuery) AddFields(m Fields) *SelectQuery {
 	var fields = make([]string, len(m))
 	var i = 0
 	for k := range m {
-		fields[i] = k
+		fields[i] = m[k].Field
 		i++
 	}
 	return q.Add(fields...)
@@ -39,11 +39,14 @@ func (q *SelectQuery) QueryCommand() string {
 	if p != "" {
 		command += " " + p
 	}
-	var colunms = " "
+	var columns = " "
 	for k := range q.Fields {
-		colunms += q.Fields[k] + " , "
+		columns += q.Fields[k] + " , "
 	}
-	command += colunms[:len(colunms)-3]
+	if len(q.Fields) > 0 {
+		columns = columns[:len(columns)-3]
+	}
+	command += columns
 	return command
 }
 func (q *SelectQuery) QueryArgs() []interface{} {
@@ -80,8 +83,8 @@ func (r *SelectResult) Bind(field string, arg interface{}) *SelectResult {
 }
 
 func (r *SelectResult) BindFields(m Fields) *SelectResult {
-	for k, v := range m {
-		r.Bind(k, v)
+	for _, v := range m {
+		r.Bind(v.Field, v.Data)
 	}
 	return r
 }
@@ -129,11 +132,11 @@ func (s *Select) QueryRow(db DB) *sql.Row {
 	if Debug {
 		timestamp = time.Now().UnixNano()
 	}
-	err := db.QueryRow(cmd, args...)
+	row := db.QueryRow(cmd, args...)
 	if Debug {
 		Logger(timestamp, cmd, args)
 	}
-	return err
+	return row
 }
 func (s *Select) QueryRows(db DB) (*sql.Rows, error) {
 	q := s.Query()

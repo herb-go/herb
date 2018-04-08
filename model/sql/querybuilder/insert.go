@@ -22,8 +22,8 @@ func (q *InsertQuery) SetAlias(alias string) *InsertQuery {
 	return q
 }
 func (q *InsertQuery) AddFields(m Fields) *InsertQuery {
-	for k, v := range m {
-		q.Add(k, v)
+	for _, v := range m {
+		q.Add(v.Field, v.Data)
 	}
 	return q
 }
@@ -70,12 +70,16 @@ func (q *InsertQuery) QueryCommand() string {
 		}
 		columns += q.Data[k].Field + " , "
 	}
+	if len(q.Data) > 0 {
+		columns = columns[:len(columns)-3]
+		values = values[:len(values)-3]
+	}
 	command += " ("
-	command += columns[:len(columns)-3]
+	command += columns
 	command += " )"
 
 	command += " VALUES ( "
-	command += values[:len(values)-3]
+	command += values
 	command += " )"
 	return command
 }

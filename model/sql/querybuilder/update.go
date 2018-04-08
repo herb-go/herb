@@ -32,8 +32,8 @@ func (q *UpdateQuery) AddSelect(field string, Select *Select) *UpdateQuery {
 }
 
 func (q *UpdateQuery) AddFields(m Fields) *UpdateQuery {
-	for k, v := range m {
-		q.Add(k, v)
+	for _, v := range m {
+		q.Add(v.Field, v.Data)
 	}
 	return q
 }
@@ -71,7 +71,10 @@ func (q *UpdateQuery) QueryCommand() string {
 			values += q.Data[k].Raw + " , "
 		}
 	}
-	command += values[:len(values)-3]
+	if len(q.Data) > 0 {
+		values = values[:len(values)-3]
+	}
+	command += values
 	return command
 }
 func (q *UpdateQuery) QueryArgs() []interface{} {
