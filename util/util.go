@@ -14,13 +14,10 @@ import (
 	"time"
 )
 
-type SiteConfig struct {
-	Name    string
-	BaseURL string
-}
 type NetConfig struct {
-	Net  string
-	Addr string
+	Net     string
+	Addr    string
+	BaseURL string
 }
 
 func (c *NetConfig) Listen() (net.Listener, error) {

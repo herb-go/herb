@@ -1,17 +1,20 @@
-package resource
+package config
 
 import (
 	"bufio"
 	"encoding/json"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/pelletier/go-toml"
 )
 
 func LoadJSON(path string, v interface{}) error {
 	f, err := os.Open(path)
 	if err != nil {
-		return err
+		return NewError(path, err)
 	}
 	defer f.Close()
 	r := bufio.NewReader(f)
@@ -28,12 +31,30 @@ func LoadJSON(path string, v interface{}) error {
 	}
 	err = json.Unmarshal(bytes, v)
 	if err != nil {
-		return err
+		return NewError(path, err)
 	}
 	return nil
 }
 func MustLoadJSON(path string, v interface{}) {
 	err := LoadJSON(path, v)
+	if err != nil {
+		panic(err)
+	}
+}
+func LoadTOML(path string, v interface{}) error {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return NewError(path, err)
+	}
+	err = toml.Unmarshal(data, v)
+	if err != nil {
+		return NewError(path, err)
+	}
+	return nil
+}
+
+func MustLoadTOML(path string, v interface{}) {
+	err := LoadTOML(path, v)
 	if err != nil {
 		panic(err)
 	}

@@ -48,3 +48,17 @@ func (c Config) ApplyTo(cache *Cache) error {
 	}
 	return OptionJSON(c.Driver, c.Config, c.TTL)(cache)
 }
+
+type ConfigString struct {
+	Driver string
+	Config string
+	TTL    int64
+}
+
+func (c ConfigString) ApplyTo(cache *Cache) error {
+	config := json.RawMessage(c.Config)
+	if len(c.Config) == 0 {
+		config = json.RawMessage("{}")
+	}
+	return OptionJSON(c.Driver, config, c.TTL)(cache)
+}
