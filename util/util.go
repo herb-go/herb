@@ -45,6 +45,7 @@ var RootPath = path.Join(path.Dir(SrcPath), "../")
 var ResouresPath = path.Join(RootPath, "resources")
 var AppDataPath = path.Join(RootPath, "appdata")
 var ConfigPath = path.Join(RootPath, "config")
+var SystemPath = path.Join(RootPath, "system")
 
 func SetConfigPath(paths ...string) {
 	ConfigPath = path.Join(paths...)
@@ -68,6 +69,9 @@ func Config(filepaths ...string) string {
 }
 func AppData(filepaths ...string) string {
 	return joinPath(AppDataPath, filepaths...)
+}
+func System(filepaths ...string) string {
+	return joinPath(SystemPath, filepaths...)
 }
 
 var QuitChan = make(chan int)
