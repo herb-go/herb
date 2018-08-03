@@ -1,5 +1,8 @@
 package commonconfig
 
 type DevelopmentConfig struct {
-	Debug bool
+	Debug        bool
+	Testing      bool
+	Profiling    bool
+	Benchmarking bool
 }
