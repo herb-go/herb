@@ -2,17 +2,14 @@ package forwarded
 
 import "net/http"
 
-//StatusDisabled status stands for disable this middleware.
-const StatusDisabled = 0
-
 func defaultTokenFailedAction(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 }
 
 //Middleware main middleware struct.
 type Middleware struct {
-	//Status if this middleware is enabled.
-	Status int
+	//Enabled if this middleware is enabled.
+	Enabled bool
 	//ForwardedForHeader request header name which stores real ip.
 	//If set to empty string,this feature will be disabeld.
 	ForwardedForHeader string
@@ -37,7 +34,7 @@ func (m *Middleware) SetTokenFailedAction(action func(w http.ResponseWriter, r *
 
 //ServeMiddleware return middleware.
 func (m *Middleware) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	if m.Status == StatusDisabled {
+	if !m.Enabled {
 		next(w, r)
 		return
 	}

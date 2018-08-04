@@ -87,7 +87,7 @@ func TestMiddleware(t *testing.T) {
 		t.Error(data["scheme"])
 	}
 
-	middleware.Status = 1
+	middleware.Enabled = true
 	data, statusCode = doRequest(t, nil)
 
 	if statusCode != http.StatusOK {
@@ -204,7 +204,7 @@ func TestMiddleware(t *testing.T) {
 	if statusCode != http.StatusForbidden {
 		t.Fatal(statusCode)
 	}
-	middleware.Status = 0
+	middleware.Enabled = false
 	data, statusCode = doRequest(t, nil)
 
 	if statusCode != http.StatusOK {
