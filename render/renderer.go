@@ -5,28 +5,31 @@ import (
 	"sync"
 )
 
-//ViewConfig view config struct.
-type ViewConfig struct {
-	Views []string
-}
-
 //New create new renderer
 func New() *Renderer {
 	r := Renderer{}
 	r.engine = nil
-	r.Views = map[string]CompiledView{}
-	r.ViewFiles = map[string][]string{}
+	r.CompiledViews = map[string]CompiledView{}
+	r.Views = map[string]ViewConfig{}
 	return &r
+}
+
+//ViewConfig view config struct.
+type ViewConfig struct {
+	DevelopmentMode bool
+	Files           []string
 }
 
 //Renderer renderer main struct
 type Renderer struct {
 	engine Engine
 	//ViewFiles view file info map.
-	ViewFiles map[string][]string
+	Views map[string]ViewConfig
 	//Views complied views map.
-	Views map[string]CompiledView
-	lock  sync.RWMutex
+	CompiledViews map[string]CompiledView
+	//Developing Developing mode.If set to true,All views will not be cached.
+	DevelopmentMode bool
+	lock            sync.RWMutex
 }
 
 //Init init renderer with option.
@@ -131,25 +134,29 @@ func (r *Renderer) MustError(w http.ResponseWriter, status int) int {
 func (r *Renderer) view(name string) (CompiledView, error) {
 	var err error
 	var view CompiledView
-	view = r.Views[name]
+	view = r.CompiledViews[name]
 	if view == nil {
-		vf, ok := r.ViewFiles[name]
+		vfs, ok := r.Views[name]
 		if ok == false {
 			return nil, NewViewError(name, ErrViewNotExist)
 		}
-		view, err = r.engine.Compile(vf...)
+		view, err = r.engine.Compile(vfs.Files...)
 		if err != nil {
 			return nil, NewViewError(name, err)
 		}
-		r.setView(name, view)
+		config := r.Views[name]
+		if !(config.DevelopmentMode == true || r.DevelopmentMode == true) {
+			r.CompiledView(name, view)
+		}
 	}
 	return view, nil
 }
-func (r *Renderer) setView(name string, view CompiledView) {
-	r.Views[name] = view
+func (r *Renderer) CompiledView(name string, view CompiledView) {
+	r.CompiledViews[name] = view
 }
-func (r *Renderer) setViewFiles(name string, viewFiles []string) {
-	r.ViewFiles[name] = viewFiles
+func (r *Renderer) setViewConfig(name string, config ViewConfig) {
+	r.Views[name] = config
+	r.CompiledViews[name] = nil
 }
 
 //InitViews init renderer views with views option.
@@ -191,11 +198,11 @@ func (r *Renderer) Execute(viewname string, data interface{}) ([]byte, error) {
 }
 
 //NewView create new view by name with given view files.
-func (r *Renderer) NewView(ViewName string, viewFiles ...string) *NamedView {
+func (r *Renderer) NewView(ViewName string, config ViewConfig) *NamedView {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	delete(r.Views, ViewName)
-	r.setViewFiles(ViewName, viewFiles)
+	r.setViewConfig(ViewName, config)
 	v := &NamedView{
 		Name:     ViewName,
 		Renderer: r,

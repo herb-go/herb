@@ -36,20 +36,24 @@ func (o ViewsOptionFunc) ApplyTo(r *Renderer) (map[string]*NamedView, error) {
 }
 
 //ViewsOptionCommon views option with new view configs.
-type ViewsOptionCommon map[string]ViewConfig
+type ViewsOptionCommon struct {
+	DevelopmentMode bool
+	Views           map[string]ViewConfig
+}
 
 //ApplyTo init renderer with given json conf.
 func (o ViewsOptionCommon) ApplyTo(r *Renderer) (map[string]*NamedView, error) {
-	var loadedNamedViews = make(map[string]*NamedView, len(o))
+	var loadedNamedViews = make(map[string]*NamedView, len(o.Views))
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	for k, v := range o {
+	for k, v := range o.Views {
 		delete(r.Views, k)
-		r.setViewFiles(k, v.Views)
+		r.setViewConfig(k, v)
 		loadedNamedViews[k] = &NamedView{
 			Name:     k,
 			Renderer: r,
 		}
 	}
+	r.DevelopmentMode = o.DevelopmentMode
 	return loadedNamedViews, nil
 }

@@ -71,6 +71,7 @@ var Engine = New()
 func New() *RenderEngine {
 	var e = &RenderEngine{}
 	e.Set = jet.NewHTMLSetLoader(newLoader(e))
+	e.Set.SetDevelopmentMode(true)
 	return e
 }
 
