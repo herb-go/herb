@@ -1,10 +1,5 @@
 package render
 
-import (
-	"encoding/json"
-	"io/ioutil"
-)
-
 //Option renderer init option interface.
 type Option interface {
 	ApplyTo(*Renderer) error
@@ -41,36 +36,20 @@ func (o ViewsOptionFunc) ApplyTo(r *Renderer) (map[string]*NamedView, error) {
 }
 
 //ViewsOptionCommon views option with new view configs.
-func ViewsOptionCommon(data map[string]ViewConfig) ViewsOptionFunc {
-	return func(r *Renderer) (map[string]*NamedView, error) {
-		var loadedNamedViews = make(map[string]*NamedView, len(data))
-		r.lock.Lock()
-		defer r.lock.Unlock()
-		for k, v := range data {
-			delete(r.Views, k)
-			r.setViewFiles(k, v.Views)
-			loadedNamedViews[k] = &NamedView{
-				Name:     k,
-				Renderer: r,
-			}
-		}
-		return loadedNamedViews, nil
-	}
-}
-
-//ViewsConf views option load given json conf.
-type ViewsConf string
+type ViewsOptionCommon map[string]ViewConfig
 
 //ApplyTo init renderer with given json conf.
-func (o ViewsConf) ApplyTo(r *Renderer) (map[string]*NamedView, error) {
-	var data map[string]ViewConfig
-	bytes, err := ioutil.ReadFile(string(o))
-	if err != nil {
-		return nil, err
+func (o ViewsOptionCommon) ApplyTo(r *Renderer) (map[string]*NamedView, error) {
+	var loadedNamedViews = make(map[string]*NamedView, len(o))
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	for k, v := range o {
+		delete(r.Views, k)
+		r.setViewFiles(k, v.Views)
+		loadedNamedViews[k] = &NamedView{
+			Name:     k,
+			Renderer: r,
+		}
 	}
-	err = json.Unmarshal(bytes, &data)
-	if err != nil {
-		return nil, err
-	}
-	return ViewsOptionCommon(data).ApplyTo(r)
+	return loadedNamedViews, nil
 }
