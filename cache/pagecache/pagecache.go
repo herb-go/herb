@@ -77,8 +77,12 @@ func (p *PageCache) serve(key string, ttl time.Duration, w http.ResponseWriter, 
 }
 func (p *PageCache) Middleware(keyGenerator func(r *http.Request) string, ttl time.Duration) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		key := p.KeyPrefix + keyGenerator(r)
-		p.serve(key, ttl, w, r, next)
+		key := keyGenerator(r)
+		if key == "" {
+			next(w, r)
+			return
+		}
+		p.serve(p.KeyPrefix+key, ttl, w, r, next)
 	}
 }
 func FieldMiddleware(FieldGenerator func(r *http.Request) *cache.Field, ttl time.Duration, statusValidator func(status int) bool) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

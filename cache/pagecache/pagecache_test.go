@@ -35,6 +35,9 @@ func testAction(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(content)
 	w.Write([]byte(r.Header.Get("test") + strconv.Itoa(content)))
 }
+func emptyKeyGenerator(r *http.Request) string {
+	return ""
+}
 func keyGenerator(r *http.Request) string {
 	return r.Header.Get("test")
 }
@@ -294,6 +297,10 @@ func TestPageCache(t *testing.T) {
 		w.Header().Set("rawts", strconv.FormatInt(time.Now().UnixNano(), 10))
 		testAction(w, r)
 	})
+	mux.HandleFunc("/empty", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("rawts", strconv.FormatInt(time.Now().UnixNano(), 10))
+		PageCache.Middleware(emptyKeyGenerator, 0)(w, r, testAction)
+	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	req, err := http.NewRequest("GET", server.URL+"/test", nil)
@@ -320,6 +327,27 @@ func TestPageCache(t *testing.T) {
 	}
 
 	req, err = http.NewRequest("GET", server.URL+"/raw", nil)
+	req.Header.Set("test", "test1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bs, err = ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(bs) != "test1"+"200" {
+		t.Error(string(bs))
+	}
+	if resp.StatusCode != 200 {
+		t.Error(resp.StatusCode)
+	}
+
+	req, err = http.NewRequest("GET", server.URL+"/empty", nil)
 	req.Header.Set("test", "test1")
 	if err != nil {
 		t.Fatal(err)
@@ -369,6 +397,33 @@ func TestPageCache(t *testing.T) {
 	}
 
 	req, err = http.NewRequest("GET", server.URL+"/raw", nil)
+	req.Header.Set("test", "test1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bs, err = ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(bs) != "test1"+"404" {
+		t.Error(string(bs))
+	}
+	if resp.Header.Get("ts") == ts {
+		t.Error(resp.Header.Get("ts"))
+	}
+	if resp.Header.Get("rawts") == rawts {
+		t.Error(resp.Header.Get("rawts"))
+	}
+	if resp.StatusCode != 404 {
+		t.Error(resp.StatusCode)
+	}
+
+	req, err = http.NewRequest("GET", server.URL+"/empty", nil)
 	req.Header.Set("test", "test1")
 	if err != nil {
 		t.Fatal(err)
