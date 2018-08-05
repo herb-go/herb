@@ -2,6 +2,7 @@ package render
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -52,9 +53,20 @@ func TestEngine(t *testing.T) {
 	if err != ErrRegisterFuncNotSupported {
 		t.Error(err)
 	}
-	render.MustInitViews(ViewsConf("./testdata/testconfig.json"))
+	option := ViewsOptionCommon{}
+	bytes, err := ioutil.ReadFile("./testdata/testconfig.json")
+	if err != nil {
+		t.Error(err)
+	}
+	err = json.Unmarshal(bytes, &option)
+	if err != nil {
+		t.Error(err)
+	}
+	render.MustInitViews(option)
 	ViewTest := render.GetView("test")
-	ViewTestNew := render.NewView("testnew", "testnew.view")
+	ViewTestNew := render.NewView("testnew", ViewConfig{
+		Files: []string{"testnew.view"},
+	})
 	ViewNotExist := render.GetView("testnotexist")
 
 	mux := http.NewServeMux()

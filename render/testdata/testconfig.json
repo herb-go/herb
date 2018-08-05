@@ -1,3 +1,5 @@
 {
-    "test": {"Views":["test.view"]}
+    "Views":{
+        "test": {"Files":["test.view"]}
+    }
 }
