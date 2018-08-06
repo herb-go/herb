@@ -16,9 +16,9 @@ type testEngine struct {
 func (e *testEngine) SetViewRoot(path string) {
 	e.Root = path
 }
-func (e *testEngine) Compile(viewFiles ...string) (CompiledView, error) {
+func (e *testEngine) Compile(config ViewConfig) (CompiledView, error) {
 	return &testView{
-		Files: viewFiles,
+		Files: config.Files,
 	}, nil
 }
 func (e *testEngine) RegisterFunc(name string, fn interface{}) error {

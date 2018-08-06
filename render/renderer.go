@@ -136,22 +136,22 @@ func (r *Renderer) view(name string) (CompiledView, error) {
 	var view CompiledView
 	view = r.CompiledViews[name]
 	if view == nil {
-		vfs, ok := r.Views[name]
+		vconfig, ok := r.Views[name]
 		if ok == false {
 			return nil, NewViewError(name, ErrViewNotExist)
 		}
-		view, err = r.engine.Compile(vfs.Files...)
+		view, err = r.engine.Compile(vconfig)
 		if err != nil {
 			return nil, NewViewError(name, err)
 		}
 		config := r.Views[name]
 		if !(config.DevelopmentMode == true || r.DevelopmentMode == true) {
-			r.CompiledView(name, view)
+			r.setCompiledView(name, view)
 		}
 	}
 	return view, nil
 }
-func (r *Renderer) CompiledView(name string, view CompiledView) {
+func (r *Renderer) setCompiledView(name string, view CompiledView) {
 	r.CompiledViews[name] = view
 }
 func (r *Renderer) setViewConfig(name string, config ViewConfig) {
@@ -222,7 +222,7 @@ type Engine interface {
 	//SetViewRoot set view root path
 	SetViewRoot(string)
 	//Compile complie view files to complied view.
-	Compile(viewFiles ...string) (CompiledView, error)
+	Compile(config ViewConfig) (CompiledView, error)
 	//RegisterFunc register func to engine
 	//Return any error if raised.
 	RegisterFunc(name string, fn interface{}) error

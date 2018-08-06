@@ -16,7 +16,7 @@ func TestTemplate(t *testing.T) {
 	engine.SetViewRoot("./testdata")
 	engine.RegisterFunc("b64", b64)
 
-	view, err := engine.Compile("test.jet")
+	view, err := engine.Compile(render.ViewConfig{Files: []string{"test.jet"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func TestTemplate(t *testing.T) {
 	if string(output) != result {
 		t.Error(output)
 	}
-	viewraw, err := engine.Compile("raw.jet")
+	viewraw, err := engine.Compile(render.ViewConfig{Files: []string{"raw.jet"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,11 +43,11 @@ func TestTemplate(t *testing.T) {
 	if string(outputraw) != "<html/>" {
 		t.Error(outputraw)
 	}
-	_, err = engine.Compile("1.jet", "2.jet")
+	_, err = engine.Compile(render.ViewConfig{Files: []string{"1.jet", "2.jet"}})
 	if err != render.ErrTooManyViewFiles {
 		t.Fatal(err)
 	}
-	_, err = engine.Compile("notexist.jet")
+	_, err = engine.Compile(render.ViewConfig{Files: []string{"notexist.jet"}})
 	if err == nil {
 		t.Fatal(err)
 	}

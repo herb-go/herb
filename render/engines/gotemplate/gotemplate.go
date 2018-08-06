@@ -51,10 +51,10 @@ func (e *RenderEngine) SetViewRoot(path string) {
 }
 
 //Compile complie view files to complied view.
-func (e *RenderEngine) Compile(viewFiles ...string) (render.CompiledView, error) {
-	var absFiles = make([]string, len(viewFiles))
+func (e *RenderEngine) Compile(config render.ViewConfig) (render.CompiledView, error) {
+	var absFiles = make([]string, len(config.Files))
 
-	for k, v := range viewFiles {
+	for k, v := range config.Files {
 		var p string
 		if path.IsAbs(v) {
 			p = v
@@ -63,7 +63,7 @@ func (e *RenderEngine) Compile(viewFiles ...string) (render.CompiledView, error)
 		}
 		absFiles[k] = path.Clean(p)
 	}
-	t := template.New(filepath.Base(viewFiles[0]))
+	t := template.New(filepath.Base(config.Files[0]))
 	t.Funcs(e.FuncMap)
 	_, err := t.ParseFiles(absFiles...)
 	if err != nil {
