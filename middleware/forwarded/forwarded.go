@@ -69,3 +69,13 @@ func (m *Middleware) ServeMiddleware(w http.ResponseWriter, r *http.Request, nex
 	}
 	next(w, r)
 }
+
+func (m *Middleware) Warnings() []string {
+	if m.Enabled && (m.ForwardedForHeader != "" ||
+		m.ForwardedHostHeader != "" ||
+		m.ForwardedProtoHeader != "") &&
+		m.ForwardedTokenHeader == "" {
+		return []string{"Forwarded middleware is running without available ForwardedTokenHeader Value."}
+	}
+	return nil
+}
