@@ -339,6 +339,9 @@ func (c *Cache) Load(key string, v interface{}, ttl time.Duration, closure func(
 	}
 	return nil
 }
+func (c *Cache) FinalKey(key string) (string, error) {
+	return c.getKey(key), nil
+}
 
 func (c *Cache) Field(fieldname string) *Field {
 	return &Field{

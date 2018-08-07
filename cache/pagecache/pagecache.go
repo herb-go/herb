@@ -3,11 +3,16 @@ package pagecache
 import (
 	"bytes"
 	"net/http"
+	"strings"
 
 	"time"
 
 	"github.com/herb-go/herb/cache"
 )
+
+var Debug bool
+
+var PageCacheKeyHeader = "herbgo-debug-pagecache"
 
 func New(c cache.Cacheable) *PageCache {
 	p := PageCache{
@@ -66,6 +71,12 @@ func (p *PageCache) serve(key string, ttl time.Duration, w http.ResponseWriter, 
 	h := w.Header()
 	for k, v := range page.Header {
 		h[k] = v
+	}
+	if Debug {
+		k, err := p.Cache.FinalKey(key)
+		if err == nil {
+			h.Set(PageCacheKeyHeader, strings.Replace(k, cache.KeyPrefix, " ", -1))
+		}
 	}
 	if page.Status != 0 {
 		w.WriteHeader(page.Status)

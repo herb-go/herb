@@ -211,3 +211,7 @@ func (c *Collection) Field(fieldname string) *Field {
 		FieldName: fieldname,
 	}
 }
+
+func (c *Collection) FinalKey(key string) (string, error) {
+	return c.Cache.FinalKey(c.Prefix + KeyPrefix + key)
+}

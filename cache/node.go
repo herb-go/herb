@@ -126,3 +126,7 @@ func (n *Node) Field(fieldname string) *Field {
 		FieldName: fieldname,
 	}
 }
+
+func (n *Node) FinalKey(key string) (string, error) {
+	return n.Cache.FinalKey(n.Prefix + KeyPrefix + key)
+}
