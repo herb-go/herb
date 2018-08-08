@@ -2,10 +2,6 @@ package forwarded
 
 import "net/http"
 
-func defaultTokenFailedAction(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-}
-
 //Middleware main middleware struct.
 type Middleware struct {
 	//Enabled if this middleware is enabled.
@@ -24,12 +20,22 @@ type Middleware struct {
 	ForwardedTokenHeader string
 	//ForwardedTokenValue value which request header must equal.
 	ForwardedTokenValue string
-	tokenFailedAction   http.HandlerFunc
+	//FailErrorCode error code raised when forwarded token verification fail.
+	FailStatusCode    int
+	tokenFailedAction http.HandlerFunc
 }
 
 //SetTokenFailedAction set action which will execute when token verification fail
 func (m *Middleware) SetTokenFailedAction(action func(w http.ResponseWriter, r *http.Request)) {
 	m.tokenFailedAction = action
+}
+
+func (m *Middleware) DefaultTokenFailedAction(w http.ResponseWriter, r *http.Request) {
+	if m.FailStatusCode == 0 {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	} else {
+		http.Error(w, http.StatusText(m.FailStatusCode), m.FailStatusCode)
+	}
 }
 
 //ServeMiddleware return middleware.
@@ -42,7 +48,8 @@ func (m *Middleware) ServeMiddleware(w http.ResponseWriter, r *http.Request, nex
 		if m.ForwardedTokenValue == "" || r.Header.Get(m.ForwardedTokenHeader) != m.ForwardedTokenValue {
 			action := m.tokenFailedAction
 			if action == nil {
-				action = defaultTokenFailedAction
+				m.DefaultTokenFailedAction(w, r)
+				return
 			}
 			action(w, r)
 			return
