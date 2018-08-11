@@ -2,14 +2,10 @@
 package hashcache
 
 var testConfig = `{
-            "Local":{
-                "Driver":"freecache",
-	            "Config":{"Size": 10000000},
-	            "TTL":1200
-	        },
-            "Remote":{
-                "Driver":"freecache",
-	            "Config":{"Size": 10000000},
-	            "TTL":1200
-            }
-        }`
+        "Local.Driver":"\"freecache\"",
+        "Local.Config.Size":"10000000",
+        "Local.TTL":"1200",
+        "Remote.Driver":"\"freecache\"",
+        "Remote.Config.Size": "10000000",
+        "Remote.TTL":"1200"
+}`

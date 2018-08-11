@@ -1,13 +1,11 @@
-//please rename this file to testconfig_test.go
 package cachegroup
 
-var testConfig = `[{
-	"Driver":"freecache",
-	"Config":{"Size": 10000000},
-	"TTL":-1
-	},
-	{
-	"Driver":"freecache",
-	"Config":{"Size": 10000000},
-	"TTL":-1
-	}]`
+var testConfig = `{
+		"Caches":"[\"Cache1\",\"Cache2\"]",
+		"Cache1.Driver":"\"freecache\"",
+		"Cache1.Config.Size": "10000000",
+		"Cache1.TTL":"-1",
+		"Cache2.Driver":"\"freecache\"",
+		"Cache2.Config.Size": "10000000",
+		"Cache2.TTL":"-1"
+		}`

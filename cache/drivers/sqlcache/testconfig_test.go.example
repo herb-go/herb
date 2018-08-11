@@ -1,13 +1,12 @@
 //please rename this file to testconfig_test.go
 package sqlcache
 
-
 var testConfig = `{
-                    "Driver":"mysql",
-                    "Conn":"username:pass@/dbname",
-                    "Table":"cache",
+                    "Driver":"\"mysql\"",
+                    "Conn":"\"dbname:password@ip/database\"",
+                    "Table":"\"cache\"",
                     "Name":"",
-                    "MaxIdleConns":10,
-                    "ConnMaxLifetimeInSecond":3600,
-                    "MaxOpenConns":10                    
+                    "MaxIdleConns":"10",
+                    "ConnMaxLifetimeInSecond":"3600",
+                    "MaxOpenConns":"10"                    
                 }`
