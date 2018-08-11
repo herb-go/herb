@@ -14,11 +14,23 @@ import (
 )
 
 func newTestCache(ttl int64) *cache.Cache {
+
 	c := cache.New()
-	err := c.Init(cache.OptionJSON("hashcache", json.RawMessage(testConfig), ttl))
+	config := &cache.ConfigJSON{}
+	err := json.Unmarshal([]byte(testConfig), config)
 	if err != nil {
 		panic(err)
 	}
+	err = c.Init(cache.OptionConfig("hashcache", config, ttl))
+	if err != nil {
+		panic(err)
+	}
+	err = c.Flush()
+	if err != nil {
+		panic(err)
+	}
+	return c
+
 	return c
 }
 

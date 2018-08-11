@@ -370,26 +370,18 @@ type Config struct {
 	Remote cache.Config
 }
 
-//New Create new cache driver with given json bytes.
-//Return new driver and any error raised.
-func (config *Config) Create() (cache.Driver, error) {
-	cc := Cache{}
-	localcache := cache.New()
-	err := localcache.Init(config.Local)
-	if err != nil {
-		return &cc, err
-	}
-	cc.Local = localcache
-	remotecache := cache.New()
-	err = remotecache.Init(config.Remote)
-	if err != nil {
-		return &cc, err
-	}
-	cc.Remote = remotecache
-	return &cc, nil
-}
 func init() {
-	cache.Register("hashcache", func() cache.DriverConfig {
-		return &Config{}
+	cache.Register("hashcache", func(conf cache.Config, prefix string) (cache.Driver, error) {
+		var err error
+		cc := &Cache{}
+		cc.Local, err = cache.NewSubCache(conf, prefix+"Local.")
+		if err != nil {
+			return nil, err
+		}
+		cc.Remote, err = cache.NewSubCache(conf, prefix+"Remote.")
+		if err != nil {
+			return nil, err
+		}
+		return cc, nil
 	})
 }

@@ -37,10 +37,7 @@ var (
 	intKeyPrefix = string([]byte{69, 0})
 )
 
-type DriverConfig interface {
-	Create() (Driver, error)
-}
-type Factory func() DriverConfig
+type Factory func(conf Config, prefix string) (Driver, error)
 
 //Driver : Cache driver interface.Should Never used directly
 type Driver interface {
@@ -102,14 +99,44 @@ func Factories() []string {
 	return list
 }
 
-func NewDriverConfig(name string) (DriverConfig, error) {
+func NewDriver(name string, conf Config, prefix string) (Driver, error) {
 	factorysMu.RLock()
 	factoryi, ok := factories[name]
 	factorysMu.RUnlock()
 	if !ok {
 		return nil, fmt.Errorf("cache: unknown driver %q (forgotten import?)", name)
 	}
-	return factoryi(), nil
+	return factoryi(conf, prefix)
+}
+
+func NewSubCache(conf Config, prefix string) (*Cache, error) {
+	var err error
+	c := New()
+	var TTL int64
+	var DriverName string
+	var d Driver
+	err = conf.Get(prefix+"TTL", &TTL)
+	if err != nil {
+		return nil, err
+	}
+	err = conf.Get(prefix+"Driver", &DriverName)
+	if err != nil {
+		return nil, err
+	}
+	d, err = NewDriver(DriverName, conf, prefix+"Config.")
+	if err != nil {
+		return nil, err
+	}
+	c.Driver = d
+	return c, nil
+}
+
+func MustNewDriver(name string, conf Config, prefix string) Driver {
+	d, err := NewDriver(name, conf, prefix)
+	if err != nil {
+		panic(err)
+	}
+	return d
 }
 
 //New :Create a empty cache.

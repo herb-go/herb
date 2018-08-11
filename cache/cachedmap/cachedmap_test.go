@@ -2,7 +2,6 @@ package cachedmap
 
 import (
 	"bytes"
-	"encoding/json"
 	"testing"
 
 	"github.com/herb-go/herb/cache"
@@ -10,9 +9,10 @@ import (
 )
 
 func newTestCache(ttl int64) *cache.Cache {
-	config := json.RawMessage("{\"Size\": 10000000}")
+	config := &cache.ConfigJSON{}
+	config.Set("Size", 10000000)
 	c := cache.New()
-	err := c.Init(cache.OptionJSON("freecache", config, ttl))
+	err := c.Init(cache.OptionConfig("freecache", config, ttl))
 	if err != nil {
 		panic(err)
 	}
@@ -21,6 +21,7 @@ func newTestCache(ttl int64) *cache.Cache {
 		panic(err)
 	}
 	return c
+
 }
 
 type testmodel struct {

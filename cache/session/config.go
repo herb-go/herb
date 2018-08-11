@@ -9,7 +9,7 @@ import (
 const DriverNameCacheStore = "cache"
 const DriverNameClientStore = "cookie"
 
-type StoreConfigString struct {
+type StoreConfig struct {
 	DriverName                   string
 	TokenLifetimeInDay           int64  //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
 	TokenMaxLifetimeInDay        int64  //Token max life time.Token can't live more than TokenMaxLifetime if TokenMaxLifetime if greater than 0.
@@ -20,10 +20,10 @@ type StoreConfigString struct {
 	UpdateActiveIntervalInSecond int64  //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
 	DefaultSessionFlag           Flag   //Default flag when creating session.
 	ClientStoreKey               string
-	Cache                        cache.ConfigString
+	Cache                        cache.OptionConfigJSON
 }
 
-func (s *StoreConfigString) ApplyTo(store *Store) error {
+func (s *StoreConfig) ApplyTo(store *Store) error {
 	if s.TokenLifetimeInDay != 0 {
 		store.TokenLifetime = time.Duration(s.TokenLifetimeInDay) * time.Hour * 24
 	}
@@ -47,7 +47,7 @@ func (s *StoreConfigString) ApplyTo(store *Store) error {
 	switch s.DriverName {
 	case DriverNameCacheStore:
 		c := cache.New()
-		err := c.Init(s.Cache)
+		err := c.Init(&s.Cache)
 		if err != nil {
 			return err
 		}

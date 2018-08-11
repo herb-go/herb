@@ -694,7 +694,45 @@ func (cf *Config) Create() (cache.Driver, error) {
 }
 
 func init() {
-	cache.Register("sqlcache", func() cache.DriverConfig {
-		return &Config{}
+	cache.Register("sqlcache", func(conf cache.Config, prefix string) (cache.Driver, error) {
+		var err error
+		c := &Config{}
+		err = conf.Get(prefix+"Conn", &c.Conn)
+		if err != nil {
+			return nil, err
+		}
+		conf.Get(prefix+"ConnMaxLifetimeInSecond", &c.ConnMaxLifetimeInSecond)
+		if err != nil {
+			return nil, err
+		}
+		conf.Get(prefix+"Driver", &c.Driver)
+		if err != nil {
+			return nil, err
+		}
+		conf.Get(prefix+"GCLimit", &c.GCLimit)
+		if err != nil {
+			return nil, err
+		}
+		conf.Get(prefix+"GCPeriod", &c.GCPeriod)
+		if err != nil {
+			return nil, err
+		}
+		conf.Get(prefix+"MaxIdleConns", &c.MaxIdleConns)
+		if err != nil {
+			return nil, err
+		}
+		conf.Get(prefix+"MaxOpenConns", &c.MaxOpenConns)
+		if err != nil {
+			return nil, err
+		}
+		conf.Get(prefix+"Name", &c.Name)
+		if err != nil {
+			return nil, err
+		}
+		conf.Get(prefix+"Table", &c.Table)
+		if err != nil {
+			return nil, err
+		}
+		return c.Create()
 	})
 }

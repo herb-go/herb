@@ -12,23 +12,6 @@ import (
 const modeSet = 0
 const modeUpdate = 1
 
-//Config Cache driver list of all sub cache driver.
-type Config []cache.Config
-
-func (config *Config) Create() (cache.Driver, error) {
-	cc := Cache{}
-	cc.SubCaches = make([]*cache.Cache, len(*config))
-	for k, v := range *config {
-		subcache := cache.New()
-		err := subcache.Init(v)
-		if err != nil {
-			return &cc, err
-		}
-		cc.SubCaches[k] = subcache
-	}
-	return &cc, nil
-}
-
 //Cache The group cache driver.
 type Cache struct {
 	SubCaches []*cache.Cache
@@ -103,18 +86,11 @@ func (c *Cache) Get(key string, v interface{}) error {
 }
 
 func (c *Cache) Expire(key string, ttl time.Duration) error {
-	mainCache := c.SubCaches[len(c.SubCaches)-1]
-	var b, err = mainCache.GetBytesValue(key)
+	var b, err = c.GetBytesValue(key)
 	if err != nil {
 		return err
 	}
-	e := entry(b)
-	buf, _, err := e.Get()
-	if err != nil {
-		return err
-	}
-	e.Set(buf, ttl)
-	err = mainCache.SetBytesValue(key, e, ttl)
+	err = c.SetBytesValue(key, b, ttl)
 	return err
 }
 func (c *Cache) setBytesCaches(key string, caches []*cache.Cache, bytes []byte, expired int64, mode int) error {
@@ -321,7 +297,18 @@ func (c *Cache) Flush() error {
 }
 
 func init() {
-	cache.Register("cachegroup", func() cache.DriverConfig {
-		return &Config{}
+	cache.Register("cachegroup", func(conf cache.Config, prefix string) (cache.Driver, error) {
+		cc := Cache{}
+		var caches = []string{}
+		conf.Get(prefix+"Caches", &caches)
+		cc.SubCaches = make([]*cache.Cache, len(caches))
+		for k, v := range caches {
+			subcache, err := cache.NewSubCache(conf, prefix+v+".")
+			if err != nil {
+				return nil, err
+			}
+			cc.SubCaches[k] = subcache
+		}
+		return &cc, nil
 	})
 }

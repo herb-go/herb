@@ -580,7 +580,49 @@ func (c *Config) Create() (cache.Driver, error) {
 	return &cache, nil
 }
 func init() {
-	cache.Register("redisluacache", func() cache.DriverConfig {
-		return &Config{}
+	cache.Register("redisluacache", func(conf cache.Config, prefix string) (cache.Driver, error) {
+		var err error
+		c := &Config{}
+		err = conf.Get(prefix+"Network", &c.Network)
+		if err != nil {
+			return nil, err
+		}
+		err = conf.Get(prefix+"Address", &c.Address)
+		if err != nil {
+			return nil, err
+		}
+		err = conf.Get(prefix+"Name", &c.Name)
+		if err != nil {
+			return nil, err
+		}
+		err = conf.Get(prefix+"Password", &c.Password)
+		if err != nil {
+			return nil, err
+		}
+		err = conf.Get(prefix+"Db", &c.Db)
+		if err != nil {
+			return nil, err
+		}
+		err = conf.Get(prefix+"MaxIdle", &c.MaxIdle)
+		if err != nil {
+			return nil, err
+		}
+		err = conf.Get(prefix+"MaxAlive", &c.MaxAlive)
+		if err != nil {
+			return nil, err
+		}
+		err = conf.Get(prefix+"IdleTimeout", &c.IdleTimeout)
+		if err != nil {
+			return nil, err
+		}
+		err = conf.Get(prefix+"GCPeriod", &c.GCPeriod)
+		if err != nil {
+			return nil, err
+		}
+		err = conf.Get(prefix+"GCLimit", &c.GCLimit)
+		if err != nil {
+			return nil, err
+		}
+		return c.Create()
 	})
 }

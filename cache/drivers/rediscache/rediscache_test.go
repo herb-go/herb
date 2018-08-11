@@ -12,7 +12,13 @@ import (
 
 func newTestCache(ttl int64) *cache.Cache {
 	c := cache.New()
-	err := c.Init(cache.OptionJSON("rediscache", json.RawMessage(testConfig), ttl))
+	config := &cache.ConfigJSON{}
+	err := json.Unmarshal([]byte(testConfig), config)
+	if err != nil {
+		panic(err)
+	}
+	err = c.Init(cache.OptionConfig("rediscache", config, ttl))
+
 	if err != nil {
 		panic(err)
 	}
