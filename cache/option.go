@@ -78,31 +78,3 @@ func (c *ConfigJSON) Set(key string, v interface{}) error {
 	(*c)[key] = string(s)
 	return nil
 }
-
-//Config :The cache config json format struct
-// type Config struct {
-// 	Driver string
-// 	Config json.RawMessage
-// 	TTL    int64
-// }
-
-// func (c Config) ApplyTo(cache *Cache) error {
-// 	if len(c.Config) == 0 || c.Config == nil {
-// 		c.Config = json.RawMessage("{}")
-// 	}
-// 	return OptionJSON(c.Driver, c.Config, c.TTL)(cache)
-// }
-
-// type ConfigLoader struct {
-// 	Driver string
-// 	loader func(v interface{}) error
-// 	TTL    int64
-// }
-
-// func (c *ConfigLoader) SetLoader(loader func(v interface{}) error) {
-// 	c.loader = loader
-// }
-
-// func (c *ConfigLoader) ApplyTo(cache *Cache) error {
-// 	return OptionLoader(c.Driver, c.loader, c.TTL)(cache)
-// }
