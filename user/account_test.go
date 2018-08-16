@@ -31,11 +31,11 @@ func TestUserAccount(t *testing.T) {
 		t.Error(account2)
 	}
 	err = accounts.Bind(account1equal)
-	if err != ErrAccountBindExists {
+	if err != ErrAccountBindingExists {
 		t.Fatal(err)
 	}
 	err = accounts.Unbind(account2)
-	if err != ErrAccountUnbindNotExists {
+	if err != ErrAccountUnbindingNotExists {
 		t.Fatal(err)
 	}
 	err = accounts.Bind(account2)

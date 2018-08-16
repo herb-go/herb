@@ -30,11 +30,11 @@ func (a *Accounts) Exists(account *Account) bool {
 
 //Bind add account to accountlist.
 //Return any error if raised.
-//If account exists in account list,error ErrAccountBindExists will be raised.
+//If account exists in account list,error ErrAccountBindingExists will be raised.
 func (a *Accounts) Bind(account *Account) error {
 	for k := range *a {
 		if (*a)[k].Equal(account) {
-			return ErrAccountBindExists
+			return ErrAccountBindingExists
 		}
 	}
 	*a = append(*a, account)
@@ -43,7 +43,7 @@ func (a *Accounts) Bind(account *Account) error {
 
 //Unbind remove account from accountlist.
 //Return any error if raised.
-//If account not exists in account list,error ErrAccountUnbindNotExists will be raised.
+//If account not exists in account list,error ErrAccountUnbindingNotExists will be raised.
 func (a *Accounts) Unbind(account *Account) error {
 	for k := range *a {
 		if (*a)[k].Equal(account) {
@@ -51,7 +51,7 @@ func (a *Accounts) Unbind(account *Account) error {
 			return nil
 		}
 	}
-	return ErrAccountUnbindNotExists
+	return ErrAccountUnbindingNotExists
 }
 
 //AccountProvider account provider interface

@@ -2,8 +2,8 @@ package user
 
 import "errors"
 
-//ErrAccountBindExists error rasied when account exists when binding
-var ErrAccountBindExists = errors.New("account binded exists")
+//ErrAccountBindingExists error rasied when account exists when binding
+var ErrAccountBindingExists = errors.New("account binding exists")
 
-//ErrAccountUnbindNotExists error rasied when account does not exist when unbinding
-var ErrAccountUnbindNotExists = errors.New("account unbinded dose not exist")
+//ErrAccountUnbindingNotExists error rasied when account does not exist when unbinding
+var ErrAccountUnbindingNotExists = errors.New("account unbinding dose not exist")
