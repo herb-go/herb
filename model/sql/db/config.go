@@ -16,7 +16,7 @@ type Config struct {
 	//Driver sql driver.
 	Driver string
 	//Conn sql conn string.
-	Conn string
+	DataSource string
 	//Prefix sql table prefix.
 	Prefix string
 	//MaxIdleConns max idle conns.
@@ -29,7 +29,7 @@ type Config struct {
 
 //Apply init plain database with config
 func (c *Config) Apply(d *PlainDB) error {
-	db, err := sql.Open(c.Driver, c.Conn)
+	db, err := sql.Open(c.Driver, c.DataSource)
 	if err != nil {
 		return err
 	}

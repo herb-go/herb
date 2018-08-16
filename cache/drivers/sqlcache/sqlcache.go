@@ -621,8 +621,8 @@ func (c *Cache) Close() error {
 type Config struct {
 	//Registered sql driver.
 	Driver string
-	//Conn string of database.
-	Conn string
+	//DataSource string of database.
+	DataSource string
 	//Database table name.
 	Table string
 	//Database cache name.
@@ -642,7 +642,7 @@ type Config struct {
 func (cf *Config) Create() (cache.Driver, error) {
 	var err error
 	cache := Cache{}
-	cache.DB, err = sql.Open(cf.Driver, cf.Conn)
+	cache.DB, err = sql.Open(cf.Driver, cf.DataSource)
 	if err != nil {
 		return &cache, err
 	}
@@ -697,7 +697,7 @@ func init() {
 	cache.Register("sqlcache", func(conf cache.Config, prefix string) (cache.Driver, error) {
 		var err error
 		c := &Config{}
-		err = conf.Get(prefix+"Conn", &c.Conn)
+		err = conf.Get(prefix+"DataSource", &c.DataSource)
 		if err != nil {
 			return nil, err
 		}

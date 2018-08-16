@@ -3,7 +3,7 @@ package sqlcache
 
 var testConfig = `{
                     "Driver":"\"mysql\"",
-                    "Conn":"\"dbname:password@ip/database\"",
+                    "DataSource":"\"dbname:password@ip/database\"",
                     "Table":"\"cache\"",
                     "Name":"",
                     "MaxIdleConns":"10",
