@@ -1,4 +1,4 @@
-package cachedmap
+package cacheablemap
 
 import (
 	"bytes"
@@ -58,6 +58,9 @@ func (m *testmodelmap) LoadMapElements(keys ...string) error {
 		(*m)[v].Content = rawData[v]
 	}
 	return nil
+}
+func (m *testmodelmap) Map() interface{} {
+	return m
 }
 func creator(m *testmodelmap) func(key string) error {
 	return func(key string) error {
@@ -319,6 +322,10 @@ func (m *teststringmap) LoadMapElements(keys ...string) error {
 	}
 	return nil
 }
+
+func (m *teststringmap) Map() interface{} {
+	return m
+}
 func TestString(t *testing.T) {
 	var emptyKey = "empty"
 	rawString = map[string]string{
@@ -377,6 +384,9 @@ func (m *testbytesmap) LoadMapElements(keys ...string) error {
 		(*m)[v] = rawBytes[v]
 	}
 	return nil
+}
+func (m *testbytesmap) Map() interface{} {
+	return m
 }
 func TestBytes(t *testing.T) {
 	rawBytes = map[string][]byte{

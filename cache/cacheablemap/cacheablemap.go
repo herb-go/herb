@@ -1,4 +1,4 @@
-package cachedmap
+package cacheablemap
 
 import (
 	"reflect"
@@ -6,14 +6,16 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-//CachedMap cached map interface
-type CachedMap interface {
+//Map cached map interface
+type Map interface {
 	//NewMapElement method create new Element with given key.
 	//Return any error if raised.
 	NewMapElement(string) error
 	//LoadMapElements method load element to map by give key list.
 	//Return any error if raised.
 	LoadMapElements(keys ...string) error
+	//Map return cachable map
+	Map() interface{}
 }
 
 func unmarshalMapElement(cm interface{}, creator func(string) error, key string, data []byte) (err error) {
@@ -104,6 +106,6 @@ func Load(cm interface{}, c cache.Cacheable, loader func(keys ...string) error, 
 //Param c map cache
 //Param keys key list to load
 //Return any error if raised.
-func LoadCachedMap(cm CachedMap, c cache.Cacheable, keys ...string) error {
-	return Load(cm, c, cm.LoadMapElements, cm.NewMapElement, keys...)
+func LoadCachedMap(cm Map, c cache.Cacheable, keys ...string) error {
+	return Load(cm.Map(), c, cm.LoadMapElements, cm.NewMapElement, keys...)
 }
