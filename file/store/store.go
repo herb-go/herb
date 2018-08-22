@@ -97,6 +97,6 @@ func MustNewDriver(name string, conf Config, prefix string) Driver {
 }
 
 //New :Create a empty cache.
-func NewStore() *Store {
+func New() *Store {
 	return &Store{}
 }

@@ -20,6 +20,9 @@ func (b *Builder) New(command string, args ...interface{}) *PlainQuery {
 		Args:    args,
 	}
 }
+func (b *Builder) Exec(db DB, q Query) (sql.Result, error) {
+	return b.New(q.QueryCommand(), q.QueryArgs()...).Exec(db)
+}
 
 type PlainQuery struct {
 	Builder *Builder
