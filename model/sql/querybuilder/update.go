@@ -109,3 +109,11 @@ type Update struct {
 func (u *Update) Query() *PlainQuery {
 	return u.Builder.Lines(u.Update, u.Where, u.Other)
 }
+
+func (u *Update) QueryCommand() string {
+	return u.Query().Command
+}
+
+func (u *Update) QueryArgs() []interface{} {
+	return u.Query().Args
+}

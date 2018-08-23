@@ -43,7 +43,7 @@ func (f *Assets) save(filename string, reader io.Reader, flag int) (string, int6
 }
 
 func (f *Assets) Save(filename string, reader io.Reader) (string, int64, error) {
-	return f.save(filename, reader, os.O_WRONLY)
+	return f.save(filename, reader, os.O_WRONLY|os.O_CREATE)
 }
 func (f *Assets) Load(id string, writer io.Writer) error {
 	infile := path.Join(f.Location, id)
@@ -106,6 +106,10 @@ func init() {
 			return nil, err
 		}
 		err = conf.Get(prefix+"URLPrefix", &c.URLPrefix)
+		if err != nil {
+			return nil, err
+		}
+		err = conf.Get(prefix+"Root", &c.Root)
 		if err != nil {
 			return nil, err
 		}
