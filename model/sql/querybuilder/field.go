@@ -6,8 +6,8 @@ type Field struct {
 }
 type Fields []Field
 
-func NewFields() *Fields {
-	return &Fields{}
+func NewFields() Fields {
+	return Fields{}
 }
 func (f Fields) Set(field string, data interface{}) Fields {
 	for k, v := range f {
