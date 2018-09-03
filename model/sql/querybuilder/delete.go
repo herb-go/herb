@@ -22,7 +22,10 @@ func (q *DeleteQuery) QueryCommand() string {
 	}
 	return command
 }
-
+func (q *DeleteQuery) SetAlias(alias string) *DeleteQuery {
+	q.Alias = alias
+	return q
+}
 func (q *DeleteQuery) QueryArgs() []interface{} {
 	return q.Prefix.QueryArgs()
 }
