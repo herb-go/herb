@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+//DefaultConnMaxLifetimeInSecond default conn max lifetime
+const DefaultConnMaxLifetimeInSecond = int64(30)
+
 //PlainDBOption plain database init option interface.
 type PlainDBOption interface {
 	//Apply init plain database.
@@ -38,6 +41,8 @@ func (c *Config) Apply(d *PlainDB) error {
 	}
 	if c.ConnMaxLifetimeInSecond > 0 {
 		db.SetConnMaxLifetime(time.Duration(c.ConnMaxLifetimeInSecond) * time.Second)
+	} else if c.ConnMaxLifetimeInSecond == 0 {
+		db.SetConnMaxLifetime(time.Duration(DefaultConnMaxLifetimeInSecond) * time.Second)
 	}
 	if c.MaxOpenConns > 0 {
 		db.SetMaxOpenConns(c.MaxOpenConns)
