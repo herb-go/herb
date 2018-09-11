@@ -13,51 +13,80 @@ type driver interface {
 }
 
 type CommonOutput struct {
-	Type   string
-	Config json.RawMessage
+	Type    string
+	Enabled bool
+	Config  json.RawMessage
 }
 
 func New() *Captcha {
 	return &Captcha{}
 }
+func defaultEnabledChecker(captcha *Captcha, w http.ResponseWriter, r *http.Request) (bool, error) {
+	return true, nil
+}
 
 type Captcha struct {
-	driver driver
+	driver         driver
+	Disabled       bool
+	EnabledChecker func(captcha *Captcha, w http.ResponseWriter, r *http.Request) (bool, error)
 }
 
-func (c *Captcha) ActionConfig(w http.ResponseWriter, r *http.Request) {
+func (c *Captcha) EnabledCheck(w http.ResponseWriter, r *http.Request) (bool, error) {
+	if c.Disabled {
+		return false, nil
+	}
+	return c.EnabledChecker(c, w, r)
+}
+
+func (c *Captcha) ConfigAction(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	config, err := c.driver.Config(w, r)
+	enabled, err := c.EnabledCheck(w, r)
 	if err != nil {
 		panic(err)
 	}
-	output, err := json.Marshal(CommonOutput{
-		Type:   c.driver.Type(),
-		Config: config,
-	})
+	output := CommonOutput{
+		Type:    c.driver.Type(),
+		Enabled: enabled,
+	}
+	if enabled {
+		config, err := c.driver.Config(w, r)
+		if err != nil {
+			panic(err)
+		}
+		output.Config = config
+	}
+	outputJSON, err := json.Marshal(output)
 	if err != nil {
 		panic(err)
 	}
-	_, err = w.Write(output)
+	_, err = w.Write(outputJSON)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (c *Captcha) ActionReset(w http.ResponseWriter, r *http.Request) {
+func (c *Captcha) ResetAction(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	config, err := c.driver.Reset(w, r)
+	enabled, err := c.EnabledCheck(w, r)
 	if err != nil {
 		panic(err)
 	}
-	output, err := json.Marshal(CommonOutput{
-		Type:   c.driver.Type(),
-		Config: config,
-	})
+	output := CommonOutput{
+		Type:    c.driver.Type(),
+		Enabled: enabled,
+	}
+	if enabled {
+		config, err := c.driver.Reset(w, r)
+		if err != nil {
+			panic(err)
+		}
+		output.Config = config
+	}
+	outputJSON, err := json.Marshal(output)
 	if err != nil {
 		panic(err)
 	}
-	_, err = w.Write(output)
+	_, err = w.Write(outputJSON)
 	if err != nil {
 		panic(err)
 	}
