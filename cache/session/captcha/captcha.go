@@ -3,6 +3,8 @@ package captcha
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/herb-go/herb/cache/session"
 )
 
 type driver interface {
@@ -18,9 +20,10 @@ type CommonOutput struct {
 	Config  json.RawMessage
 }
 
-func New() *Captcha {
+func New(s *session.Store) *Captcha {
 	return &Captcha{
 		DisabledScenes: map[string]bool{},
+		Session:        s,
 	}
 }
 func defaultEnabledChecker(captcha *Captcha, scene string, w http.ResponseWriter, r *http.Request) (bool, error) {
@@ -29,6 +32,7 @@ func defaultEnabledChecker(captcha *Captcha, scene string, w http.ResponseWriter
 
 type Captcha struct {
 	driver         driver
+	Session        *session.Store
 	Disabled       bool
 	DisabledScenes map[string]bool
 	EnabledChecker func(captcha *Captcha, scene string, w http.ResponseWriter, r *http.Request) (bool, error)
