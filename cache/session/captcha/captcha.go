@@ -1,23 +1,19 @@
 package captcha
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/herb-go/herb/cache/session"
 )
 
-type driver interface {
-	Type() string
-	Config(scene string, w http.ResponseWriter, r *http.Request) (json.RawMessage, error)
-	Reset(scene string, w http.ResponseWriter, r *http.Request) (json.RawMessage, error)
-	Verify(r *http.Request, token string) (bool, error)
-}
+const HeaderReset = "X-Reset-Captcha"
+const HeaderCaptchaName = "X-Captcha-Name"
+const HeaderCaptchaEnabled = "X-Captcha-Enabled"
 
-type CommonOutput struct {
-	Type    string
-	Enabled bool
-	Config  json.RawMessage
+type driver interface {
+	Name() string
+	MustCaptcha(scene string, reset bool, w http.ResponseWriter, r *http.Request)
+	Verify(r *http.Request, scene string, token string) (bool, error)
 }
 
 func New(s *session.Store) *Captcha {
@@ -39,69 +35,33 @@ type Captcha struct {
 }
 
 func (c *Captcha) EnabledCheck(scene string, w http.ResponseWriter, r *http.Request) (bool, error) {
-	if c.Disabled {
+	if c.Disabled || c.DisabledScenes[scene] {
 		return false, nil
 	}
 	return c.EnabledChecker(c, scene, w, r)
 }
 
-func (c *Captcha) ConfigJSONAction(scene string) func(w http.ResponseWriter, r *http.Request) {
+func (c *Captcha) CaptchaAction(scene string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		enabled, err := c.EnabledCheck(scene, w, r)
 		if err != nil {
 			panic(err)
 		}
-		output := CommonOutput{
-			Type:    c.driver.Type(),
-			Enabled: enabled,
+		w.Header().Set(HeaderCaptchaName, c.driver.Name())
+		if enabled {
+			w.Header().Set(HeaderCaptchaEnabled, "Disabled")
 		}
 		if enabled {
-			config, err := c.driver.Config(scene, w, r)
-			if err != nil {
-				panic(err)
-			}
-			output.Config = config
+			c.driver.MustCaptcha(scene, r.Header.Get(HeaderReset) != "", w, r)
+			return
 		}
-		outputJSON, err := json.Marshal(output)
-		if err != nil {
-			panic(err)
-		}
-		_, err = w.Write(outputJSON)
+		_, err = w.Write([]byte{})
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func (c *Captcha) ResetJSONAction(scene string) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		enabled, err := c.EnabledCheck(scene, w, r)
-		if err != nil {
-			panic(err)
-		}
-		output := CommonOutput{
-			Type:    c.driver.Type(),
-			Enabled: enabled,
-		}
-		if enabled {
-			config, err := c.driver.Reset(scene, w, r)
-			if err != nil {
-				panic(err)
-			}
-			output.Config = config
-		}
-		outputJSON, err := json.Marshal(output)
-		if err != nil {
-			panic(err)
-		}
-		_, err = w.Write(outputJSON)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
 func (c *Captcha) Verify(r *http.Request, scene string, token string) (bool, error) {
-	return c.driver.Verify(r, token)
+	return c.driver.Verify(r, scene, token)
 }

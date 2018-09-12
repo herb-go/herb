@@ -12,12 +12,26 @@ func (i OptionFunc) ApplyTo(store *Store) error {
 	return i(store)
 }
 
-type OptionConfig struct {
+type OptionConfigJSON struct {
 	Driver string
 	Config ConfigJSON
 }
 
-func (o *OptionConfig) ApplyTo(store *Store) error {
+func (o *OptionConfigJSON) ApplyTo(store *Store) error {
+	driver, err := NewDriver(o.Driver, &o.Config, "")
+	if err != nil {
+		return err
+	}
+	store.Driver = driver
+	return nil
+}
+
+type OptionConfigMap struct {
+	Driver string
+	Config ConfigMap
+}
+
+func (o *OptionConfigMap) ApplyTo(store *Store) error {
 	driver, err := NewDriver(o.Driver, &o.Config, "")
 	if err != nil {
 		return err
@@ -44,5 +58,24 @@ func (c *ConfigJSON) Set(key string, v interface{}) error {
 		return nil
 	}
 	(*c)[key] = string(s)
+	return nil
+}
+
+type ConfigMap map[string]interface{}
+
+func (c *ConfigMap) Get(key string, v interface{}) error {
+	i, ok := (*c)[key]
+	if !ok {
+		return nil
+	}
+	bs, err := json.Marshal(i)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(bs, v)
+}
+
+func (c *ConfigMap) Set(key string, v interface{}) error {
+	(*c)[key] = v
 	return nil
 }

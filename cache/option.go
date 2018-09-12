@@ -24,6 +24,16 @@ type OptionConfigJSON struct {
 func (o *OptionConfigJSON) ApplyTo(c *Cache) error {
 	return OptionConfig(o.Driver, &o.Config, o.TTL).ApplyTo(c)
 }
+
+type OptionConfigMap struct {
+	Driver string
+	TTL    int64
+	Config ConfigMap
+}
+
+func (o *OptionConfigMap) ApplyTo(c *Cache) error {
+	return OptionConfig(o.Driver, &o.Config, o.TTL).ApplyTo(c)
+}
 func OptionConfig(driverName string, conf Config, ttlInSecond int64) OptionFunc {
 	return func(cache *Cache) error {
 		driver, err := NewDriver(driverName, conf, "")
@@ -76,5 +86,24 @@ func (c *ConfigJSON) Set(key string, v interface{}) error {
 		return nil
 	}
 	(*c)[key] = string(s)
+	return nil
+}
+
+type ConfigMap map[string]interface{}
+
+func (c *ConfigMap) Get(key string, v interface{}) error {
+	i, ok := (*c)[key]
+	if !ok {
+		return nil
+	}
+	bs, err := json.Marshal(i)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(bs, v)
+}
+
+func (c *ConfigMap) Set(key string, v interface{}) error {
+	(*c)[key] = v
 	return nil
 }
