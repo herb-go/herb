@@ -102,7 +102,7 @@ func (b *Builder) NewUpdate(tableName string) *Update {
 type Update struct {
 	Builder *Builder
 	Update  *UpdateQuery
-	Where   *WhereQurey
+	Where   *WhereQuery
 	Other   *PlainQuery
 }
 

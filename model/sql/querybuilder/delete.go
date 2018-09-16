@@ -50,7 +50,7 @@ func (b *Builder) NewDelete(TableName string) *Delete {
 type Delete struct {
 	Builder *Builder
 	Delete  *DeleteQuery
-	Where   *WhereQurey
+	Where   *WhereQuery
 	Other   *PlainQuery
 }
 

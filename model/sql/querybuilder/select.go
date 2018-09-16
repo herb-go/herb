@@ -104,6 +104,8 @@ func (b *Builder) NewSelect() *Select {
 		From:    b.NewFromQuery(),
 		Join:    b.NewJoinQuery(),
 		Where:   b.NewWhereQuery(),
+		OrderBy: b.NewOrderByQuery(),
+		Limit:   b.NewLimitQuery(),
 		Other:   b.New(""),
 	}
 }
@@ -113,7 +115,9 @@ type Select struct {
 	Select  *SelectQuery
 	From    *FromQuery
 	Join    *JoinQuery
-	Where   *WhereQurey
+	Where   *WhereQuery
+	OrderBy *OrderByQuery
+	Limit   *LimitQuery
 	Other   *PlainQuery
 }
 
@@ -122,7 +126,9 @@ func (s *Select) Result() *SelectResult {
 }
 
 func (s *Select) Query() *PlainQuery {
-	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.Other)
+	switch s.Builder.Driver {
+	}
+	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.OrderBy, s.Limit, s.Other)
 }
 func (s *Select) QueryRow(db DB) *sql.Row {
 	q := s.Query()
