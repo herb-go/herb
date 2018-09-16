@@ -13,12 +13,12 @@ type UpdateQuery struct {
 	Builder   *Builder
 	Prefix    *PlainQuery
 	TableName string
-	Alias     string
+	alias     string
 	Data      []QueryData
 }
 
 func (q *UpdateQuery) SetAlias(alias string) *UpdateQuery {
-	q.Alias = alias
+	q.alias = alias
 	return q
 }
 func (q *UpdateQuery) AddSelect(field string, Select *Select) *UpdateQuery {
@@ -58,8 +58,8 @@ func (q *UpdateQuery) QueryCommand() string {
 		command += " " + p
 	}
 	command += " " + q.TableName
-	if q.Alias != "" {
-		command += " AS " + q.Alias
+	if q.alias != "" {
+		command += " AS " + q.alias
 	}
 	command += " SET "
 	var values = ""

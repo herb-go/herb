@@ -13,12 +13,12 @@ type InsertQuery struct {
 	Builder   *Builder
 	Prefix    *PlainQuery
 	TableName string
-	Alias     string
+	alias     string
 	Data      []QueryData
 }
 
 func (q *InsertQuery) SetAlias(alias string) *InsertQuery {
-	q.Alias = alias
+	q.alias = alias
 	return q
 }
 func (q *InsertQuery) AddFields(m Fields) *InsertQuery {
@@ -56,8 +56,8 @@ func (q *InsertQuery) QueryCommand() string {
 	if p != "" {
 		command += " " + p
 	}
-	if q.Alias != "" {
-		command += " AS " + q.Alias
+	if q.alias != "" {
+		command += " AS " + q.alias
 	}
 	command += " INTO " + q.TableName
 	var values = ""

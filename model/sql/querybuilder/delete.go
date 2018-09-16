@@ -4,7 +4,7 @@ type DeleteQuery struct {
 	Builder   *Builder
 	TableName string
 	Prefix    *PlainQuery
-	Alias     string
+	alias     string
 }
 
 func (q *DeleteQuery) QueryCommand() string {
@@ -13,17 +13,17 @@ func (q *DeleteQuery) QueryCommand() string {
 	if p != "" {
 		command += " " + p
 	}
-	if q.Alias != "" {
-		command += " " + q.Alias
+	if q.alias != "" {
+		command += " " + q.alias
 	}
 	command += " FROM " + q.TableName
-	if q.Alias != "" {
-		command += " AS " + q.Alias
+	if q.alias != "" {
+		command += " AS " + q.alias
 	}
 	return command
 }
 func (q *DeleteQuery) SetAlias(alias string) *DeleteQuery {
-	q.Alias = alias
+	q.alias = alias
 	return q
 }
 func (q *DeleteQuery) QueryArgs() []interface{} {
