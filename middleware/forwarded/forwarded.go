@@ -21,7 +21,9 @@ type Middleware struct {
 	//ForwardedTokenValue value which request header must equal.
 	ForwardedTokenValue string
 	//FailErrorCode error code raised when forwarded token verification fail.
-	FailStatusCode    int
+	FailStatusCode int
+	//Debug debug mode.Echo client ip in header "X-Remote-Addr".
+	Debug             bool
 	tokenFailedAction http.HandlerFunc
 }
 
@@ -73,6 +75,9 @@ func (m *Middleware) ServeMiddleware(w http.ResponseWriter, r *http.Request, nex
 		if forwardedHost != "" {
 			r.Host = forwardedHost
 		}
+	}
+	if m.Debug {
+		w.Header().Set("X-Remote-Addr", r.RemoteAddr)
 	}
 	next(w, r)
 }
