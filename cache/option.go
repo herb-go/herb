@@ -47,27 +47,6 @@ func OptionConfig(driverName string, conf Config, ttlInSecond int64) OptionFunc 
 	}
 }
 
-// func OptionJSON(driverName string, creatorjson json.RawMessage, ttlInSecond int64) OptionFunc {
-// 	return func(cache *Cache) error {
-// 		config, err := NewDriverConfig(driverName)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		err = json.Unmarshal(creatorjson, config)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		driver, err := config.Create()
-// 		if err != nil {
-// 			return err
-// 		}
-// 		cache.Driver = driver
-// 		cache.TTL = time.Duration(ttlInSecond * int64(time.Second))
-// 		return nil
-
-// 	}
-// }
-
 type Config interface {
 	Get(key string, v interface{}) error
 }
