@@ -6,6 +6,7 @@ type Config struct {
 	Enabled        bool
 	Driver         string
 	DisabledScenes map[string]bool
+	AddrWhiteList  []string
 	Config         cache.ConfigMap
 }
 
@@ -17,5 +18,6 @@ func (c *Config) ApplyTo(captcha *Captcha) error {
 	captcha.driver = d
 	captcha.Enabled = c.Enabled
 	captcha.DisabledScenes = c.DisabledScenes
+	captcha.AddrWhiteList = c.AddrWhiteList
 	return nil
 }
