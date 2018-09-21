@@ -18,10 +18,10 @@ var (
 //Flag Flag used when saving session
 type Flag uint64
 
-//SessionFlagDefault default session flag
+//FlagDefault default session flag
 const FlagDefault = Flag(1)
 
-//SessionFlagTemporay Flag what stands for a Temporay sesson.
+//FlagTemporay Flag what stands for a Temporay sesson.
 //For example,a login withour "remeber me".
 const FlagTemporay = Flag(3)
 
@@ -90,13 +90,13 @@ func NewSession(token string, s *Store) *Session {
 
 //Token return the toke name.
 //Return any error raised.
-func (ts *Session) Token() (string, error) {
-	return ts.Store.GetSessionToken(ts)
+func (s *Session) Token() (string, error) {
+	return s.Store.GetSessionToken(s)
 }
 
 //MustToken return the toke name.
-func (ts *Session) MustToken() string {
-	token, err := ts.Store.GetSessionToken(ts)
+func (s *Session) MustToken() string {
+	token, err := s.Store.GetSessionToken(s)
 	if err != nil {
 		panic(err)
 	}
@@ -104,31 +104,31 @@ func (ts *Session) MustToken() string {
 }
 
 //SetToken update token name
-func (ts *Session) SetToken(newToken string) {
-	ts.token = newToken
-	ts.tokenChanged = true
-	ts.updated = true
+func (s *Session) SetToken(newToken string) {
+	s.token = newToken
+	s.tokenChanged = true
+	s.updated = true
 }
 
 //RegenerateToken create new token and token data with given owner.
 //Return any error raised.
-func (ts *Session) RegenerateToken(owner string) error {
-	token, err := ts.Store.GenerateToken(owner)
+func (s *Session) RegenerateToken(owner string) error {
+	token, err := s.Store.GenerateToken(owner)
 	if err != nil {
 		return err
 	}
-	ts.SetToken(token)
+	s.SetToken(token)
 
 	return nil
 }
 
 //Regenerate reset all session values except token
-func (ts *Session) Regenerate() {
-	ts.data = map[string][]byte{}
-	ts.cache = map[string]reflect.Value{}
-	ts.updated = false
-	ts.notFound = false
-	ts.Flag = ts.Store.DefaultSessionFlag
+func (s *Session) Regenerate() {
+	s.data = map[string][]byte{}
+	s.cache = map[string]reflect.Value{}
+	s.updated = false
+	s.notFound = false
+	s.Flag = s.Store.DefaultSessionFlag
 }
 
 //Load the token data from cache.
@@ -186,79 +186,79 @@ func (s *Session) Marshal() ([]byte, error) {
 
 //Unmarshal Unmarshal bytes to Session.
 //Return   any error raised.
-func (t *Session) Unmarshal(token string, bytes []byte) error {
+func (s *Session) Unmarshal(token string, bytes []byte) error {
 	var err error
 	var Data = tokenCachedSession{}
-	t.Mutex.Lock()
-	defer t.Mutex.Unlock()
-	t.token = token
-	t.cache = map[string]reflect.Value{}
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+	s.token = token
+	s.cache = map[string]reflect.Value{}
 	err = cache.UnmarshalMsgpack(bytes, &(Data))
 	if err != nil {
 		return err
 	}
-	t.data = Data.Data
-	t.ExpiredAt = Data.ExpiredAt
-	t.CreatedTime = Data.CreatedTime
-	t.LastActiveTime = Data.LastActiveTime
-	t.Flag = Data.Flag
-	t.loaded = true
+	s.data = Data.Data
+	s.ExpiredAt = Data.ExpiredAt
+	s.CreatedTime = Data.CreatedTime
+	s.LastActiveTime = Data.LastActiveTime
+	s.Flag = Data.Flag
+	s.loaded = true
 	return nil
 }
 
-func (t *Session) Set(name string, v interface{}) (err error) {
-	err = t.Load()
+func (s *Session) Set(name string, v interface{}) (err error) {
+	err = s.Load()
 	if err == ErrDataNotFound {
-		*t = *NewSession(t.token, t.Store)
+		*s = *NewSession(s.token, s.Store)
 		err = nil
 	}
 	if err != nil {
 		return
 	}
 
-	t.Mutex.Lock()
-	defer t.Mutex.Unlock()
-	t.SetCache(name, v)
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+	s.SetCache(name, v)
 	bytes, err := cache.MarshalMsgpack(v)
 	if err != nil {
 		return
 	}
-	t.data[name] = bytes
-	t.updated = true
+	s.data[name] = bytes
+	s.updated = true
 	return
 }
 
-func (t *Session) Del(name string) (err error) {
-	err = t.Load()
+func (s *Session) Del(name string) (err error) {
+	err = s.Load()
 	if err == ErrDataNotFound {
-		*t = *NewSession(t.token, t.Store)
+		*s = *NewSession(s.token, s.Store)
 		err = nil
 	}
 	if err != nil {
 		return
 	}
-	t.Mutex.Lock()
-	defer t.Mutex.Unlock()
-	delete(t.data, name)
-	delete(t.cache, name)
-	t.updated = true
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+	delete(s.data, name)
+	delete(s.cache, name)
+	s.updated = true
 	return
 }
 
-//LoadFrom load data model from given token data.
+//Get load data model from given token data.
 //Parameter v should be pointer to empty data model which data filled in.
 //Return any error raised.
-func (t *Session) Get(name string, v interface{}) (err error) {
-	if t.token == "" {
+func (s *Session) Get(name string, v interface{}) (err error) {
+	if s.token == "" {
 		err = ErrTokenNotValidated
 		return
 	}
-	err = t.Load()
+	err = s.Load()
 	if err != nil {
 		return
 	}
-	t.Mutex.RLock()
-	defer t.Mutex.RUnlock()
+	s.Mutex.RLock()
+	defer s.Mutex.RUnlock()
 	vt := reflect.TypeOf(v)
 	if vt.Kind() != reflect.Ptr {
 		return ErrNilPointer
@@ -267,22 +267,22 @@ func (t *Session) Get(name string, v interface{}) (err error) {
 		return ErrNilPointer
 	}
 
-	c, ok := t.cache[name]
+	c, ok := s.cache[name]
 	if ok == true {
 		dst := reflect.ValueOf(v).Elem()
 		dst.Set(c)
 		return
 	}
-	data, ok := t.data[name]
+	data, ok := s.data[name]
 	if ok == false {
 		return ErrDataNotFound
 	}
 	err = cache.UnmarshalMsgpack(data, v)
 	if err == nil {
-		t.cache[name] = reflect.ValueOf(v).Elem()
+		s.cache[name] = reflect.ValueOf(v).Elem()
 	}
 	return
 }
-func (t *Session) SetCache(name string, v interface{}) {
-	t.cache[name] = reflect.ValueOf(v)
+func (s *Session) SetCache(name string, v interface{}) {
+	s.cache[name] = reflect.ValueOf(v)
 }
