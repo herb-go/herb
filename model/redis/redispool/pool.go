@@ -13,23 +13,34 @@ var defualtConnectTimeout = 10 * time.Second
 var defualtReadTimeout = 2 * time.Second
 var defualtWriteTimeout = 2 * time.Second
 
+//New create a new redis pool
 func New() *Pool {
 	return &Pool{}
 }
 
+//Pool redis poll struct
 type Pool struct {
 	*redis.Pool
-	Network        string //Network string of redis conn.
-	Address        string //Redis server address.
-	Name           string ////Redis server username.
-	Password       string //Redis server password.
+	// Network string of redis conn.
+	Network string
+	//Redis server address.
+	Address string
+	//Redis server password.
+	Password string
+	//ConnectTimeout redis connect timeout.
 	ConnectTimeout time.Duration
-	ReadTimeout    time.Duration
-	WriteTimeout   time.Duration
-	Db             int           //Redis server database id.
-	MaxIdle        int           //Max idle conn in redis pool.
-	MaxAlive       int           //Max Alive conn in redis pool.
-	IdleTimeout    time.Duration //Idel conn time.
+	//ReadTimeout redis read timeout.
+	ReadTimeout time.Duration
+	//WriteTimeout redis write timeout
+	WriteTimeout time.Duration
+	//Redis server database id.
+	Db int
+	//Max idle conn in redis pool.
+	MaxIdle int
+	//Max Alive conn in redis pool.
+	MaxAlive int
+	//Idel conn time.
+	IdleTimeout time.Duration
 }
 
 func (p *Pool) dial() (redis.Conn, error) {
@@ -52,6 +63,7 @@ func (p *Pool) dial() (redis.Conn, error) {
 	return conn, nil
 }
 
+//Open :open a redis poll then return it.
 func (p *Pool) Open() *redis.Pool {
 	maxIdle := p.MaxIdle
 	if maxIdle == 0 {
@@ -70,19 +82,31 @@ func (p *Pool) Open() *redis.Pool {
 	return p.Pool
 }
 
+//Config :redis pool config
 type Config struct {
-	Network                string //Network string of redis conn.
-	Address                string //Redis server address.
-	Password               string //Redis server password.
+	//Network string of redis conn.
+	Network string
+	//Redis server address.
+	Address string
+	//Redis server password.
+	Password string
+	//Redis connect timeout in second
 	ConnectTimeoutInSecond int64
-	ReadTimeoutInSecond    int64
-	WriteTimeoutInSecond   int64
-	Db                     int //Redis server database id.
-	MaxIdle                int //Max idle conn in redis pool.
-	MaxAlive               int //Max Alive conn in redis pool.
-	IdleTimeoutInSecond    int64
+	//Redis read timeout in second
+	ReadTimeoutInSecond int64
+	//Redis write timeout in second
+	WriteTimeoutInSecond int64
+	//Redis server database id.
+	Db int
+	//Max idle conn in redis pool.
+	MaxIdle int
+	//Max Alive conn in redis pool.
+	MaxAlive int
+	//Redis conn idle timeout in second
+	IdleTimeoutInSecond int64
 }
 
+//ApplyTo apply confit to redis poll
 func (c *Config) ApplyTo(p *Pool) error {
 	p.Network = c.Network
 	p.Address = c.Address
