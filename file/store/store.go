@@ -7,15 +7,21 @@ import (
 	"sync"
 )
 
+//File file stored.
 type File struct {
+	//Store store which field stored in
 	Store Store
-	ID    string
-	url   string
+	//ID file id
+	ID  string
+	url string
 }
 
+//SetURL set file url.
 func (f *File) SetURL(url string) {
 	f.url = url
 }
+
+//URL return file url and any error if raised.
 func (f *File) URL() (url string, err error) {
 	if f.url != "" {
 		return f.url, nil
@@ -23,21 +29,33 @@ func (f *File) URL() (url string, err error) {
 	return f.Store.URL(f.ID)
 }
 
+//Driver store driver interface.
 type Driver interface {
+	//Save save data form reader to named file.
+	//Return file id ,file size and any error if raised.
 	Save(filename string, reader io.Reader) (id string, length int64, err error)
+	//Load load file with given id and write to writer.
+	//Return any error if raised.
 	Load(id string, writer io.Writer) error
+	//Remove remove file by id.
+	//Return any error if raised.
 	Remove(id string) error
+	//URL convert file id to file url.
+	//Return file url and any error if raised.
 	URL(id string) (string, error)
 }
 
+//Store file store.
 type Store struct {
 	Driver
 }
 
+//Init applu option to store.
 func (s *Store) Init(option Option) error {
 	return option.ApplyTo(s)
 }
 
+// Factory store driver create factory.
 type Factory func(conf Config, prefix string) (Driver, error)
 
 var (
@@ -78,6 +96,8 @@ func Factories() []string {
 	return list
 }
 
+//NewDriver create new driver with given name,config and prefix.
+//Reutrn driver created and any error if raised.
 func NewDriver(name string, conf Config, prefix string) (Driver, error) {
 	factorysMu.RLock()
 	factoryi, ok := factories[name]
@@ -88,6 +108,9 @@ func NewDriver(name string, conf Config, prefix string) (Driver, error) {
 	return factoryi(conf, prefix)
 }
 
+//MustNewDriver create new driver with given name,config and prefix
+//Reutrn driver created.
+//Panic if any error raised.
 func MustNewDriver(name string, conf Config, prefix string) Driver {
 	d, err := NewDriver(name, conf, prefix)
 	if err != nil {
@@ -96,7 +119,7 @@ func MustNewDriver(name string, conf Config, prefix string) Driver {
 	return d
 }
 
-//New :Create a empty cache.
+//New :Create a empty store..
 func New() *Store {
 	return &Store{}
 }

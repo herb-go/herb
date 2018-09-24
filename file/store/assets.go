@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+//Assets local file store.
 type Assets struct {
 	URLPrefix string
 	Location  string
@@ -42,9 +43,14 @@ func (f *Assets) save(filename string, reader io.Reader, flag int) (string, int6
 	return filename, size, nil
 }
 
+//Save save data form reader to named file.
+//Return file id ,file size and any error if raised.
 func (f *Assets) Save(filename string, reader io.Reader) (string, int64, error) {
 	return f.save(filename, reader, os.O_WRONLY|os.O_CREATE)
 }
+
+//Load load file with given id and write to writer.
+//Return any error if raised.
 func (f *Assets) Load(id string, writer io.Writer) error {
 	infile := path.Join(f.Location, id)
 	if !strings.HasPrefix(infile, f.Location) {
@@ -59,6 +65,9 @@ func (f *Assets) Load(id string, writer io.Writer) error {
 	_, err = io.Copy(writer, file)
 	return err
 }
+
+//Remove remove file by id.
+//Return any error if raised.
 func (f *Assets) Remove(id string) error {
 	infile := path.Join(f.Location, id)
 	if !strings.HasPrefix(infile, f.Location) {
@@ -67,18 +76,31 @@ func (f *Assets) Remove(id string) error {
 	return os.Remove(infile)
 
 }
+
+//URL convert file id to file url.
+//Return file url and any error if raised.
 func (f *Assets) URL(id string) (string, error) {
 	return path.Join(f.URLPrefix, id), nil
 }
 
+//AssetsStoreConfig local file store config
 type AssetsStoreConfig struct {
-	URLHost   string
+	//URLHost file url host.
+	URLHost string
+	//URLPrefix file url path prefix
 	URLPrefix string
-	Absolute  bool
-	Root      string
-	Location  string
+	//Absolute if filepath is Absolute.
+	Absolute bool
+	//Root file root path.
+	//if Absolute is true,file root is based from root path.
+	//Otherwie file root is based from current working direction.
+	Root string
+	//Location file sub  folder which stored in.
+	Location string
 }
 
+//Create create new local file driver.
+//Return created driver and any error if raised.
 func (c *AssetsStoreConfig) Create() (Driver, error) {
 	driver := &Assets{}
 	driver.URLPrefix = path.Join(c.URLHost, c.URLPrefix)
