@@ -2,6 +2,7 @@ package captcha
 
 import "github.com/herb-go/herb/cache"
 
+//Config captcha config struct.
 type Config struct {
 	Enabled        bool
 	Driver         string
@@ -10,6 +11,7 @@ type Config struct {
 	Config         cache.ConfigMap
 }
 
+//ApplyTo apply config to captcha.
 func (c *Config) ApplyTo(captcha *Captcha) error {
 	d, err := NewDriver(c.Driver, &c.Config, "")
 	if err != nil {
