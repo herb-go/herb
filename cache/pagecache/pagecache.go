@@ -48,7 +48,7 @@ func (p *PageCache) ValidateStatus(status int) bool {
 }
 func (p *PageCache) serve(key string, ttl time.Duration, w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	page := cachedPage{}
-	err := p.Cache.Load(key, &page, ttl, func(v interface{}) error {
+	err := p.Cache.Load(key, &page, ttl, func() (interface{}, error) {
 		cw := cacheResponseWriter{
 			writer: *(bytes.NewBuffer([]byte{})),
 			header: http.Header{},
@@ -59,9 +59,9 @@ func (p *PageCache) serve(key string, ttl time.Duration, w http.ResponseWriter, 
 		page.Response = cw.writer.Bytes()
 		page.Status = cw.status
 		if p.ValidateStatus(cw.status) {
-			return nil
+			return page, nil
 		}
-		return cache.ErrNotCacheable
+		return nil, cache.ErrNotCacheable
 	})
 	if err != nil {
 		if err != cache.ErrEntryTooLarge && err != cache.ErrNotCacheable {

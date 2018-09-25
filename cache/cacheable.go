@@ -14,7 +14,7 @@ type Cacheable interface {
 	DelCounter(key string) error
 	Expire(key string, ttl time.Duration) error
 	ExpireCounter(key string, ttl time.Duration) error
-	Load(key string, v interface{}, ttl time.Duration, closure func(v interface{}) error) error
+	Load(key string, v interface{}, ttl time.Duration, loader func() (interface{}, error)) error
 	MGetBytesValue(keys ...string) (map[string][]byte, error)
 	MSetBytesValue(map[string][]byte, time.Duration) error
 	FinalKey(string) (string, error)

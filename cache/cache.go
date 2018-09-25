@@ -4,6 +4,7 @@ package cache
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"sort"
 	"sync"
 	"time"
@@ -147,7 +148,8 @@ func New() *Cache {
 //Cache Cache stores the cache Driver and default ttl.
 type Cache struct {
 	Driver
-	TTL time.Duration
+	TTL   time.Duration
+	locks sync.Map
 }
 
 func (c *Cache) getKey(key string) string {
@@ -342,19 +344,40 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	return err
 }
 
-//Load Get data model from cache by given key.If data not found,call closure to get current data value and save to cache.
+//Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
-func (c *Cache) Load(key string, v interface{}, ttl time.Duration, closure func(v interface{}) error) error {
+func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader func() (interface{}, error)) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
+	l, _ := c.locks.Load(key)
+	if l != nil {
+		lock := l.(*sync.RWMutex)
+		lock.RLock()
+		lock.RUnlock()
+	}
 	err := c.Get(key, v)
 	if err == ErrNotFound {
-		err2 := closure(v)
+		l, _ := c.locks.Load(key)
+		if l != nil {
+			lock := l.(*sync.RWMutex)
+			lock.RLock()
+			lock.RUnlock()
+			return c.Load(key, v, ttl, loader)
+		}
+		lock := &sync.RWMutex{}
+		c.locks.Store(key, lock)
+		lock.Lock()
+		defer func() {
+			lock.Unlock()
+			c.locks.Delete(key)
+		}()
+		v2, err2 := loader()
 		if err2 != nil {
 			return err2
 		}
+		reflect.Indirect(reflect.ValueOf(v)).Set(reflect.Indirect(reflect.ValueOf(v2)))
 		err3 := c.Set(key, v, ttl)
 		if err3 == ErrNotCacheable {
 			return nil
