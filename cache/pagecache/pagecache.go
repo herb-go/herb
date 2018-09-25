@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/http"
 	"strings"
+	"sync"
 
 	"time"
 
@@ -12,6 +13,11 @@ import (
 
 var Debug bool
 
+var pagePool = sync.Pool{
+	New: func() interface{} {
+		return []byte{}
+	},
+}
 var PageCacheKeyHeader = "herbgo-debug-pagecache"
 
 func New(c cache.Cacheable) *PageCache {
@@ -47,7 +53,10 @@ func (p *PageCache) ValidateStatus(status int) bool {
 	return defualtStatusValidator(status)
 }
 func (p *PageCache) serve(key string, ttl time.Duration, w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	page := cachedPage{}
+	page := cachedPage{
+		Response: pagePool.Get().([]byte),
+	}
+	defer pagePool.Put(page.Response)
 	err := p.Cache.Load(key, &page, ttl, func() (interface{}, error) {
 		cw := cacheResponseWriter{
 			writer: *(bytes.NewBuffer([]byte{})),
