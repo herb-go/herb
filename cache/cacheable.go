@@ -64,4 +64,6 @@ type Cacheable interface {
 	Flush() error
 	//DefualtTTL return cache default ttl
 	DefualtTTL() time.Duration
+	Lock(key string) (unlocker func(), err error)
+	Wait(key string) (bool, error)
 }

@@ -364,6 +364,27 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	return err
 }
 
+func (c *Cache) Lock(key string) (func(), error) {
+	lock := &sync.RWMutex{}
+	c.locks.Store(key, lock)
+	lock.Lock()
+	return func() {
+		lock.Unlock()
+		c.locks.Delete(key)
+	}, nil
+}
+
+func (c *Cache) Wait(key string) (bool, error) {
+	l, _ := c.locks.Load(key)
+	if l != nil {
+		lock := l.(*sync.RWMutex)
+		lock.RLock()
+		lock.RUnlock()
+		return true, nil
+	}
+	return false, nil
+}
+
 //Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
@@ -371,28 +392,17 @@ func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader Loader
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	l, _ := c.locks.Load(key)
-	if l != nil {
-		lock := l.(*sync.RWMutex)
-		lock.RLock()
-		lock.RUnlock()
+	_, err := c.Wait(key)
+	if err != nil {
+		return err
 	}
-	err := c.Get(key, v)
+	err = c.Get(key, v)
 	if err == ErrNotFound {
-		l, _ := c.locks.Load(key)
-		if l != nil {
-			lock := l.(*sync.RWMutex)
-			lock.RLock()
-			lock.RUnlock()
-			return c.Load(key, v, ttl, loader)
+		unlocker, err := c.Lock(key)
+		if err != nil {
+			return err
 		}
-		lock := &sync.RWMutex{}
-		c.locks.Store(key, lock)
-		lock.Lock()
-		defer func() {
-			lock.Unlock()
-			c.locks.Delete(key)
-		}()
+		defer unlocker()
 		v2, err2 := loader(key)
 		if err2 != nil {
 			return err2

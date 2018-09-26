@@ -286,6 +286,20 @@ func (c *Collection) ExpireCounter(key string, ttl time.Duration) error {
 	}
 	return c.Cache.ExpireCounter(k, ttl)
 }
+func (c *Collection) Lock(key string) (unlocker func(), err error) {
+	k, err := c.GetCacheKey(key)
+	if err != nil {
+		return nil, err
+	}
+	return c.Cache.Lock(k)
+}
+func (c *Collection) Wait(key string) (bool, error) {
+	k, err := c.GetCacheKey(key)
+	if err != nil {
+		return false, err
+	}
+	return c.Cache.Wait(k)
+}
 
 //Collection get a cache colletion with given prefix
 func (c *Collection) Collection(prefix string) *Collection {

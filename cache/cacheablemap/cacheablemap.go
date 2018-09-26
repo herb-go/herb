@@ -47,7 +47,9 @@ func Load(cm interface{}, c cache.Cacheable, loader func(keys ...string) error, 
 	var mapvalue = reflect.Indirect(reflect.ValueOf(cm))
 	var filteredKeys = make([]string, len(keys))
 	var filteredKeysLength = 0
-
+	if len(keys) == 0 {
+		return nil
+	}
 	for k := range keys {
 		if keysmap[keys[k]] == true {
 			continue
@@ -60,6 +62,14 @@ func Load(cm interface{}, c cache.Cacheable, loader func(keys ...string) error, 
 		}
 	}
 	filteredKeys = filteredKeys[:filteredKeysLength]
+	if filteredKeysLength == 0 {
+		return nil
+	}
+	lockKey := filteredKeys[0]
+	_, err := c.Wait(lockKey)
+	if err != nil {
+		return err
+	}
 	results, err := c.MGetBytesValue(filteredKeys...)
 	if err != nil {
 		return err
@@ -86,6 +96,11 @@ func Load(cm interface{}, c cache.Cacheable, loader func(keys ...string) error, 
 	if uncachedKeysLength == 0 {
 		return nil
 	}
+	unlocker, err := c.Lock(lockKey)
+	if err != nil {
+		return err
+	}
+	defer unlocker()
 	err = loader(uncachedKeys...)
 	if err != nil {
 		return err

@@ -186,6 +186,21 @@ func (n *Node) ExpireCounter(key string, ttl time.Duration) error {
 	return n.Cache.ExpireCounter(k, ttl)
 }
 
+func (n *Node) Lock(key string) (unlocker func(), err error) {
+	k, err := n.GetCacheKey(key)
+	if err != nil {
+		return nil, err
+	}
+	return n.Cache.Lock(k)
+}
+func (n *Node) Wait(key string) (bool, error) {
+	k, err := n.GetCacheKey(key)
+	if err != nil {
+		return false, err
+	}
+	return n.Cache.Wait(k)
+}
+
 //Collection get a cache colletion with given prefix
 func (n *Node) Collection(prefix string) *Collection {
 	return NewCollection(n, prefix, n.Cache.DefualtTTL())
