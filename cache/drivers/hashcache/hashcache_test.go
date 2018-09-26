@@ -30,8 +30,6 @@ func newTestCache(ttl int64) *cache.Cache {
 		panic(err)
 	}
 	return c
-
-	return c
 }
 
 func TestNameConflict(t *testing.T) {

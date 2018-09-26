@@ -64,6 +64,8 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	return bytes, err
 }
 
+//MGetBytesValue get multiple bytes data from cache by given keys.
+//Return data bytes map and any error if raised.
 func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	var result = make(map[string][]byte, len(keys))
 	for k := range keys {
@@ -79,6 +81,9 @@ func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	}
 	return result, nil
 }
+
+//MSetBytesValue set multiple bytes data to cache with given key-value map.
+//Return  any error if raised.
 func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
 	var err error
 	var ttlsecond = int(ttl / time.Second)
@@ -201,6 +206,7 @@ func (c *Cache) DelCounter(key string) error {
 	return nil
 }
 
+//Expire set cache value expire duration by given key and ttl
 func (c *Cache) Expire(key string, ttl time.Duration) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -218,6 +224,7 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 	return err
 }
 
+//ExpireCounter set cache counter  expire duration by given key and ttl
 func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -240,6 +247,8 @@ type Config struct {
 	Size int //Cache memory usage limie.
 }
 
+//Create new cache driver.
+//Return cache driver created and any error if raised.
 func (config *Config) Create() (cache.Driver, error) {
 	cache := Cache{
 		freecache: freecache.NewCache(config.Size),

@@ -12,6 +12,7 @@ const hashTypeKey = byte(1)
 const hashTypeValue = byte(2)
 const hashMinLength = 256
 
+//ErrHashFormatWrong raised when hash format wrong
 var ErrHashFormatWrong = errors.New("error hash format wrong")
 
 //Cache The redis cache Driver.
@@ -243,6 +244,9 @@ func (c *Cache) mGetRemoteData(data *map[string][]byte, hashedKeys map[string]st
 	}
 	return
 }
+
+//MGetBytesValue get multiple bytes data from cache by given keys.
+//Return data bytes map and any error if raised.
 func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	var err error
 	var unfinishedKeys []string
@@ -262,6 +266,9 @@ func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	}
 	return data, nil
 }
+
+//MSetBytesValue set multiple bytes data to cache with given key-value map.
+//Return  any error if raised.
 func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
 	var hashs = make(map[string][]byte, len(data))
 	var RemoteData = make(map[string][]byte, len(data))
@@ -333,6 +340,7 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	return b, err
 }
 
+//Expire set cache value expire duration by given key and ttl
 func (c *Cache) Expire(key string, ttl time.Duration) error {
 	var err error
 	err = c.Remote.Expire(key+cache.KeyPrefix, ttl)
@@ -353,6 +361,7 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 	return c.Remote.Expire(hashKey, ttl)
 }
 
+//ExpireCounter set cache counter  expire duration by given key and ttl
 func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	return c.Remote.ExpireCounter(key, ttl)
 }

@@ -23,7 +23,7 @@ var (
 	ErrKeyUnavailable = errors.New("Key Unavailable")
 	//ErrFeatureNotSupported raised when calling feature on unsupported driver.
 	ErrFeatureNotSupported = errors.New("Feature is not supported")
-
+	//ErrPermanentCacheNotSupport raised when cache driver not support permanent ttl.
 	ErrPermanentCacheNotSupport = errors.New("Permanent cache is not supported.can use ttl <0 on this cache")
 )
 
@@ -34,10 +34,13 @@ var DefualtTTL = time.Duration(0)
 var TTLForever = time.Duration(-1)
 
 var (
+	//KeyPrefix default key prefix
 	KeyPrefix    = string([]byte{0})
 	intKeyPrefix = string([]byte{69, 0})
 )
 
+//Factory create driver with given config and prefix
+//Reutrn driver created and any error if raised..
 type Factory func(conf Config, prefix string) (Driver, error)
 
 //Driver : Cache driver interface.Should Never used directly
@@ -100,6 +103,8 @@ func Factories() []string {
 	return list
 }
 
+//NewDriver create new dirver with given driver name,config and prefix.
+//Return driver created and any error if raised.
 func NewDriver(name string, conf Config, prefix string) (Driver, error) {
 	factorysMu.RLock()
 	factoryi, ok := factories[name]
@@ -110,6 +115,8 @@ func NewDriver(name string, conf Config, prefix string) (Driver, error) {
 	return factoryi(conf, prefix)
 }
 
+//NewSubCache  create subcache with given config and prefix.
+//Return cache created and any error if raised.
 func NewSubCache(conf Config, prefix string) (*Cache, error) {
 	var err error
 	c := New()
@@ -132,6 +139,9 @@ func NewSubCache(conf Config, prefix string) (*Cache, error) {
 	return c, nil
 }
 
+//MustNewDriver  create new dirver with given driver name,config and prefix.
+//Return driver created.
+//Painc is any error raised.
 func MustNewDriver(name string, conf Config, prefix string) Driver {
 	d, err := NewDriver(name, conf, prefix)
 	if err != nil {
@@ -155,6 +165,8 @@ type Cache struct {
 func (c *Cache) getKey(key string) string {
 	return KeyPrefix + key
 }
+
+//Init init cache with option
 func (c *Cache) Init(option Option) error {
 	return option.ApplyTo(c)
 }
@@ -231,6 +243,9 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	}
 	return c.Driver.GetBytesValue(c.getKey(key))
 }
+
+//MGetBytesValue get multiple bytes data from cache by given keys.
+//Return data bytes map and any error if raised.
 func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	var result map[string][]byte
 	var prefixedKeys = make([]string, len(keys))
@@ -247,6 +262,9 @@ func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	}
 	return result, nil
 }
+
+//MSetBytesValue set multiple bytes data to cache with given key-value map.
+//Return  any error if raised.
 func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
 	var prefixed = make(map[string][]byte, len(data))
 	for k := range data {
@@ -267,6 +285,7 @@ func (c *Cache) Del(key string) error {
 	return c.Driver.Del(c.getKey(key))
 }
 
+//Expire set cache value expire duration by given key and ttl
 func (c *Cache) Expire(key string, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
@@ -333,6 +352,7 @@ func (c *Cache) DelCounter(key string) error {
 	return err
 }
 
+//ExpireCounter set cache counter  expire duration by given key and ttl
 func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
@@ -347,7 +367,7 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 //Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
-func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader func(key string) (interface{}, error)) error {
+func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader Loader) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
@@ -389,10 +409,13 @@ func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader func(k
 	}
 	return nil
 }
+
+//FinalKey get final key which passed to cache driver .
 func (c *Cache) FinalKey(key string) (string, error) {
 	return c.getKey(key), nil
 }
 
+//Field retuan a cache field with given field name
 func (c *Cache) Field(fieldname string) *Field {
 	return &Field{
 		Cache:     c,
@@ -400,13 +423,22 @@ func (c *Cache) Field(fieldname string) *Field {
 	}
 }
 
+//DefualtTTL return cache default ttl
 func (c *Cache) DefualtTTL() time.Duration {
 	return c.TTL
 }
 
+//Collection get a cache colletion with given prefix
 func (c *Cache) Collection(prefix string) *Collection {
 	return NewCollection(c, prefix, c.TTL)
 }
+
+//Node get a cache node with given prefix
 func (c *Cache) Node(prefix string) *Node {
 	return NewNode(c, prefix)
 }
+
+//Loader cache value loader used in cache load method.
+//Load value with given key.
+//Return loaded value and any error if raised.
+type Loader func(key string) (interface{}, error)

@@ -85,6 +85,7 @@ func (c *Cache) Get(key string, v interface{}) error {
 	return cache.UnmarshalMsgpack(bytes, v)
 }
 
+//Expire set cache value expire duration by given key and ttl
 func (c *Cache) Expire(key string, ttl time.Duration) error {
 	var b, err = c.GetBytesValue(key)
 	if err != nil {
@@ -189,6 +190,8 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	return buf, nil
 }
 
+//MGetBytesValue get multiple bytes data from cache by given keys.
+//Return data bytes map and any error if raised.
 func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	emap, err := c.SubCaches[len(c.SubCaches)-1].MGetBytesValue(keys...)
 	if err != nil {
@@ -210,6 +213,9 @@ func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	}
 	return data, nil
 }
+
+//MSetBytesValue set multiple bytes data to cache with given key-value map.
+//Return  any error if raised.
 func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
 
 	var emap = make(map[string][]byte, len(data))
@@ -239,6 +245,7 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 	return c.SubCaches[len(c.SubCaches)-1].IncrCounter(key, increment, ttl)
 }
 
+//ExpireCounter set cache counter  expire duration by given key and ttl
 func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	return c.SubCaches[len(c.SubCaches)-1].ExpireCounter(key, ttl)
 }

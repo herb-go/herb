@@ -9,6 +9,8 @@ import (
 type DummyCache struct {
 }
 
+//Create create new dummy cache driver.
+//Return driver created and any error if raised.
 func (c *DummyCache) Create() (Driver, error) {
 	return &DummyCache{}, nil
 }
@@ -56,9 +58,14 @@ func (c *DummyCache) GetBytesValue(key string) ([]byte, error) {
 	return nil, ErrNotFound
 }
 
+//MGetBytesValue get multiple bytes data from cache by given keys.
+//Return data bytes map and any error if raised.
 func (c *DummyCache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	return map[string][]byte{}, nil
 }
+
+//MSetBytesValue set multiple bytes data to cache with given key-value map.
+//Return  any error if raised.
 func (c *DummyCache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
 	return nil
 }
@@ -109,10 +116,13 @@ func (c *DummyCache) GetCounter(key string) (int64, error) {
 func (c *DummyCache) DelCounter(key string) error {
 	return nil
 }
+
+//Expire set cache value expire duration by given key and ttl
 func (c *DummyCache) Expire(key string, ttl time.Duration) error {
 	return nil
 }
 
+//ExpireCounter set cache counter  expire duration by given key and ttl
 func (c *DummyCache) ExpireCounter(key string, ttl time.Duration) error {
 	return nil
 }
