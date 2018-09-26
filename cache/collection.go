@@ -286,6 +286,9 @@ func (c *Collection) ExpireCounter(key string, ttl time.Duration) error {
 	}
 	return c.Cache.ExpireCounter(k, ttl)
 }
+
+// Lock lock cache value by given key.
+//Return  unlock function and any error if rasied
 func (c *Collection) Lock(key string) (unlocker func(), err error) {
 	k, err := c.GetCacheKey(key)
 	if err != nil {
@@ -293,6 +296,9 @@ func (c *Collection) Lock(key string) (unlocker func(), err error) {
 	}
 	return c.Cache.Lock(k)
 }
+
+//Wait wait any usef lock unlcok.
+//Return whether waited and any error if rasied.
 func (c *Collection) Wait(key string) (bool, error) {
 	k, err := c.GetCacheKey(key)
 	if err != nil {

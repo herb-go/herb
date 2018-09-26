@@ -64,6 +64,10 @@ type Cacheable interface {
 	Flush() error
 	//DefualtTTL return cache default ttl
 	DefualtTTL() time.Duration
+	// Lock lock cache value by given key.
+	//Return  unlock function and any error if rasied
 	Lock(key string) (unlocker func(), err error)
+	//Wait wait any usef lock unlcok.
+	//Return whether waited and any error if rasied.
 	Wait(key string) (bool, error)
 }

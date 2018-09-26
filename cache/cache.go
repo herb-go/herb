@@ -364,6 +364,8 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	return err
 }
 
+// Lock lock cache value by given key.
+//Return  unlock function and any error if rasied
 func (c *Cache) Lock(key string) (func(), error) {
 	lock := &sync.RWMutex{}
 	c.locks.Store(key, lock)
@@ -374,6 +376,8 @@ func (c *Cache) Lock(key string) (func(), error) {
 	}, nil
 }
 
+//Wait wait any usef lock unlcok.
+//Return whether waited and any error if rasied.
 func (c *Cache) Wait(key string) (bool, error) {
 	l, _ := c.locks.Load(key)
 	if l != nil {

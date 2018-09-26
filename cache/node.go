@@ -186,6 +186,8 @@ func (n *Node) ExpireCounter(key string, ttl time.Duration) error {
 	return n.Cache.ExpireCounter(k, ttl)
 }
 
+// Lock lock cache value by given key.
+//Return  unlock function and any error if rasied
 func (n *Node) Lock(key string) (unlocker func(), err error) {
 	k, err := n.GetCacheKey(key)
 	if err != nil {
@@ -193,6 +195,9 @@ func (n *Node) Lock(key string) (unlocker func(), err error) {
 	}
 	return n.Cache.Lock(k)
 }
+
+//Wait wait any usef lock unlcok.
+//Return whether waited and any error if rasied.
 func (n *Node) Wait(key string) (bool, error) {
 	k, err := n.GetCacheKey(key)
 	if err != nil {
