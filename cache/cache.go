@@ -347,7 +347,7 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 //Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
-func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader func() (interface{}, error)) error {
+func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader func(key string) (interface{}, error)) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
@@ -373,7 +373,7 @@ func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader func()
 			lock.Unlock()
 			c.locks.Delete(key)
 		}()
-		v2, err2 := loader()
+		v2, err2 := loader(key)
 		if err2 != nil {
 			return err2
 		}

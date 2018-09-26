@@ -167,7 +167,7 @@ func (c *Collection) GetCounter(key string) (int64, error) {
 	return c.Cache.GetCounter(k)
 
 }
-func (c *Collection) Load(key string, v interface{}, TTL time.Duration, loader func() (interface{}, error)) error {
+func (c *Collection) Load(key string, v interface{}, TTL time.Duration, loader func(string) (interface{}, error)) error {
 	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
 		return ErrPermanentCacheNotSupport
 	}

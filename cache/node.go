@@ -81,7 +81,7 @@ func (n *Node) GetCounter(key string) (int64, error) {
 	k := n.MustGetCacheKey(key)
 	return n.Cache.GetCounter(k)
 }
-func (n *Node) Load(key string, v interface{}, TTL time.Duration, loader func() (interface{}, error)) error {
+func (n *Node) Load(key string, v interface{}, TTL time.Duration, loader func(string) (interface{}, error)) error {
 	k := n.MustGetCacheKey(key)
 	return n.Cache.Load(k, v, TTL, loader)
 }
