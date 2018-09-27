@@ -55,6 +55,7 @@ type Store struct {
 	TokenContextName     ContextKey    //Name in request context store the token  data.Default Session is "token".
 	CookieName           string        //Cookie name used in CookieMiddleware.Default Session is "herb-session".
 	CookiePath           string        //Cookie path used in cookieMiddleware.Default Session is "/".
+	CookieSecure         bool          //Cookie secure value used in cookie middleware.
 	AutoGenerate         bool          //Whether auto generate token when guset visit.Default Session is false.
 	UpdateActiveInterval time.Duration //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
 	DefaultSessionFlag   Flag          //Default flag when creating session.

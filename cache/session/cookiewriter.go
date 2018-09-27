@@ -30,7 +30,7 @@ func (w *cookieResponseWriter) WriteHeader(status int) {
 				Name:     w.store.CookieName,
 				Value:    td.token,
 				Path:     w.store.CookiePath,
-				Secure:   false,
+				Secure:   w.store.CookieSecure,
 				HttpOnly: true,
 			}
 			if td.token != "" {
