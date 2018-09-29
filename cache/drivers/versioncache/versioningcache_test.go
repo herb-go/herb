@@ -1,4 +1,4 @@
-package hashcache
+package versioncache
 
 import (
 	"strings"
@@ -21,7 +21,7 @@ func newTestCache(ttl int64) *cache.Cache {
 	if err != nil {
 		panic(err)
 	}
-	err = c.Init(cache.OptionConfig("hashcache", config, ttl))
+	err = c.Init(cache.OptionConfig("versioncache", config, ttl))
 	if err != nil {
 		panic(err)
 	}
@@ -143,8 +143,8 @@ func TestMSetMGet(t *testing.T) {
 		testkeys[0]: []byte("testModel1"),
 		testkeys[1]: []byte("testModel2"),
 		testkeys[2]: []byte("testModel3"),
-		testkeys[3]: []byte("testModel4" + strings.Repeat(".", hashMinLength)),
-		testkeys[4]: []byte("testModel5" + strings.Repeat(".", hashMinLength)),
+		testkeys[3]: []byte("testModel4" + strings.Repeat(".", versionMinLength)),
+		testkeys[4]: []byte("testModel5" + strings.Repeat(".", versionMinLength)),
 	}
 	var unusedKey = "unuseds"
 
@@ -293,7 +293,7 @@ func TestDefaulTTL(t *testing.T) {
 	testKey := "testKey"
 	testKey2 := "testKey2"
 	testKey3 := "testKey3"
-	testDataModel := "test" + strings.Repeat(".", hashMinLength)
+	testDataModel := "test" + strings.Repeat(".", versionMinLength)
 	var resultDataModel string
 	testDataBytes := []byte("testbytes")
 	var resultDataBytes []byte

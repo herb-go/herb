@@ -1,5 +1,5 @@
 //please rename this file to testconfig_test.go
-package hashcache
+package versioncache
 
 var testConfig = `{
         "Local.Driver":"\"freecache\"",

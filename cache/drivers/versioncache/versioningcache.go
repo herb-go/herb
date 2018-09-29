@@ -1,4 +1,4 @@
-package hashcache
+package versioncache
 
 import (
 	"errors"
@@ -8,12 +8,12 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-const hashTypeKey = byte(1)
-const hashTypeValue = byte(2)
-const hashMinLength = 256
+const versionTypeKey = byte(1)
+const versionTypeValue = byte(2)
+const versionMinLength = 256
 
-//ErrHashFormatWrong raised when hash format wrong
-var ErrHashFormatWrong = errors.New("error hash format wrong")
+//ErrVersionFormatWrong raised when version format wrong
+var ErrVersionFormatWrong = errors.New("error version format wrong")
 
 //Cache The redis cache Driver.
 type Cache struct {
@@ -107,13 +107,13 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 	return c.Remote.IncrCounter(key, increment, ttl)
 }
 
-func (c *Cache) getHash(key string) (byte, []byte, error) {
+func (c *Cache) getVersion(key string) (byte, []byte, error) {
 	b, err := c.Remote.GetBytesValue(key + cache.KeyPrefix)
 	if err != nil {
 		return 0, nil, err
 	}
-	if len(b) < 2 || !(b[0] == hashTypeKey || b[0] == hashTypeValue) {
-		return 0, nil, ErrHashFormatWrong
+	if len(b) < 2 || !(b[0] == versionTypeKey || b[0] == versionTypeValue) {
+		return 0, nil, ErrVersionFormatWrong
 	}
 	return b[0], b[1:], nil
 }
@@ -122,15 +122,15 @@ func (c *Cache) getHash(key string) (byte, []byte, error) {
 //Return any error raised.
 func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	var err error
-	if len(bytes) < hashMinLength {
+	if len(bytes) < versionMinLength {
 		b := make([]byte, len(bytes)+1)
-		b[0] = hashTypeValue
+		b[0] = versionTypeValue
 		copy(b[1:], bytes)
 		return c.Remote.SetBytesValue(key+cache.KeyPrefix, b, ttl)
 	}
 	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
 	b := make([]byte, len(ts)+1)
-	b[0] = hashTypeKey
+	b[0] = versionTypeKey
 	copy(b[1:], ts)
 	err = c.Remote.SetBytesValue(key+cache.KeyPrefix, b, ttl)
 	if err != nil {
@@ -144,15 +144,15 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 //Return any error raised.
 func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	var err error
-	if len(bytes) < hashMinLength {
+	if len(bytes) < versionMinLength {
 		b := make([]byte, len(bytes)+1)
-		b[0] = hashTypeValue
+		b[0] = versionTypeValue
 		copy(b[1:], bytes)
 		return c.Remote.UpdateBytesValue(key+cache.KeyPrefix, b, ttl)
 	}
 	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
 	b := make([]byte, len(ts)+1)
-	b[0] = hashTypeKey
+	b[0] = versionTypeKey
 	copy(b[1:], ts)
 	err = c.Remote.UpdateBytesValue(key+cache.KeyPrefix, b, ttl)
 
@@ -174,68 +174,68 @@ func (c *Cache) getPrefixedKeys(keys ...string) []string {
 	}
 	return prefixedKeys
 }
-func (c *Cache) mGetHashs(data *map[string][]byte, keys ...string) (hashedKeys map[string]string, hashedValueKeys []string, err error) {
-	hashedValueKeys = make([]string, len(keys))
-	hashedKeys = make(map[string]string, len(keys))
+func (c *Cache) mGetVersions(data *map[string][]byte, keys ...string) (values map[string]string, versions []string, err error) {
+	versions = make([]string, len(keys))
+	values = make(map[string]string, len(keys))
 	var prefixLength = len(cache.KeyPrefix)
 
-	var hashedValueKeysLength = 0
-	hashs, err := c.Remote.MGetBytesValue(c.getPrefixedKeys(keys...)...)
+	var versionsLength = 0
+	bytesvalues, err := c.Remote.MGetBytesValue(c.getPrefixedKeys(keys...)...)
 	if err != nil {
 		return
 	}
-	for k := range hashs {
-		if hashs[k] == nil {
+	for k := range bytesvalues {
+		if bytesvalues[k] == nil {
 			continue
 		}
-		if hashs[k][0] == hashTypeValue {
-			(*data)[k[:len(k)-prefixLength]] = hashs[k][1:]
-		} else if hashs[k][0] == hashTypeKey {
-			var key = k + string(hashs[k][1:])
-			hashedValueKeys[hashedValueKeysLength] = key
-			hashedKeys[key] = k[:len(k)-prefixLength]
-			hashedValueKeysLength++
+		if bytesvalues[k][0] == versionTypeValue {
+			(*data)[k[:len(k)-prefixLength]] = bytesvalues[k][1:]
+		} else if bytesvalues[k][0] == versionTypeKey {
+			var key = k + string(bytesvalues[k][1:])
+			versions[versionsLength] = key
+			values[key] = k[:len(k)-prefixLength]
+			versionsLength++
 		} else {
-			err = ErrHashFormatWrong
+			err = ErrVersionFormatWrong
 			return
 		}
 	}
-	hashedValueKeys = hashedValueKeys[:hashedValueKeysLength]
+	versions = versions[:versionsLength]
 	return
 }
-func (c *Cache) mGetLocalData(data *map[string][]byte, hashedKeys map[string]string, hashedValueKeys []string) (RemoteValueKeys []string, err error) {
+func (c *Cache) mGetLocalData(data *map[string][]byte, values map[string]string, versions []string) (RemoteVersions []string, err error) {
 	var LocalData map[string][]byte
-	RemoteValueKeys = make([]string, len(hashedValueKeys))
-	var RemoteValueKeysLength = 0
-	if len(hashedValueKeys) > 0 {
-		LocalData, err = c.Local.MGetBytesValue(hashedValueKeys...)
+	RemoteVersions = make([]string, len(versions))
+	var RemoteVersionsLength = 0
+	if len(versions) > 0 {
+		LocalData, err = c.Local.MGetBytesValue(versions...)
 		if err != nil {
 			return
 		}
 		for k := range LocalData {
 			if LocalData[k] != nil {
-				key, ok := hashedKeys[k]
+				key, ok := values[k]
 				if ok == true {
 					(*data)[key] = LocalData[k]
 				}
 			} else {
-				RemoteValueKeys[RemoteValueKeysLength] = k
-				RemoteValueKeysLength++
+				RemoteVersions[RemoteVersionsLength] = k
+				RemoteVersionsLength++
 			}
 		}
-		RemoteValueKeys = RemoteValueKeys[:RemoteValueKeysLength]
+		RemoteVersions = RemoteVersions[:RemoteVersionsLength]
 	}
 	return
 }
-func (c *Cache) mGetRemoteData(data *map[string][]byte, hashedKeys map[string]string, RemoteValueKeys []string) (err error) {
+func (c *Cache) mGetRemoteData(data *map[string][]byte, values map[string]string, versions []string) (err error) {
 	var RemoteData map[string][]byte
-	if len(RemoteValueKeys) > 0 {
-		RemoteData, err = c.Remote.MGetBytesValue(RemoteValueKeys...)
+	if len(versions) > 0 {
+		RemoteData, err = c.Remote.MGetBytesValue(versions...)
 		if err != nil {
 			return
 		}
 		for k := range RemoteData {
-			key, ok := hashedKeys[k]
+			key, ok := values[k]
 			if ok == true {
 				(*data)[key] = RemoteData[k]
 			}
@@ -249,18 +249,18 @@ func (c *Cache) mGetRemoteData(data *map[string][]byte, hashedKeys map[string]st
 //Return data bytes map and any error if raised.
 func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	var err error
-	var unfinishedKeys []string
-	var hashedKeys map[string]string
+	var versions []string
+	var values map[string]string
 	var data = make(map[string][]byte, len(keys))
-	hashedKeys, unfinishedKeys, err = c.mGetHashs(&data, keys...)
+	values, versions, err = c.mGetVersions(&data, keys...)
 	if err != nil {
 		return nil, err
 	}
-	unfinishedKeys, err = c.mGetLocalData(&data, hashedKeys, unfinishedKeys)
+	versions, err = c.mGetLocalData(&data, values, versions)
 	if err != nil {
 		return nil, err
 	}
-	err = c.mGetRemoteData(&data, hashedKeys, unfinishedKeys)
+	err = c.mGetRemoteData(&data, values, versions)
 	if err != nil {
 		return nil, err
 	}
@@ -270,24 +270,24 @@ func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 //MSetBytesValue set multiple bytes data to cache with given key-value map.
 //Return  any error if raised.
 func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
-	var hashs = make(map[string][]byte, len(data))
+	var versions = make(map[string][]byte, len(data))
 	var RemoteData = make(map[string][]byte, len(data))
 	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
 	for k := range data {
-		if len(data[k]) < hashMinLength {
+		if len(data[k]) < versionMinLength {
 			b := make([]byte, len(data[k])+1)
-			b[0] = hashTypeValue
+			b[0] = versionTypeValue
 			copy(b[1:], data[k])
-			hashs[k+cache.KeyPrefix] = b
+			versions[k+cache.KeyPrefix] = b
 		} else {
 			b := make([]byte, len(ts)+1)
-			b[0] = hashTypeKey
+			b[0] = versionTypeKey
 			copy(b[1:], ts)
-			hashs[k+cache.KeyPrefix] = b
+			versions[k+cache.KeyPrefix] = b
 			RemoteData[k+cache.KeyPrefix+string(ts)] = data[k]
 		}
 	}
-	err := c.Remote.MSetBytesValue(hashs, ttl)
+	err := c.Remote.MSetBytesValue(versions, ttl)
 	if err != nil {
 		return err
 	}
@@ -298,7 +298,7 @@ func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error 
 //Return any error raised.
 func (c *Cache) Del(key string) error {
 	var finalErr error
-	t, b, err := c.getHash(key)
+	t, b, err := c.getVersion(key)
 	if err != nil {
 		return err
 	}
@@ -306,7 +306,7 @@ func (c *Cache) Del(key string) error {
 	if err != nil {
 		return err
 	}
-	if t == hashTypeValue {
+	if t == versionTypeValue {
 		return nil
 	}
 	k := string(b)
@@ -321,21 +321,21 @@ func (c *Cache) Del(key string) error {
 //GetBytesValue Get bytes data from cache by given key.
 //Return data bytes and any error raised.
 func (c *Cache) GetBytesValue(key string) ([]byte, error) {
-	t, b, err := c.getHash(key)
+	t, b, err := c.getVersion(key)
 	if err != nil {
 		return b, err
 	}
-	if t == hashTypeValue {
+	if t == versionTypeValue {
 		return b, nil
 	}
-	hashKey := key + cache.KeyPrefix + string(b)
-	b, err = c.Local.GetBytesValue(hashKey)
+	versionKey := key + cache.KeyPrefix + string(b)
+	b, err = c.Local.GetBytesValue(versionKey)
 	if err == cache.ErrNotFound {
-		b, err = c.Remote.GetBytesValue(hashKey)
+		b, err = c.Remote.GetBytesValue(versionKey)
 		if err != nil {
 			return b, err
 		}
-		err = c.Local.SetBytesValue(hashKey, b, 0)
+		err = c.Local.SetBytesValue(versionKey, b, 0)
 	}
 	return b, err
 }
@@ -347,18 +347,18 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 	if err != nil {
 		return err
 	}
-	t, b, err := c.getHash(key)
+	t, b, err := c.getVersion(key)
 	if err == cache.ErrNotFound {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
-	if t == hashTypeValue {
+	if t == versionTypeValue {
 		return nil
 	}
-	hashKey := key + cache.KeyPrefix + string(b)
-	return c.Remote.Expire(hashKey, ttl)
+	versionKey := key + cache.KeyPrefix + string(b)
+	return c.Remote.Expire(versionKey, ttl)
 }
 
 //ExpireCounter set cache counter  expire duration by given key and ttl
@@ -380,7 +380,7 @@ type Config struct {
 }
 
 func init() {
-	cache.Register("hashcache", func(conf cache.Config, prefix string) (cache.Driver, error) {
+	cache.Register("versioncache", func(conf cache.Config, prefix string) (cache.Driver, error) {
 		var err error
 		cc := &Cache{}
 		cc.Local, err = cache.NewSubCache(conf, prefix+"Local.")
