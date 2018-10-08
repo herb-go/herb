@@ -25,21 +25,14 @@ type ContextKey string
 
 var defaultTokenContextName = ContextKey("token")
 
-//MustRegisterField registe filed to store.
-//registered field can be used directly with request to load or save the token Session.
-//Parameter Key filed name.
-//Parameter v should be pointer to empty data model which data filled in.
-//Return a new Token field.
-//Panic if any error raised.
-// func MustRegisterField(s Store, Key string, v interface{}) *TokenField {
-// 	tf, err := s.RegisterField(Key, v)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return tf
-// }
+const (
+	//StoreModeCookie which store session token in cookie.
+	StoreModeCookie = "cookie"
+	//StoreModeHeader which store session token in header.
+	StoreModeHeader = "header"
+)
 
-//Store Basic token storce interface
+//Driver store driver.
 type Driver interface {
 	GetSessionToken(ts *Session) (token string, err error)
 	GenerateToken(owner string) (token string, err error)
@@ -48,6 +41,8 @@ type Driver interface {
 	Delete(token string) error
 	Close() error
 }
+
+//Store Basic token store interface
 type Store struct {
 	Driver               Driver
 	TokenLifetime        time.Duration //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
@@ -57,6 +52,7 @@ type Store struct {
 	CookiePath           string        //Cookie path used in cookieMiddleware.Default Session is "/".
 	CookieSecure         bool          //Cookie secure value used in cookie middleware.
 	AutoGenerate         bool          //Whether auto generate token when guset visit.Default Session is false.
+	Mode                 string        //Mode used in auto install middleware.
 	UpdateActiveInterval time.Duration //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
 	DefaultSessionFlag   Flag          //Default flag when creating session.
 }
@@ -262,7 +258,7 @@ func (s *Store) CookieMiddleware() func(w http.ResponseWriter, r *http.Request, 
 }
 
 //HeaderMiddleware return a Middleware which install the token which special by Header with given name.
-//this middleware will save token after request finished if the token changed.
+//This middleware will save token after request finished if the token changed.
 func (s *Store) HeaderMiddleware(Name string) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		var token = r.Header.Get(Name)
@@ -276,6 +272,16 @@ func (s *Store) HeaderMiddleware(Name string) func(w http.ResponseWriter, r *htt
 			panic(err)
 		}
 	}
+}
+
+//InstallMiddleware middleware which auto install session depand on store mode.
+//Cookie middleware will be installed if no valid store mode given.
+func (s *Store) InstallMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	switch s.Mode {
+	case StoreModeHeader:
+		return s.HeaderMiddleware(s.CookieName)
+	}
+	return s.CookieMiddleware()
 }
 
 //GetRequestSession get stored  token data from request.
@@ -379,6 +385,6 @@ func (s Store) MustRegenerateRequestToken(r *http.Request, owner string) *Sessio
 	return v
 }
 
-func (s Store) IsNotFound(err error) bool {
+func (s Store) IsNotFoundError(err error) bool {
 	return err == ErrDataNotFound
 }
