@@ -86,7 +86,6 @@ func TestMiddleware(t *testing.T) {
 	if data["scheme"] != scheme {
 		t.Error(data["scheme"])
 	}
-
 	middleware.Enabled = true
 	data, statusCode = doRequest(t, nil)
 
