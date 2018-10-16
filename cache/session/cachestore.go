@@ -27,12 +27,17 @@ func defaultTokenGenerater(s *CacheDriver, prefix string) (token string, err err
 	token = url.PathEscape(prefix) + "-" + string(t)
 	return
 }
+
+//NewCacheDriver create new cache driver
 func NewCacheDriver() *CacheDriver {
 	return &CacheDriver{
 		TokenGenerater: defaultTokenGenerater,
 	}
 }
 
+// MustCacheStore create new cache store with given token lifetime.
+//Return store created.
+//Panic if any error raised.
 func MustCacheStore(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
 	driver := NewCacheDriver()
 	err := driver.Init(CacheDriverOptionCommon(Cache))
@@ -53,6 +58,7 @@ type CacheDriver struct {
 	TokenGenerater func(s *CacheDriver, prefix string) (token string, err error) //Token name generate func
 }
 
+//Init init cache driver with given option
 func (s *CacheDriver) Init(option CacheDriverOption) error {
 	return option.ApplyTo(s)
 }
@@ -86,6 +92,8 @@ func (s *CacheDriver) Load(v *Session) (err error) {
 	return
 }
 
+//Save  save given session with given ttl to store.
+//Return any error if raised.
 func (s *CacheDriver) Save(ts *Session, ttl time.Duration) (err error) {
 	bytes, err := ts.Marshal()
 	if err != nil {

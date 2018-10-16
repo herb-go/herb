@@ -6,9 +6,13 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
+//DriverNameCacheStore driver name for cache store
 const DriverNameCacheStore = "cache"
+
+//DriverNameClientStore driver name for client store
 const DriverNameClientStore = "cookie"
 
+//StoreConfig store config struct.
 type StoreConfig struct {
 	DriverName                   string
 	TokenLifetimeInDay           int64  //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
@@ -24,6 +28,8 @@ type StoreConfig struct {
 	Cache                        cache.OptionConfigMap
 }
 
+//ApplyTo apply config to store.
+//Return any error if raised.
 func (s *StoreConfig) ApplyTo(store *Store) error {
 	if s.TokenLifetimeInDay != 0 {
 		store.TokenLifetime = time.Duration(s.TokenLifetimeInDay) * time.Hour * 24

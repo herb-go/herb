@@ -57,6 +57,7 @@ type Store struct {
 	DefaultSessionFlag   Flag          //Default flag when creating session.
 }
 
+// New create empty session store.
 func New() *Store {
 	return &Store{
 		TokenContextName:     defaultTokenContextName,
@@ -67,6 +68,7 @@ func New() *Store {
 	}
 }
 
+//Init  init store with given option.
 func (s *Store) Init(option Option) error {
 	return option.ApplyTo(s)
 }
@@ -182,6 +184,10 @@ func (s *Store) GetSession(token string) (ts *Session) {
 func (s *Store) GetSessionToken(ts *Session) (token string, err error) {
 	return s.Driver.GetSessionToken(ts)
 }
+
+// MustGetSessionToken Get the token string from token data.
+//Return token.
+//Panic if any error raised.
 func (s *Store) MustGetSessionToken(ts *Session) (token string) {
 	token, err := s.Driver.GetSessionToken(ts)
 	if err != nil {
@@ -189,6 +195,9 @@ func (s *Store) MustGetSessionToken(ts *Session) (token string) {
 	}
 	return
 }
+
+//RegenerateToken regenerate session token with given prefix.
+//Return session and any error if raised.
 func (s *Store) RegenerateToken(prefix string) (ts *Session, err error) {
 	ts = NewSession("", s)
 	err = ts.RegenerateToken(prefix)
@@ -214,6 +223,7 @@ func (s *Store) Install(r *http.Request, token string) (ts *Session, err error) 
 	return
 }
 
+//AutoGenerateMiddleware middleware that auto generate session.
 func (s *Store) AutoGenerateMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		var ts = s.MustGetRequestSession(r)
@@ -285,7 +295,7 @@ func (s *Store) InstallMiddleware() func(w http.ResponseWriter, r *http.Request,
 }
 
 //GetRequestSession get stored  token data from request.
-//Return the stoed token data and any error raised.
+//Return the stored token data and any error raised.
 func (s *Store) GetRequestSession(r *http.Request) (ts *Session, err error) {
 	var ok bool
 	t := r.Context().Value(s.TokenContextName)
@@ -298,6 +308,9 @@ func (s *Store) GetRequestSession(r *http.Request) (ts *Session, err error) {
 	}
 	return ts, ErrRequestTokenNotFound
 }
+
+//MustRegenerateRequsetSession rregenerate request session with given prefix.
+//Return session regenerated.
 func (s *Store) MustRegenerateRequsetSession(r *http.Request, prefix string) (ts *Session) {
 	var err error
 	ts, err = s.GetRequestSession(r)
@@ -310,6 +323,9 @@ func (s *Store) MustRegenerateRequsetSession(r *http.Request, prefix string) (ts
 	}
 	return ts
 }
+
+//Set set value to request with given field name.
+//Return any error if raised.
 func (s *Store) Set(r *http.Request, fieldName string, v interface{}) (err error) {
 	ts, err := s.GetRequestSession(r)
 	if err != nil {
@@ -318,6 +334,8 @@ func (s *Store) Set(r *http.Request, fieldName string, v interface{}) (err error
 	return ts.Set(fieldName, v)
 }
 
+//Get get value form request with given field name.
+//Return any error if raised.
 func (s *Store) Get(r *http.Request, fieldName string, v interface{}) (err error) {
 	ts, err := s.GetRequestSession(r)
 	if err != nil {
@@ -326,6 +344,8 @@ func (s *Store) Get(r *http.Request, fieldName string, v interface{}) (err error
 	return ts.Get(fieldName, v)
 }
 
+//Del delete value from request with given field name.
+//Return any error if raised.
 func (s *Store) Del(r *http.Request, fieldName string) (err error) {
 	ts, err := s.GetRequestSession(r)
 	if err != nil {
@@ -333,6 +353,9 @@ func (s *Store) Del(r *http.Request, fieldName string) (err error) {
 	}
 	return ts.Del(fieldName)
 }
+
+//ExpiredAt get session expired timestamp from rerquest.
+//Return  expired timestamp and any error if raised.
 func (s *Store) ExpiredAt(r *http.Request) (ExpiredAt int64, err error) {
 	ts, err := s.GetRequestSession(r)
 	if err != nil {
@@ -341,6 +364,8 @@ func (s *Store) ExpiredAt(r *http.Request) (ExpiredAt int64, err error) {
 	return ts.ExpiredAt, nil
 }
 
+//Field create store field with given name.
+//Return field created.
 func (s *Store) Field(name string) *Field {
 	return &Field{Name: name, Store: s}
 }
@@ -385,6 +410,7 @@ func (s Store) MustRegenerateRequestToken(r *http.Request, owner string) *Sessio
 	return v
 }
 
+//IsNotFoundError return if given error if a not found error.
 func (s Store) IsNotFoundError(err error) bool {
 	return err == ErrDataNotFound
 }

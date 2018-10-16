@@ -206,6 +206,8 @@ func (s *Session) Unmarshal(token string, bytes []byte) error {
 	return nil
 }
 
+//Set set value to session with given name.
+//Return any error if rasied.
 func (s *Session) Set(name string, v interface{}) (err error) {
 	err = s.Load()
 	if err == ErrDataNotFound {
@@ -228,6 +230,7 @@ func (s *Session) Set(name string, v interface{}) (err error) {
 	return
 }
 
+//Del delete value form session with given name.
 func (s *Session) Del(name string) (err error) {
 	err = s.Load()
 	if err == ErrDataNotFound {
@@ -283,6 +286,8 @@ func (s *Session) Get(name string, v interface{}) (err error) {
 	}
 	return
 }
+
+//SetCache set cached value to session with given name and value.
 func (s *Session) SetCache(name string, v interface{}) {
 	s.cache[name] = reflect.ValueOf(v)
 }

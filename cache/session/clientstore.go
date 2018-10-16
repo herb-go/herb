@@ -50,12 +50,11 @@ type ClientDriver struct {
 	TokenUnmarshaler func(*ClientDriver, *Session) error //Unmarshler data from Session.token
 }
 
-//New New create a new client side token store with given key and token lifetime.
+//NewClientDriver New create a new client side token store with given key and token lifetime.
 //Key the key used to encrpty data
 //TokenLifeTime is the token initial expired tome.
 //Return a new token store.
 //All other property of the store can be set after creation.
-
 func NewClientDriver() *ClientDriver {
 	return &ClientDriver{
 		TokenMarshaler:   AESTokenMarshaler,
@@ -63,6 +62,9 @@ func NewClientDriver() *ClientDriver {
 	}
 }
 
+//MustClientStore create new client store with given  key and ttl.
+//Return store created.
+//Panic if any error raised.
 func MustClientStore(key []byte, TokenLifetime time.Duration) *Store {
 	driver := NewClientDriver()
 	err := driver.Init(ClientDriverOptionCommon(key))
@@ -84,6 +86,8 @@ func (s *ClientDriver) GetSessionToken(ts *Session) (token string, err error) {
 	return ts.token, err
 }
 
+//Init init client driver with given option.
+//Return any error if raised.
 func (s *ClientDriver) Init(option ClientDriverOption) error {
 	return option.ApplyTo(s)
 }
