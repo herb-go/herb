@@ -173,7 +173,7 @@ func (s *Session) Save() error {
 //Marshal convert Session to bytes.
 //Return  Converted bytes and any error raised.
 func (s *Session) Marshal() ([]byte, error) {
-	return cache.MarshalMsgpack(
+	return cache.Marshal(
 		tokenCachedSession{
 			Data:           s.data,
 			ExpiredAt:      s.ExpiredAt,
@@ -193,7 +193,7 @@ func (s *Session) Unmarshal(token string, bytes []byte) error {
 	defer s.Mutex.Unlock()
 	s.token = token
 	s.cache = map[string]reflect.Value{}
-	err = cache.UnmarshalMsgpack(bytes, &(Data))
+	err = cache.Unmarshal(bytes, &(Data))
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func (s *Session) Set(name string, v interface{}) (err error) {
 	s.Mutex.Lock()
 	defer s.Mutex.Unlock()
 	s.SetCache(name, v)
-	bytes, err := cache.MarshalMsgpack(v)
+	bytes, err := cache.Marshal(v)
 	if err != nil {
 		return
 	}
@@ -280,7 +280,7 @@ func (s *Session) Get(name string, v interface{}) (err error) {
 	if ok == false {
 		return ErrDataNotFound
 	}
-	err = cache.UnmarshalMsgpack(data, v)
+	err = cache.Unmarshal(data, v)
 	if err == nil {
 		s.cache[name] = reflect.ValueOf(v).Elem()
 	}

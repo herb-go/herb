@@ -65,15 +65,15 @@ func NewRandMaskedBytes(mask []byte, length int, origin []byte) ([]byte, error) 
 	}
 }
 
-//MarshalMsgpack Marshal data model to msgpack bytes.
+//Marshal Marshal data model to  bytes.
 //Return marshaled bytes and any erro rasied.
-func MarshalMsgpack(v interface{}) ([]byte, error) {
+var Marshal = func(v interface{}) ([]byte, error) {
 	return msgpack.Marshal(v)
 }
 
-//UnmarshalMsgpack Unmarshal bytes to data model.
+//Unmarshal Unmarshal bytes to data model.
 //Parameter v should be pointer to empty data model which data filled in.
 //Return any error raseid.
-func UnmarshalMsgpack(bytes []byte, v interface{}) error {
+var Unmarshal = func(bytes []byte, v interface{}) error {
 	return msgpack.Unmarshal(bytes, v)
 }
