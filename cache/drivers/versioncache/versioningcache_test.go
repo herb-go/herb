@@ -21,7 +21,14 @@ func newTestCache(ttl int64) *cache.Cache {
 	if err != nil {
 		panic(err)
 	}
-	err = c.Init(cache.OptionConfig("versioncache", config, ttl))
+	oc := &cache.OptionConfigJSON{
+		Driver:    "versioncache",
+		TTL:       ttl,
+		Config:    *config,
+		Marshaler: "json",
+	}
+
+	err = c.Init(oc)
 	if err != nil {
 		panic(err)
 	}

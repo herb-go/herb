@@ -307,6 +307,19 @@ func (c *Collection) Wait(key string) (bool, error) {
 	return c.Cache.Wait(k)
 }
 
+//Marshal Marshal data model to  bytes.
+//Return marshaled bytes and any error rasied.
+func (c *Collection) Marshal(v interface{}) ([]byte, error) {
+	return c.Cache.Marshal(v)
+}
+
+//Unmarshal Unmarshal bytes to data model.
+//Parameter v should be pointer to empty data model which data filled in.
+//Return any error raseid.
+func (c *Collection) Unmarshal(bytes []byte, v interface{}) error {
+	return c.Cache.Unmarshal(bytes, v)
+}
+
 //Collection get a cache colletion with given prefix
 func (c *Collection) Collection(prefix string) *Collection {
 	return NewCollection(c, prefix, c.TTL)

@@ -6,6 +6,8 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
+var DefaultMarshaler = "msgpack"
+
 //DriverNameCacheStore driver name for cache store
 const DriverNameCacheStore = "cache"
 
@@ -15,6 +17,7 @@ const DriverNameClientStore = "cookie"
 //StoreConfig store config struct.
 type StoreConfig struct {
 	DriverName                   string
+	Marshaler                    string
 	TokenLifetimeInDay           int64  //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
 	TokenMaxLifetimeInDay        int64  //Token max life time.Token can't live more than TokenMaxLifetime if TokenMaxLifetime if greater than 0.
 	TokenContextName             string //Name in request context store the token  data.Default Session is "token".
@@ -51,6 +54,16 @@ func (s *StoreConfig) ApplyTo(store *Store) error {
 		store.UpdateActiveInterval = time.Duration(s.UpdateActiveIntervalInSecond) * time.Second
 	}
 	store.DefaultSessionFlag = s.DefaultSessionFlag
+	var marshaler string
+	marshaler = s.Marshaler
+	if marshaler == "" {
+		marshaler = DefaultMarshaler
+	}
+	m, err := cache.NewMarshaler(marshaler)
+	if err != nil {
+		return err
+	}
+	store.Marshaler = m
 	switch s.DriverName {
 	case DriverNameCacheStore:
 		c := cache.New()
@@ -59,18 +72,28 @@ func (s *StoreConfig) ApplyTo(store *Store) error {
 			return err
 		}
 		driver := NewCacheDriver()
-		err = driver.Init(CacheDriverOptionCommon(c))
+		coc := NewCacheDriverOptionConfig()
+		coc.Cache = c
+		err = driver.Init(coc)
 		if err != nil {
 			return err
 		}
-		return store.Init(OptionCommon(driver, store.TokenLifetime))
+		soc := NewOptionConfig()
+		soc.Driver = driver
+		soc.TokenLifetime = store.TokenLifetime
+		return store.Init(soc)
 	case DriverNameClientStore:
 		driver := NewClientDriver()
-		err := driver.Init(ClientDriverOptionCommon([]byte(s.ClientStoreKey)))
+		coc := NewClientDriverOptionConfig()
+		coc.Key = []byte(s.ClientStoreKey)
+		err := driver.Init(coc)
 		if err != nil {
 			return err
 		}
-		return store.Init(OptionCommon(driver, store.TokenLifetime))
+		soc := NewOptionConfig()
+		soc.Driver = driver
+		soc.TokenLifetime = store.TokenLifetime
+		return store.Init(soc)
 	}
 	return nil
 }

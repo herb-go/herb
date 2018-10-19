@@ -206,6 +206,19 @@ func (n *Node) Wait(key string) (bool, error) {
 	return n.Cache.Wait(k)
 }
 
+//Marshal Marshal data model to  bytes.
+//Return marshaled bytes and any error rasied.
+func (n *Node) Marshal(v interface{}) ([]byte, error) {
+	return n.Cache.Marshal(v)
+}
+
+//Unmarshal Unmarshal bytes to data model.
+//Parameter v should be pointer to empty data model which data filled in.
+//Return any error raseid.
+func (n *Node) Unmarshal(bytes []byte, v interface{}) error {
+	return n.Cache.Unmarshal(bytes, v)
+}
+
 //Collection get a cache colletion with given prefix
 func (n *Node) Collection(prefix string) *Collection {
 	return NewCollection(n, prefix, n.Cache.DefualtTTL())

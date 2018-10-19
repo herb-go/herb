@@ -10,54 +10,74 @@ type Option interface {
 	ApplyTo(*Cache) error
 }
 
-//OptionFunc cache option function interface.
-type OptionFunc func(*Cache) error
+func NewOptionConfig() *OptionConfig {
+	return &OptionConfig{}
+}
 
-//ApplyTo apply option finction to given cache.
-//Return any error if raised.
-func (i OptionFunc) ApplyTo(cache *Cache) error {
-	return i(cache)
+type OptionConfig struct {
+	Driver    string
+	TTL       int64
+	Marshaler string
+	Config    Config
+}
+
+func (o *OptionConfig) ApplyTo(cache *Cache) error {
+	driver, err := NewDriver(o.Driver, o.Config, "")
+	if err != nil {
+		return err
+	}
+	cache.Driver = driver
+	var mname = o.Marshaler
+	if mname == "" {
+		mname = DefaultMarshaler
+	}
+	marshaler, err := NewMarshaler(mname)
+	if err != nil {
+		return err
+	}
+	u := NewUtil()
+	u.Marshaler = marshaler
+	driver.SetUtil(u)
+	cache.TTL = time.Duration(o.TTL * int64(time.Second))
+	return nil
 }
 
 //OptionConfigJSON option config in json format
 type OptionConfigJSON struct {
-	Driver string
-	TTL    int64
-	Config ConfigJSON
+	Driver    string
+	TTL       int64
+	Marshaler string
+	Config    ConfigJSON
 }
 
 //ApplyTo apply config json option to cache.
 //Return any error if raised.
 func (o *OptionConfigJSON) ApplyTo(c *Cache) error {
-	return OptionConfig(o.Driver, &o.Config, o.TTL).ApplyTo(c)
+	oc := NewOptionConfig()
+	oc.Driver = o.Driver
+	oc.Config = &o.Config
+	oc.Marshaler = o.Marshaler
+	oc.TTL = o.TTL
+	return oc.ApplyTo(c)
 }
 
 //OptionConfigMap option config in map format.
 type OptionConfigMap struct {
-	Driver string
-	TTL    int64
-	Config ConfigMap
+	Driver    string
+	Marshaler string
+	TTL       int64
+	Config    ConfigMap
 }
 
 //ApplyTo apply config map option to cache.
 //Return any error if raised.
 func (o *OptionConfigMap) ApplyTo(c *Cache) error {
-	return OptionConfig(o.Driver, &o.Config, o.TTL).ApplyTo(c)
-}
-
-//OptionConfig option config return option function with given drivername,config,ttl.
-//Return option function
-func OptionConfig(driverName string, conf Config, ttlInSecond int64) OptionFunc {
-	return func(cache *Cache) error {
-		driver, err := NewDriver(driverName, conf, "")
-		if err != nil {
-			return err
-		}
-		cache.Driver = driver
-		cache.TTL = time.Duration(ttlInSecond * int64(time.Second))
-		return nil
-
-	}
+	oc := NewOptionConfig()
+	oc.Driver = o.Driver
+	oc.Config = &o.Config
+	oc.Marshaler = o.Marshaler
+	oc.TTL = o.TTL
+	return oc.ApplyTo(c)
 }
 
 //Config cache config interface.

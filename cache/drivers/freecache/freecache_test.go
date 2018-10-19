@@ -10,7 +10,13 @@ func newTestCache(ttl int64) *cache.Cache {
 	config := &cache.ConfigJSON{}
 	config.Set("Size", 10000000)
 	c := cache.New()
-	err := c.Init(cache.OptionConfig("freecache", config, ttl))
+	oc := &cache.OptionConfigMap{
+		Driver:    "freecache",
+		TTL:       int64(ttl),
+		Config:    nil,
+		Marshaler: "json",
+	}
+	err := c.Init(oc)
 	if err != nil {
 		panic(err)
 	}

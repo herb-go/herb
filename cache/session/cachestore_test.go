@@ -19,7 +19,13 @@ func getStore(ttl time.Duration) *Store {
 	config := &cache.ConfigJSON{}
 	config.Set("Size", 10000000)
 	c := cache.New()
-	err := c.Init(cache.OptionConfig("freecache", config, int64(ttl/time.Second)))
+	oc := &cache.OptionConfigJSON{
+		Driver:    "freecache",
+		TTL:       int64(ttl / time.Second),
+		Config:    *config,
+		Marshaler: "json",
+	}
+	err := c.Init(oc)
 	if err != nil {
 		panic(err)
 	}
@@ -28,12 +34,18 @@ func getStore(ttl time.Duration) *Store {
 		panic(err)
 	}
 	s := MustCacheStore(c, ttl)
+	m, err := cache.NewMarshaler("json")
+	if err != nil {
+		panic(err)
+	}
+	s.Marshaler = m
 	return s
 }
 
 func getTimeoutStore(ttl time.Duration, UpdateActiveInterval time.Duration) *Store {
 	c := cache.New()
 	config := &cache.OptionConfigJSON{}
+	config.Marshaler = "json"
 	err := json.Unmarshal([]byte(testCache), config)
 	if err != nil {
 		panic(err)
@@ -48,7 +60,11 @@ func getTimeoutStore(ttl time.Duration, UpdateActiveInterval time.Duration) *Sto
 	}
 	s := MustCacheStore(c, ttl)
 	s.UpdateActiveInterval = UpdateActiveInterval
-
+	m, err := cache.NewMarshaler("json")
+	if err != nil {
+		panic(err)
+	}
+	s.Marshaler = m
 	return s
 }
 func TestField(t *testing.T) {

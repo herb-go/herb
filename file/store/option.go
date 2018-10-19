@@ -7,14 +7,6 @@ type Option interface {
 	ApplyTo(*Store) error
 }
 
-//OptionFunc option function interface.
-type OptionFunc func(*Store) error
-
-//ApplyTo apply option to file store.
-func (i OptionFunc) ApplyTo(store *Store) error {
-	return i(store)
-}
-
 // OptionConfigJSON option config in json format.
 type OptionConfigJSON struct {
 	Driver string

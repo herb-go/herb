@@ -7,6 +7,7 @@ import (
 //DummyCache DummyCache dont store any data.
 //Usually used in develop environment or testing
 type DummyCache struct {
+	DriverUtil
 }
 
 //Create create new dummy cache driver.

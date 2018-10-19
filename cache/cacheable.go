@@ -70,4 +70,11 @@ type Cacheable interface {
 	//Wait wait any usef lock unlcok.
 	//Return whether waited and any error if rasied.
 	Wait(key string) (bool, error)
+	//Marshal Marshal data model to  bytes.
+	//Return marshaled bytes and any error rasied.
+	Marshal(v interface{}) ([]byte, error)
+	//Unmarshal Unmarshal bytes to data model.
+	//Parameter v should be pointer to empty data model which data filled in.
+	//Return any error raseid.
+	Unmarshal(bytes []byte, v interface{}) error
 }

@@ -3,8 +3,6 @@ package cache
 import (
 	"bytes"
 	"crypto/rand"
-
-	"github.com/vmihailenco/msgpack"
 )
 
 //TokenMask The []bytes of RFC 4648  Base 64 Alphabet to generate token.
@@ -63,17 +61,4 @@ func NewRandMaskedBytes(mask []byte, length int, origin []byte) ([]byte, error) 
 			return token, nil
 		}
 	}
-}
-
-//Marshal Marshal data model to  bytes.
-//Return marshaled bytes and any erro rasied.
-var Marshal = func(v interface{}) ([]byte, error) {
-	return msgpack.Marshal(v)
-}
-
-//Unmarshal Unmarshal bytes to data model.
-//Parameter v should be pointer to empty data model which data filled in.
-//Return any error raseid.
-var Unmarshal = func(bytes []byte, v interface{}) error {
-	return msgpack.Unmarshal(bytes, v)
 }

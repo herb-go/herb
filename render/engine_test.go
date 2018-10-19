@@ -38,7 +38,9 @@ func (v *testView) Execute(data interface{}) ([]byte, error) {
 func TestEngine(t *testing.T) {
 	engine := &testEngine{}
 	render := New()
-	err := render.Init(OptionCommon(engine, ""))
+	oc := NewOptionCommon()
+	oc.Engine = engine
+	err := render.Init(oc)
 	if err != nil {
 		panic(err)
 	}

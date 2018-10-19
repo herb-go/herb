@@ -5,34 +5,24 @@ type Option interface {
 	ApplyTo(*Renderer) error
 }
 
-//OptionFunc renderer func init option.
-type OptionFunc func(*Renderer) error
-
-//ApplyTo apply option to renderer.
-func (i OptionFunc) ApplyTo(r *Renderer) error {
-	return i(r)
+func NewOptionCommon() *OptionCommon {
+	return &OptionCommon{}
 }
 
-//OptionCommon option with given render engine and view root path.
-func OptionCommon(e Engine, viewRoot string) OptionFunc {
-	return func(r *Renderer) error {
-		r.engine = e
-		e.SetViewRoot(viewRoot)
-		return nil
-	}
+type OptionCommon struct {
+	Engine   Engine
+	ViewRoot string
+}
+
+func (o *OptionCommon) ApplyTo(r *Renderer) error {
+	r.engine = o.Engine
+	r.engine.SetViewRoot(o.ViewRoot)
+	return nil
 }
 
 //ViewsOption renderer views init option.
 type ViewsOption interface {
 	ApplyTo(*Renderer) (map[string]*NamedView, error)
-}
-
-//ViewsOptionFunc renderer views func init option.
-type ViewsOptionFunc func(*Renderer) (map[string]*NamedView, error)
-
-//ApplyTo apply views option to renderer.
-func (o ViewsOptionFunc) ApplyTo(r *Renderer) (map[string]*NamedView, error) {
-	return o(r)
 }
 
 //ViewsOptionCommon views option with new view configs.

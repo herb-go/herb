@@ -45,6 +45,7 @@ type Driver interface {
 //Store Basic token store interface
 type Store struct {
 	Driver               Driver
+	Marshaler            cache.Marshaler
 	TokenLifetime        time.Duration //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
 	TokenMaxLifetime     time.Duration //Token max life time.Token can't live more than TokenMaxLifetime if TokenMaxLifetime if greater than 0.
 	TokenContextName     ContextKey    //Name in request context store the token  data.Default Session is "token".

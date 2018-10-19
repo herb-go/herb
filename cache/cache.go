@@ -3,10 +3,7 @@ package cache
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
-	"sort"
-	"sync"
 	"time"
 )
 
@@ -39,117 +36,6 @@ var (
 	intKeyPrefix = string([]byte{69, 0})
 )
 
-//Factory create driver with given config and prefix
-//Reutrn driver created and any error if raised..
-type Factory func(conf Config, prefix string) (Driver, error)
-
-//Driver : Cache driver interface.Should Never used directly
-type Driver interface {
-	Set(key string, v interface{}, ttl time.Duration) error                    //Set data model to cache by given key.
-	Update(key string, v interface{}, ttl time.Duration) error                 //Update data model to cache by given key only if the cache exist.
-	Get(key string, v interface{}) error                                       //Get data model from cache by given key.
-	SetBytesValue(key string, bytes []byte, ttl time.Duration) error           //Set bytes data to cache by given key.
-	UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error        //Update bytes data to cache by given key only if the cache exist.
-	GetBytesValue(key string) ([]byte, error)                                  //Get bytes data from cache by given key.
-	Del(key string) error                                                      //Delete data in cache by given key.
-	IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) //Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
-	SetCounter(key string, v int64, ttl time.Duration) error                   //Set int val in cache by given key.Count cache and data cache are in two independent namespace.
-	GetCounter(key string) (int64, error)                                      //Get int val from cache by given key.Count cache and data cache are in two independent namespace.
-	DelCounter(key string) error                                               //Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
-	SetGCErrHandler(f func(err error))                                         //Set callback to handler error raised when gc.
-	Expire(key string, ttl time.Duration) error
-	ExpireCounter(key string, ttl time.Duration) error
-	MGetBytesValue(keys ...string) (map[string][]byte, error)
-	MSetBytesValue(map[string][]byte, time.Duration) error
-	Close() error //Close cache.
-	Flush() error //Delete all data in cache.
-}
-
-var (
-	factorysMu sync.RWMutex
-	factories  = make(map[string]Factory)
-)
-
-// Register makes a driver creator available by the provided name.
-// If Register is called twice with the same name or if driver is nil,
-// it panics.
-func Register(name string, f Factory) {
-	factorysMu.Lock()
-	defer factorysMu.Unlock()
-	if f == nil {
-		panic("cache: Register cache factory is nil")
-	}
-	if _, dup := factories[name]; dup {
-		panic("cache: Register called twice for factory " + name)
-	}
-	factories[name] = f
-}
-func unregisterAll() {
-	factorysMu.Lock()
-	defer factorysMu.Unlock()
-	// For tests.
-	factories = make(map[string]Factory)
-}
-
-//Factories returns a sorted list of the names of the registered factories.
-func Factories() []string {
-	factorysMu.RLock()
-	defer factorysMu.RUnlock()
-	var list []string
-	for name := range factories {
-		list = append(list, name)
-	}
-	sort.Strings(list)
-	return list
-}
-
-//NewDriver create new dirver with given driver name,config and prefix.
-//Return driver created and any error if raised.
-func NewDriver(name string, conf Config, prefix string) (Driver, error) {
-	factorysMu.RLock()
-	factoryi, ok := factories[name]
-	factorysMu.RUnlock()
-	if !ok {
-		return nil, fmt.Errorf("cache: unknown driver %q (forgotten import?)", name)
-	}
-	return factoryi(conf, prefix)
-}
-
-//NewSubCache  create subcache with given config and prefix.
-//Return cache created and any error if raised.
-func NewSubCache(conf Config, prefix string) (*Cache, error) {
-	var err error
-	c := New()
-	var TTL int64
-	var DriverName string
-	var d Driver
-	err = conf.Get(prefix+"TTL", &TTL)
-	if err != nil {
-		return nil, err
-	}
-	err = conf.Get(prefix+"Driver", &DriverName)
-	if err != nil {
-		return nil, err
-	}
-	d, err = NewDriver(DriverName, conf, prefix+"Config.")
-	if err != nil {
-		return nil, err
-	}
-	c.Driver = d
-	return c, nil
-}
-
-//MustNewDriver  create new dirver with given driver name,config and prefix.
-//Return driver created.
-//Painc is any error raised.
-func MustNewDriver(name string, conf Config, prefix string) Driver {
-	d, err := NewDriver(name, conf, prefix)
-	if err != nil {
-		panic(err)
-	}
-	return d
-}
-
 //New :Create a empty cache.
 func New() *Cache {
 	return &Cache{}
@@ -158,8 +44,7 @@ func New() *Cache {
 //Cache Cache stores the cache Driver and default ttl.
 type Cache struct {
 	Driver
-	TTL   time.Duration
-	locks sync.Map
+	TTL time.Duration
 }
 
 func (c *Cache) getKey(key string) string {
@@ -181,7 +66,12 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	if ttl == DefualtTTL {
 		ttl = c.TTL
 	}
-	return c.Driver.Set(c.getKey(key), v, ttl)
+	bs, err := c.Driver.Util().Marshaler.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	return c.Driver.SetBytesValue(c.getKey(key), bs, ttl)
 }
 
 //Update Update data model to cache by given key only if the cache exist.
@@ -194,7 +84,11 @@ func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
 	if ttl == DefualtTTL {
 		ttl = c.TTL
 	}
-	return c.Driver.Update(c.getKey(key), v, ttl)
+	bs, err := c.Driver.Util().Marshaler.Marshal(v)
+	if err != nil {
+		return err
+	}
+	return c.Driver.UpdateBytesValue(c.getKey(key), bs, ttl)
 }
 
 //Get Get data model from cache by given key.
@@ -204,7 +98,11 @@ func (c *Cache) Get(key string, v interface{}) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	return c.Driver.Get(c.getKey(key), v)
+	bs, err := c.Driver.GetBytesValue(c.getKey(key))
+	if err != nil {
+		return err
+	}
+	return c.Driver.Util().Marshaler.Unmarshal(bs, v)
 }
 
 //SetBytesValue Set bytes data to cache by given key.
@@ -367,26 +265,13 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 // Lock lock cache value by given key.
 //Return  unlock function and any error if rasied
 func (c *Cache) Lock(key string) (func(), error) {
-	lock := &sync.RWMutex{}
-	c.locks.Store(key, lock)
-	lock.Lock()
-	return func() {
-		lock.Unlock()
-		c.locks.Delete(key)
-	}, nil
+	return c.Driver.Util().Lock(key)
 }
 
 //Wait wait any usef lock unlcok.
 //Return whether waited and any error if rasied.
 func (c *Cache) Wait(key string) (bool, error) {
-	l, _ := c.locks.Load(key)
-	if l != nil {
-		lock := l.(*sync.RWMutex)
-		lock.RLock()
-		lock.RUnlock()
-		return true, nil
-	}
-	return false, nil
+	return c.Driver.Util().Wait(key)
 }
 
 //Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
@@ -450,6 +335,19 @@ func (c *Cache) Collection(prefix string) *Collection {
 //Node get a cache node with given prefix
 func (c *Cache) Node(prefix string) *Node {
 	return NewNode(c, prefix)
+}
+
+//Marshal Marshal data model to  bytes.
+//Return marshaled bytes and any error rasied.
+func (c *Cache) Marshal(v interface{}) ([]byte, error) {
+	return c.Driver.Util().Marshaler.Marshal(v)
+}
+
+//Unmarshal Unmarshal bytes to data model.
+//Parameter v should be pointer to empty data model which data filled in.
+//Return any error raseid.
+func (c *Cache) Unmarshal(bytes []byte, v interface{}) error {
+	return c.Driver.Util().Marshaler.Unmarshal(bytes, v)
 }
 
 //Loader cache value loader used in cache load method.

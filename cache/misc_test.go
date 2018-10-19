@@ -48,18 +48,3 @@ func TestRandom(t *testing.T) {
 		}
 	}
 }
-func TestMarshal(t *testing.T) {
-	var testData = "1234567890"
-	var result string
-	bytes, err := Marshal(testData)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = Unmarshal(bytes, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result != testData {
-		t.Errorf("Unmarshal error %s", result)
-	}
-}

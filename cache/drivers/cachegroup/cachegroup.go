@@ -14,6 +14,7 @@ const modeUpdate = 1
 
 //Cache The group cache driver.
 type Cache struct {
+	cache.DriverUtil
 	SubCaches []*cache.Cache
 }
 type entry []byte
@@ -50,39 +51,6 @@ func (e *entry) Get() ([]byte, int64, error) {
 	copy(buf, b[8:])
 	return buf, expired, nil
 
-}
-
-//Set Set data model to cache by given key.
-//Return any error raised.
-func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
-	var bytes []byte
-	bytes, err := cache.Marshal(v)
-	if err != nil {
-		return err
-	}
-	return c.SetBytesValue(key, bytes, ttl)
-}
-
-//Update Update data model to cache by given key only if the cache exist.
-//Return any error raised.
-func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
-	var bytes []byte
-	bytes, err := cache.Marshal(v)
-	if err != nil {
-		return err
-	}
-	return c.UpdateBytesValue(key, bytes, ttl)
-}
-
-//Get Get data model from cache by given key.
-//Parameter v should be pointer to empty data model which data filled in.
-//Return any error raised.
-func (c *Cache) Get(key string, v interface{}) error {
-	bytes, err := c.GetBytesValue(key)
-	if err != nil {
-		return err
-	}
-	return cache.Unmarshal(bytes, v)
 }
 
 //Expire set cache value expire duration by given key and ttl

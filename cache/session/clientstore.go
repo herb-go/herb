@@ -67,12 +67,17 @@ func NewClientDriver() *ClientDriver {
 //Panic if any error raised.
 func MustClientStore(key []byte, TokenLifetime time.Duration) *Store {
 	driver := NewClientDriver()
-	err := driver.Init(ClientDriverOptionCommon(key))
+	oc := NewClientDriverOptionConfig()
+	oc.Key = key
+	err := driver.Init(oc)
 	if err != nil {
 		panic(err)
 	}
 	store := New()
-	err = store.Init(OptionCommon(driver, TokenLifetime))
+	soc := NewOptionConfig()
+	soc.Driver = driver
+	soc.TokenLifetime = TokenLifetime
+	err = store.Init(soc)
 	if err != nil {
 		panic(err)
 	}

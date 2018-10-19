@@ -15,6 +15,7 @@ import (
 
 //Cache The freecache cache Driver.
 type Cache struct {
+	cache.DriverUtil
 	freecache    *freecache.Cache
 	gcErrHandler func(err error)
 	lock         sync.Mutex
@@ -101,37 +102,6 @@ func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error 
 	return nil
 }
 
-//Set Set data model to cache by given key.
-//Return any error raised.
-func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
-	bytes, err := cache.Marshal(v)
-	if err != nil {
-		return err
-	}
-	return c.SetBytesValue(key, bytes, ttl)
-}
-
-//Update Update data model to cache by given key only if the cache exist.
-//Return any error raised.
-func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
-	bytes, err := cache.Marshal(v)
-	if err != nil {
-		return err
-	}
-	return c.UpdateBytesValue(key, bytes, ttl)
-}
-
-//Get Get data model from cache by given key.
-//Parameter v should be pointer to empty data model which data filled in.
-//Return any error raised.
-func (c *Cache) Get(key string, v interface{}) error {
-	bytes, err := c.GetBytesValue(key)
-	if err != nil {
-		return err
-	}
-	return cache.Unmarshal(bytes, v)
-}
-
 //Flush Delete all data in cache.
 //Return any error if raised
 func (c *Cache) Flush() error {
@@ -158,8 +128,11 @@ func (c *Cache) Del(key string) error {
 func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
 	var v int64
 	var err error
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	unlocker, err := c.Util().Lock(key)
+	if err != nil {
+		return 0, err
+	}
+	defer unlocker()
 	bytes, err := c.freecache.Get([]byte(key))
 	if err == freecache.ErrNotFound || bytes == nil || len(bytes) != 8 {
 		v = 0
@@ -178,9 +151,15 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 //SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return any error raised.
 func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
+	unlocker, err := c.Util().Lock(key)
+	if err != nil {
+		return err
+	}
+	defer unlocker()
+
 	bytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(bytes, uint64(v))
-	err := c.freecache.Set([]byte(key), bytes, int(ttl/time.Second))
+	err = c.freecache.Set([]byte(key), bytes, int(ttl/time.Second))
 	return err
 }
 
@@ -189,6 +168,12 @@ func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 func (c *Cache) GetCounter(key string) (int64, error) {
 	var v int64
 	bytes, err := c.freecache.Get([]byte(key))
+	unlocker, err := c.Util().Lock(key)
+	if err != nil {
+		return 0, err
+	}
+	defer unlocker()
+
 	if err == freecache.ErrNotFound || bytes == nil || len(bytes) != 8 {
 		err = cache.ErrNotFound
 	}
@@ -202,6 +187,12 @@ func (c *Cache) GetCounter(key string) (int64, error) {
 //DelCounter Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return any error raised.
 func (c *Cache) DelCounter(key string) error {
+	unlocker, err := c.Util().Lock(key)
+	if err != nil {
+		return err
+	}
+	defer unlocker()
+
 	_ = c.freecache.Del([]byte(key))
 	return nil
 }
@@ -226,8 +217,11 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 
 //ExpireCounter set cache counter  expire duration by given key and ttl
 func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	unlocker, err := c.Util().Lock(key)
+	if err != nil {
+		return err
+	}
+	defer unlocker()
 	b, err := c.freecache.Get([]byte(key))
 	if err == freecache.ErrNotFound {
 		return cache.ErrNotFound

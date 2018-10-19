@@ -40,12 +40,17 @@ func NewCacheDriver() *CacheDriver {
 //Panic if any error raised.
 func MustCacheStore(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
 	driver := NewCacheDriver()
-	err := driver.Init(CacheDriverOptionCommon(Cache))
+	oc := NewCacheDriverOptionConfig()
+	oc.Cache = Cache
+	err := driver.Init(oc)
 	if err != nil {
 		panic(err)
 	}
 	store := New()
-	err = store.Init(OptionCommon(driver, TokenLifetime))
+	soc := NewOptionConfig()
+	soc.Driver = driver
+	soc.TokenLifetime = TokenLifetime
+	err = store.Init(soc)
 	if err != nil {
 		panic(err)
 	}

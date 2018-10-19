@@ -11,22 +11,36 @@ import (
 	"testing"
 	"time"
 
+	"github.com/herb-go/herb/cache"
+
 	_ "github.com/herb-go/herb/cache/drivers/freecache"
 )
 
 func getClientDriver(ttl time.Duration) *Store {
 	s := MustClientStore([]byte("getClientDriver"), ttl)
+	m, err := cache.NewMarshaler("json")
+	if err != nil {
+		panic(err)
+	}
+	s.Marshaler = m
 	return s
 }
 
 func getTimeoutClientDriver(ttl time.Duration, UpdateActiveInterval time.Duration) *Store {
 	s := MustClientStore([]byte("getTimeoutClientDriver"), ttl)
+	m, err := cache.NewMarshaler("json")
+	if err != nil {
+		panic(err)
+	}
+	s.Marshaler = m
 	s.UpdateActiveInterval = UpdateActiveInterval
 	return s
 }
 func getBase64ClientDriver(ttl time.Duration) *Store {
 	d := NewClientDriver()
-	err := d.Init(ClientDriverOptionCommon([]byte("getClientDriver")))
+	coc := NewClientDriverOptionConfig()
+	coc.Key = []byte("getClientDriver")
+	err := d.Init(coc)
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +67,15 @@ func getBase64ClientDriver(ttl time.Duration) *Store {
 
 	}
 	s := New()
-	err = s.Init(OptionCommon(d, ttl))
+	soc := NewOptionConfig()
+	soc.Driver = d
+	soc.TokenLifetime = ttl
+	m, err := cache.NewMarshaler("json")
+	if err != nil {
+		panic(err)
+	}
+	s.Marshaler = m
+	err = s.Init(soc)
 	if err != nil {
 		panic(err)
 	}
