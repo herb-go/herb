@@ -1,14 +1,124 @@
 package session
 
 import (
+	"bytes"
 	"crypto/rand"
 	"time"
 
-	"github.com/jarlyyn/go-utils/security"
+	"crypto/aes"
+	"crypto/cipher"
+
+	"encoding/base64"
 )
 
 const clientStoreNonceSize = 4
 const clientStoreNewToken = "."
+
+var filledByte = []byte{0}
+
+const IVSize = 16
+
+func formatKey(key []byte, size int) []byte {
+	var data = make([]byte, size)
+	copy(data, key)
+	return data
+}
+func AESEncrypt(unencrypted []byte, key []byte, iv []byte) (encrypted []byte, err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			err = r.(error)
+		}
+	}()
+	cryptKey := formatKey(key, aes.BlockSize)
+	block, err := aes.NewCipher(cryptKey)
+	if err != nil {
+		return
+	}
+	data := PKCS7Padding(unencrypted, aes.BlockSize)
+	crypter := cipher.NewCBCEncrypter(block, iv)
+	encrypted = make([]byte, len(data))
+	crypter.CryptBlocks(encrypted, data)
+	return
+}
+func AESNonceEncrypt(unencrypted []byte, key []byte) (encrypted []byte, err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			err = r.(error)
+		}
+	}()
+	var rawEncrypted []byte
+	var IV = make([]byte, IVSize)
+	_, err = rand.Read(IV)
+	if err != nil {
+		return
+	}
+	rawEncrypted, err = AESEncrypt(unencrypted, key, IV)
+	if err != nil {
+		return
+	}
+	encrypted = make([]byte, len(rawEncrypted)+int(IVSize))
+	copy(encrypted[:IVSize], IV)
+	copy(encrypted[IVSize:], rawEncrypted)
+	return
+}
+func AESEncryptBase64(unencrypted []byte, key []byte, iv []byte) (encrypted string, err error) {
+	d, err := AESEncrypt(unencrypted, key, iv)
+	if err != nil {
+		return
+	}
+	return base64.StdEncoding.EncodeToString(d), nil
+}
+func AESNonceEncryptBase64(unencrypted []byte, key []byte) (encrypted string, err error) {
+	d, err := AESNonceEncrypt(unencrypted, key)
+	if err != nil {
+		return
+	}
+	return base64.StdEncoding.EncodeToString(d), nil
+}
+func AESDecrypt(encrypted []byte, key []byte, iv []byte) (decrypted []byte, err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			err = r.(error)
+		}
+	}()
+	cryptKey := formatKey(key, aes.BlockSize)
+	block, err := aes.NewCipher(cryptKey)
+	if err != nil {
+		return
+	}
+	crypter := cipher.NewCBCDecrypter(block, iv)
+	data := make([]byte, len(encrypted))
+	crypter.CryptBlocks(data, encrypted)
+	decrypted = PKCS7Unpadding(data)
+	return
+}
+func AESNonceDecrypt(encrypted []byte, key []byte) (decrypted []byte, err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			err = r.(error)
+		}
+	}()
+	return AESDecrypt(encrypted[IVSize:], key, encrypted[:IVSize])
+}
+func AESDecryptBase64(encrypted string, key []byte, iv []byte) (decrypted []byte, err error) {
+	d, err := base64.StdEncoding.DecodeString(encrypted)
+	if err != nil {
+		return
+	}
+	return AESDecrypt(d, key, iv)
+}
+
+func AESNonceDecryptBase64(encrypted string, key []byte) (decrypted []byte, err error) {
+	d, err := base64.StdEncoding.DecodeString(encrypted)
+	if err != nil {
+		return
+	}
+	return AESNonceDecrypt(d, key)
+}
 
 //AESTokenMarshaler token marshaler which crypt data with AES
 //Return error if raised
@@ -24,7 +134,7 @@ func AESTokenMarshaler(s *ClientDriver, ts *Session) (err error) {
 	if err != nil {
 		return
 	}
-	ts.token, err = security.AESNonceEncryptBase64(data, s.Key)
+	ts.token, err = AESNonceEncryptBase64(data, s.Key)
 	return
 }
 
@@ -32,7 +142,7 @@ func AESTokenMarshaler(s *ClientDriver, ts *Session) (err error) {
 //Return error if raised
 func AESTokenUnmarshaler(s *ClientDriver, v *Session) (err error) {
 	var data []byte
-	data, err = security.AESNonceDecryptBase64(v.token, s.Key)
+	data, err = AESNonceDecryptBase64(v.token, s.Key)
 	if err != nil {
 		return ErrDataNotFound
 	}
@@ -137,4 +247,28 @@ func (s *ClientDriver) Delete(token string) error {
 //Close Close cachestore and return any error if raised
 func (s *ClientDriver) Close() error {
 	return nil
+}
+
+/**
+ *   Reference http://blog.studygolang.com/167.html
+ */
+func PKCS7Padding(data []byte, blockSize int) []byte {
+	padding := blockSize - len(data)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	d := make([]byte, padding+len(data))
+	copy(d, data)
+	copy(d[len(data):], padtext)
+	return d
+
+}
+
+/**
+ *  Reference http://blog.studygolang.com/167.html
+ */
+func PKCS7Unpadding(data []byte) []byte {
+	length := len(data)
+	unpadding := int(data[length-1])
+	d := make([]byte, length-unpadding)
+	copy(d, data)
+	return d
 }
