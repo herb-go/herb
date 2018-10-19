@@ -63,7 +63,11 @@ func NewMarshaler(name string) (Marshaler, error) {
 	factoryi, ok := marshalerFactories[name]
 	marshalerFactorysMu.RUnlock()
 	if !ok {
-		return nil, fmt.Errorf("cache: unknown marshaler %q (forgotten import?)", name)
+		errmsg := "cache: unknown marshaler %q (forgotten import?)"
+		if name == "msgpack" {
+			errmsg = errmsg + "\nYou should add \n\timport _ \"github.com/herb-go/herb/cache/marshalers/msgpackmarshaler\" \nto your code."
+		}
+		return nil, fmt.Errorf(errmsg, name)
 	}
 	return factoryi()
 }
