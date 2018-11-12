@@ -2,8 +2,6 @@ package events
 
 import (
 	"sync"
-
-	"github.com/herb-go/herb/events"
 )
 
 type Type string
@@ -91,16 +89,16 @@ func New() *Events {
 	return e
 }
 
-func WrapEmit(t events.Type) func(*events.Event) {
-	return func(e *events.Event) {
+func WrapEmit(t Type) func(*Event) {
+	return func(e *Event) {
 		e.Type = t
-		appevents.Emit(e)
+		DefaultEvents.Emit(e)
 	}
 }
 
-func WrapOn(t events.Type) func(events.Hanlder) {
-	return func(hanlder events.Hanlder) {
-		appevents.On(t, hanlder)
+func urapOn(t Type) func(Hanlder) {
+	return func(hanlder Hanlder) {
+		DefaultEvents.On(t, hanlder)
 	}
 }
 
