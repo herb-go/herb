@@ -6,6 +6,7 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
+//DefaultMarshaler default session Marshaler
 var DefaultMarshaler = "msgpack"
 
 //DriverNameCacheStore driver name for cache store
