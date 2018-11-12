@@ -2,6 +2,8 @@ package events
 
 import (
 	"sync"
+
+	"github.com/herb-go/herb/events"
 )
 
 type Type string
@@ -87,6 +89,19 @@ func New() *Events {
 		c:        make(chan *Event),
 	}
 	return e
+}
+
+func WrapEmit(t events.Type) func(*events.Event) {
+	return func(e *events.Event) {
+		e.Type = t
+		appevents.Emit(e)
+	}
+}
+
+func WrapOn(t events.Type) func(events.Hanlder) {
+	return func(hanlder events.Hanlder) {
+		appevents.On(t, hanlder)
+	}
 }
 
 var DefaultEvents = New()
