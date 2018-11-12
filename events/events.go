@@ -96,7 +96,7 @@ func WrapEmit(t Type) func(*Event) {
 	}
 }
 
-func urapOn(t Type) func(Hanlder) {
+func WrapOn(t Type) func(Hanlder) {
 	return func(hanlder Hanlder) {
 		DefaultEvents.On(t, hanlder)
 	}
