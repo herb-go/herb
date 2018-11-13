@@ -40,24 +40,20 @@ func (e *Event) WithType(t Type) *Event {
 }
 
 type Events struct {
-	Hanlders  map[Type][]Hanlder
-	c         chan *Event
-	lock      sync.RWMutex
-	listening bool
+	Hanlders map[Type][]Hanlder
+	lock     sync.RWMutex
 }
 
 func (e *Events) NewEvent() *Event {
 	return &Event{}
 }
 func (e *Events) Emit(event *Event) {
-	e.c <- event
+	e.Trigger(event)
 }
 func (e *Events) On(t Type, hanlder Hanlder) {
 	e.lock.Lock()
 	defer e.lock.Unlock()
-	if e.listening == false {
-		go e.Listen()
-	}
+
 	if e.Hanlders[t] == nil {
 		e.Hanlders[t] = []Hanlder{}
 	}
@@ -76,19 +72,9 @@ func (e *Events) Trigger(event *Event) bool {
 	return false
 }
 
-func (e *Events) Listen() {
-	e.listening = true
-	for {
-		select {
-		case event := <-e.c:
-			e.Trigger(event)
-		}
-	}
-}
 func New() *Events {
 	e := &Events{
 		Hanlders: map[Type][]Hanlder{},
-		c:        make(chan *Event),
 	}
 	return e
 }
@@ -114,7 +100,4 @@ func On(t Type, hanlder Hanlder) {
 
 func Emit(event *Event) {
 	DefaultEvents.Emit(event)
-}
-func init() {
-	go DefaultEvents.Listen()
 }
