@@ -8,6 +8,9 @@ import (
 //ErrNoValidateMethod error rasied when model validate method not overrided.
 var ErrNoValidateMethod = errors.New("error no validate method for model")
 
+//ErrModelNotInited error raised when model id is empty.
+var ErrModelNotInited = errors.New("model id is empty.You must use inited model . ")
+
 //FieldError field error info struct
 type FieldError struct {
 	//Field field name.
@@ -27,6 +30,7 @@ type ValidatedResult struct {
 
 //Model model struct.
 type Model struct {
+	modelID     string
 	errors      []FieldError
 	messages    MessagesCollection
 	fieldLabels map[string]string
@@ -40,6 +44,16 @@ func MustValidate(m Validator) bool {
 		panic(err)
 	}
 	return !m.HasError()
+}
+
+//ModelID get model id
+func (model *Model) ModelID() string {
+	return model.modelID
+}
+
+//SetModelID set id to model.
+func (model *Model) SetModelID(id string) {
+	model.modelID = id
 }
 
 //SetMessages set translate messages to model.
@@ -159,4 +173,8 @@ type Validator interface {
 	//Fail validation will add error to model.
 	//Return any error if rasied.
 	Validate() error
+	//ModelID return model id.
+	ModelID() string
+	//SetModelID set model id.
+	SetModelID(string)
 }

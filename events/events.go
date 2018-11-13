@@ -4,6 +4,10 @@ import (
 	"sync"
 )
 
+func NewEvent() *Event {
+	return &Event{}
+}
+
 type Type string
 
 func (t Type) NewEvent() *Event {
