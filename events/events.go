@@ -59,8 +59,17 @@ func (e *EventService) NewEvent() *Event {
 }
 
 //Emit emit event to event service
-func (e *EventService) Emit(event *Event) {
-	e.Trigger(event)
+func (e *EventService) Emit(event *Event) bool {
+	e.lock.RLock()
+	defer e.lock.RUnlock()
+	if e.Hanlders[event.Type] == nil {
+		return false
+	}
+	for k := range e.Hanlders[event.Type] {
+		go e.Hanlders[event.Type][k](event)
+	}
+	return true
+
 }
 
 //On register event handlter to given type.
@@ -74,20 +83,6 @@ func (e *EventService) On(t Type, hanlder Hanlder) {
 	e.Hanlders[t] = append(e.Hanlders[t], hanlder)
 }
 
-//Trigger trigger a event to service.
-//return if event is hanlded
-func (e *EventService) Trigger(event *Event) bool {
-	e.lock.RLock()
-	defer e.lock.RUnlock()
-	if e.Hanlders[event.Type] == nil {
-		return false
-	}
-	for k := range e.Hanlders[event.Type] {
-		go e.Hanlders[event.Type][k](event)
-	}
-	return true
-}
-
 //New create New EventsService
 func New() *EventService {
 	e := &EventService{
@@ -97,10 +92,10 @@ func New() *EventService {
 }
 
 //WrapEmit return a default service event emitter with given type
-func WrapEmit(t Type) func(*Event) {
-	return func(e *Event) {
+func WrapEmit(t Type) func(*Event) bool {
+	return func(e *Event) bool {
 		e.Type = t
-		Emit(e)
+		return Emit(e)
 	}
 }
 
@@ -120,6 +115,6 @@ func On(t Type, hanlder Hanlder) {
 }
 
 //Emit emit event to default event service
-func Emit(event *Event) {
-	DefaultEventService.Emit(event)
+func Emit(event *Event) bool {
+	return DefaultEventService.Emit(event)
 }

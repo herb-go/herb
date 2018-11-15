@@ -28,6 +28,7 @@ func MustValidateRequestBody(r *http.Request, Unmarshaler func([]byte, interface
 			return false
 		}
 	}
+	m.SetHTTPRequest(r)
 	err = m.InitWithRequest(r)
 	if err != nil {
 		panic(err)
@@ -79,7 +80,8 @@ func MustRenderErrorsJSON(w http.ResponseWriter, model RequestValidator) {
 //Form form struct
 type Form struct {
 	model.Model
-	badRequest bool
+	badRequest  bool
+	httprequest *http.Request
 }
 
 //InitWithRequest init model with given request.
@@ -99,6 +101,16 @@ func (model *Form) SetBadRequest(hasError bool) {
 	model.badRequest = hasError
 }
 
+//SetHTTPRequest Set http request to form
+func (model *Form) SetHTTPRequest(r *http.Request) {
+	model.httprequest = r
+}
+
+//HTTPRequest Return http request in form
+func (model *Form) HTTPRequest() *http.Request {
+	return model.httprequest
+}
+
 //HasError return if model has any error.
 //Return true if form has a bad request error.
 func (model *Form) HasError() bool {
@@ -115,4 +127,8 @@ type RequestValidator interface {
 	BadRequest() bool
 	//SetBadRequest set whether form has a bad request error.
 	SetBadRequest(v bool)
+	//Return http request in form
+	HTTPRequest() *http.Request
+	//Set http request to form
+	SetHTTPRequest(*http.Request)
 }
