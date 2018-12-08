@@ -5,6 +5,7 @@ package session
 
 import (
 	"crypto/md5"
+	"encoding/hex"
 	"net/url"
 	"time"
 
@@ -12,8 +13,10 @@ import (
 )
 
 const (
-	PrefixModeRaw     = "raw"
-	PrefixModeMD5     = "md5"
+	//PrefixModeRaw prefix mode which dont convert prefix
+	PrefixModeRaw = "raw"
+	//PrefixModeMd5 prefix mode which  convert prefix to md5 sum
+	PrefixModeMd5     = "md5"
 	PrefixModeEmpty   = "empty"
 	DefaultPrefixMode = PrefixModeRaw
 )
@@ -106,9 +109,9 @@ func (s *CacheDriver) ConvertPrefix(prefix string) (output string, err error) {
 		return "", nil
 	case PrefixModeRaw:
 		return prefix, nil
-	case PrefixModeMD5:
+	case PrefixModeMd5:
 		o := md5.Sum([]byte(prefix))
-		return string(o[:]), nil
+		return hex.EncodeToString(o[:]), nil
 	}
 	return "", nil
 }
