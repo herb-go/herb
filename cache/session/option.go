@@ -36,11 +36,21 @@ func NewCacheDriverOptionConfig() *CacheDriverOptionConfig {
 }
 
 type CacheDriverOptionConfig struct {
-	Cache *cache.Cache
+	Cache      *cache.Cache
+	Length     int
+	PrefixMode string
 }
 
+//ApplyTo apply cache driver option config to cache driver.
+//return any error if raised.
 func (o *CacheDriverOptionConfig) ApplyTo(d *CacheDriver) error {
 	d.Cache = o.Cache
+	if o.Length != 0 {
+		d.Length = o.Length
+	}
+	if o.PrefixMode != "" {
+		d.PrefixMode = o.PrefixMode
+	}
 	return nil
 }
 

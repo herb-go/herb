@@ -1,8 +1,8 @@
-package tokenstore
+package session
 
 var testCache = `{
 	"Driver":"freecache",
-	"Config":{"Size": 10000000},
+	"Config":{"Size": "10000000"},
 	"TTL":-1
 	}
 `

@@ -4,11 +4,21 @@
 package session
 
 import (
+	"crypto/md5"
 	"net/url"
 	"time"
 
 	"github.com/herb-go/herb/cache"
 )
+
+const (
+	PrefixModeRaw     = "raw"
+	PrefixModeMD5     = "md5"
+	PrefixModeEmpty   = "empty"
+	DefaultPrefixMode = PrefixModeRaw
+)
+
+const DefaultTokenLength = 256
 
 var defaultUpdateActiveInterval = 5 * time.Minute
 
@@ -19,12 +29,19 @@ var (
 )
 
 func defaultTokenGenerater(s *CacheDriver, prefix string) (token string, err error) {
-	t, err := cache.RandMaskedBytes(cache.TokenMask, 256)
+	t, err := cache.RandMaskedBytes(cache.TokenMask, s.Length)
 	if err != nil {
 		return
 	}
-
-	token = url.PathEscape(prefix) + "-" + string(t)
+	prefixconverted, err := s.ConvertPrefix(prefix)
+	if err != nil {
+		return
+	}
+	if prefixconverted != "" {
+		token = url.PathEscape(prefix) + "-" + string(t)
+	} else {
+		token = string(t)
+	}
 	return
 }
 
@@ -32,6 +49,8 @@ func defaultTokenGenerater(s *CacheDriver, prefix string) (token string, err err
 func NewCacheDriver() *CacheDriver {
 	return &CacheDriver{
 		TokenGenerater: defaultTokenGenerater,
+		Length:         DefaultTokenLength,
+		PrefixMode:     PrefixModeRaw,
 	}
 }
 
@@ -59,7 +78,9 @@ func MustCacheStore(Cache *cache.Cache, TokenLifetime time.Duration) *Store {
 
 //CacheDriver CacheDriver is the stuct store token data in cache.
 type CacheDriver struct {
-	Cache          *cache.Cache                                                  //Cache which stores token data
+	Cache          *cache.Cache //Cache which stores token data
+	Length         int
+	PrefixMode     string
 	TokenGenerater func(s *CacheDriver, prefix string) (token string, err error) //Token name generate func
 }
 
@@ -77,6 +98,19 @@ func (s *CacheDriver) Close() error {
 //Return the new token name and error.
 func (s *CacheDriver) GenerateToken(prefix string) (token string, err error) {
 	return s.TokenGenerater(s, prefix)
+}
+
+func (s *CacheDriver) ConvertPrefix(prefix string) (output string, err error) {
+	switch s.PrefixMode {
+	case PrefixModeEmpty:
+		return "", nil
+	case PrefixModeRaw:
+		return prefix, nil
+	case PrefixModeMD5:
+		o := md5.Sum([]byte(prefix))
+		return string(o[:]), nil
+	}
+	return "", nil
 }
 
 //Load load a given session with token from store.
