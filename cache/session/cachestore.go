@@ -41,7 +41,7 @@ func defaultTokenGenerater(s *CacheDriver, prefix string) (token string, err err
 		return
 	}
 	if prefixconverted != "" {
-		token = url.PathEscape(prefix) + "-" + string(t)
+		token = url.PathEscape(prefixconverted) + "-" + string(t)
 	} else {
 		token = string(t)
 	}
