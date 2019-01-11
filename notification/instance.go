@@ -4,10 +4,11 @@ const (
 	NotificationInstanceStatusCanceled    = -1
 	NotificationInstanceStatusNew         = 0
 	NotificationInstanceStatusSuccess     = 1
-	NotificationInstanceStatusFail        = 2
-	NotificationInstanceStatusPending     = 3
+	NotificationInstanceStatusPending     = 2
+	NotificationInstanceStatusFail        = 3
 	NotificationInstanceStatusUnsupported = 10
-	NotificationInstanceStatusError       = 99
+
+	NotificationInstanceStatusError = 99
 )
 
 type NotificationInstance struct {
@@ -42,6 +43,12 @@ func (i *NotificationInstance) SetStatusUnsupported() {
 }
 func (i *NotificationInstance) IsStatusUnsupported() bool {
 	return i.Status == NotificationInstanceStatusUnsupported
+}
+func (i *NotificationInstance) SetStatusCanceled() {
+	i.Status = NotificationInstanceStatusCanceled
+}
+func (i *NotificationInstance) IsStatusCanceled() bool {
+	return i.Status == NotificationInstanceStatusCanceled
 }
 func NewNotificationInstance(Notification Notification) *NotificationInstance {
 	return &NotificationInstance{
