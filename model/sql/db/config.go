@@ -18,6 +18,8 @@ type PlainDBOption interface {
 type Config struct {
 	//Driver sql driver.
 	Driver string
+	//Type sql database type.
+	Type string
 	//Conn sql conn string.
 	DataSource string
 	//Prefix sql table prefix.
