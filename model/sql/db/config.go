@@ -51,5 +51,10 @@ func (c *Config) Apply(d *PlainDB) error {
 	}
 	d.SetDB(db)
 	d.SetPrefix(c.Prefix)
+	if c.Type != "" {
+		d.SetDriver(c.Type)
+	} else {
+		d.SetDriver(c.Driver)
+	}
 	return nil
 }
