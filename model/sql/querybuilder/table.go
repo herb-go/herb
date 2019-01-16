@@ -1,7 +1,10 @@
 package querybuilder
 
+import "database/sql"
+
 type DBTable interface {
 	DB
+	DB() *sql.DB
 	TableName() string
 	Alias() string
 	Driver() string

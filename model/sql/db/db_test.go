@@ -46,7 +46,7 @@ func TestDB(t *testing.T) {
 	if dm.Name() != "testnew" {
 		t.Error(dm.TableName())
 	}
-	if dm.BuildFieldName("test") != "test" {
+	if dm.BuildFieldName("test") != dm.Alias()+".test" {
 		t.Error(dm.BuildFieldName("test"))
 	}
 	dm.SetAlias("testdb")

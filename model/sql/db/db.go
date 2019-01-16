@@ -154,10 +154,7 @@ func (t *PlainTable) SetDriver(driver string) {
 
 //BuildFieldName build field name with alias.
 func (t *PlainTable) BuildFieldName(name string) string {
-	if t.alias == "" {
-		return name
-	}
-	return t.alias + "." + name
+	return t.Alias() + "." + name
 }
 
 //SetAlias set table alias.
@@ -167,5 +164,8 @@ func (t *PlainTable) SetAlias(alias string) {
 
 //Alias return table alias.
 func (t *PlainTable) Alias() string {
+	if t.alias == "" {
+		return t.table
+	}
 	return t.alias
 }
