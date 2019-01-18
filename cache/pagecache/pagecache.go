@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"net/http"
 	"strings"
-	"sync"
 
 	"time"
 
@@ -14,11 +13,11 @@ import (
 //Debug if pagecache module is in debug mode.
 var Debug bool
 
-var pagePool = sync.Pool{
-	New: func() interface{} {
-		return []byte{}
-	},
-}
+// var pagePool = sync.Pool{
+// 	New: func() interface{} {
+// 		return []byte{}
+// 	},
+// }
 
 //PageCacheKeyHeader http respnose header wihch will echo page cache key when debug is on.
 var PageCacheKeyHeader = "herbgo-debug-pagecache"
@@ -62,10 +61,11 @@ func (p *PageCache) ValidateStatus(status int) bool {
 	return defualtStatusValidator(status)
 }
 func (p *PageCache) serve(key string, ttl time.Duration, w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	page := cachedPage{
-		Response: pagePool.Get().([]byte),
-	}
-	defer pagePool.Put(page.Response)
+	// page := cachedPage{
+	// 	Response: pagePool.Get().([]byte),
+	// }
+	// defer pagePool.Put(page.Response)
+	page := cachedPage{}
 	err := p.Cache.Load(key, &page, ttl, func(key string) (interface{}, error) {
 		cw := cacheResponseWriter{
 			writer: *(bytes.NewBuffer([]byte{})),
