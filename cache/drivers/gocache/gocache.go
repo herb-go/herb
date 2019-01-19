@@ -1,6 +1,6 @@
-//Package freecache provides cache driver uses memory to store cache data.
-//Using github.com/coocood/freecache as driver.
-package freecache
+//Package gocache provides cache driver uses memory to store cache data.
+//Using github.com/allegro/bigcache as driver.
+package gocache
 
 import (
 	"time"
@@ -9,14 +9,17 @@ import (
 
 	"sync"
 
-	"github.com/coocood/freecache"
 	"github.com/herb-go/herb/cache"
+	gocache "github.com/patrickmn/go-cache"
 )
 
-//Cache The freecache cache Driver.
+const defaultExpirationInsecond = 60
+const defaultCleanupIntervalInSecond = 60
+
+//Cache The gocache cache Driver.
 type Cache struct {
 	cache.DriverUtil
-	freecache    *freecache.Cache
+	gocache      *gocache.Cache
 	gcErrHandler func(err error)
 	lock         sync.Mutex
 }
@@ -30,39 +33,26 @@ func (c *Cache) SetGCErrHandler(f func(err error)) {
 //SetBytesValue Set bytes data to cache by given key.
 //Return any error raised.
 func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	err := c.freecache.Set([]byte(key), bytes, int(ttl/time.Second))
-	if err == freecache.ErrLargeEntry {
-		return cache.ErrEntryTooLarge
-	}
-	return err
+	c.gocache.Set(key, bytes, ttl)
+	return nil
 }
 
 //UpdateBytesValue Update bytes data to cache by given key only if the cache exist.
 //Return any error raised.
 func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	_, err := c.freecache.TTL([]byte(key))
-	if err == freecache.ErrNotFound {
-		return nil
-	}
-	err = c.freecache.Set([]byte(key), bytes, int(ttl/time.Second))
-	if err == freecache.ErrLargeEntry {
-		return cache.ErrEntryTooLarge
-	}
+	err := c.gocache.Replace(key, bytes, ttl)
+	err = nil
 	return err
 }
 
 //GetBytesValue Get bytes data from cache by given key.
 //Return data bytes and any error raised.
 func (c *Cache) GetBytesValue(key string) ([]byte, error) {
-	bytes, err := c.freecache.Get([]byte(key))
-	if err == freecache.ErrNotFound {
-		err = cache.ErrNotFound
+	bytes, found := c.gocache.Get(key)
+	if found {
+		return bytes.([]byte), nil
 	}
-	return bytes, err
+	return nil, cache.ErrNotFound
 }
 
 //MGetBytesValue get multiple bytes data from cache by given keys.
@@ -86,18 +76,8 @@ func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 //MSetBytesValue set multiple bytes data to cache with given key-value map.
 //Return  any error if raised.
 func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
-	var err error
-	var ttlsecond = int(ttl / time.Second)
-	c.lock.Lock()
-	defer c.lock.Unlock()
 	for k := range data {
-		err = c.freecache.Set([]byte(k), data[k], ttlsecond)
-		if err == freecache.ErrLargeEntry {
-			return cache.ErrEntryTooLarge
-		}
-		if err != nil {
-			return err
-		}
+		c.gocache.Set(k, data[k], ttl)
 	}
 	return nil
 }
@@ -105,21 +85,21 @@ func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error 
 //Flush Delete all data in cache.
 //Return any error if raised
 func (c *Cache) Flush() error {
-	c.freecache.Clear()
+	c.gocache.Flush()
 	return nil
 }
 
 //Close Close cache.
 //Return any error if raised
 func (c *Cache) Close() error {
-	c.freecache.Clear()
+	c.gocache.Flush()
 	return nil
 }
 
 //Del Delete data in cache by given key.
 //Return any error raised.
 func (c *Cache) Del(key string) error {
-	_ = c.freecache.Del([]byte(key))
+	c.gocache.Delete(key)
 	return nil
 }
 
@@ -133,19 +113,18 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 		return 0, err
 	}
 	defer unlocker()
-	bytes, err := c.freecache.Get([]byte(key))
-	if err == freecache.ErrNotFound || bytes == nil || len(bytes) != 8 {
+	data, found := c.gocache.Get(key)
+	if found == false {
 		v = 0
-	} else if err != nil {
-		return v, err
 	} else {
+		bytes := data.([]byte)
 		v = int64(binary.BigEndian.Uint64(bytes[0:8]))
 	}
 	v = v + increment
-	bytes = make([]byte, 8)
+	bytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(bytes, uint64(v))
-	err = c.freecache.Set([]byte(key), bytes, int(ttl/time.Second))
-	return v, err
+	c.gocache.Set(key, bytes, ttl)
+	return v, nil
 }
 
 //SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
@@ -159,8 +138,8 @@ func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 
 	bytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(bytes, uint64(v))
-	err = c.freecache.Set([]byte(key), bytes, int(ttl/time.Second))
-	return err
+	c.gocache.Set(key, bytes, ttl)
+	return nil
 }
 
 //GetCounter Get int val from cache by given key.Count cache and data cache are in two independent namespace.
@@ -173,23 +152,18 @@ func (c *Cache) GetCounter(key string) (int64, error) {
 	}
 	defer unlocker()
 
-	bytes, err := c.freecache.Get([]byte(key))
-	if err != nil {
-		return 0, err
-	}
-
-	if err == freecache.ErrNotFound || bytes == nil || len(bytes) != 8 {
+	data, found := c.gocache.Get(key)
+	if found == false {
 		err = cache.ErrNotFound
-	}
-	if err != nil {
 		return 0, err
 	}
+	bytes := data.([]byte)
 	v = int64(binary.BigEndian.Uint64(bytes[0:8]))
 	return v, nil
 }
 
 //DelCounter Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
-//Return any error raised.
+//Return any error raisegrd.
 func (c *Cache) DelCounter(key string) error {
 	unlocker, err := c.Util().Lock(key)
 	if err != nil {
@@ -197,26 +171,24 @@ func (c *Cache) DelCounter(key string) error {
 	}
 	defer unlocker()
 
-	_ = c.freecache.Del([]byte(key))
+	c.gocache.Delete(key)
 	return nil
 }
 
 //Expire set cache value expire duration by given key and ttl
 func (c *Cache) Expire(key string, ttl time.Duration) error {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	b, err := c.freecache.Get([]byte(key))
-	if err == freecache.ErrNotFound {
-		return cache.ErrNotFound
-	}
+	unlocker, err := c.Util().Lock(key)
 	if err != nil {
 		return err
 	}
-	err = c.freecache.Set([]byte(key), b, int(ttl/time.Second))
-	if err == freecache.ErrLargeEntry {
-		return cache.ErrEntryTooLarge
+	defer unlocker()
+	data, found := c.gocache.Get(key)
+	if found == false {
+		return cache.ErrNotFound
 	}
-	return err
+	bytes := data.([]byte)
+	c.gocache.Set(key, bytes, ttl)
+	return nil
 }
 
 //ExpireCounter set cache counter  expire duration by given key and ttl
@@ -226,38 +198,41 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 		return err
 	}
 	defer unlocker()
-	b, err := c.freecache.Get([]byte(key))
-	if err == freecache.ErrNotFound {
+	data, found := c.gocache.Get(key)
+	if found == false {
 		return cache.ErrNotFound
 	}
-	if err != nil {
-		return err
-	}
-	err = c.freecache.Set([]byte(key), b, int(ttl/time.Second))
-	if err == freecache.ErrLargeEntry {
-		return cache.ErrEntryTooLarge
-	}
-	return err
+	bytes := data.([]byte)
+	c.gocache.Set(key, bytes, ttl)
+	return nil
 }
 
 //Config Cache driver config.
 type Config struct {
-	Size int //Cache memory usage limie.
+	DefaultExpirationInSecond int64 //Cache memory usage limie.
+	CleanupIntervalInSecond   int64
 }
 
 //Create new cache driver.
 //Return cache driver created and any error if raised.
 func (config *Config) Create() (cache.Driver, error) {
 	cache := Cache{
-		freecache: freecache.NewCache(config.Size),
+		gocache: gocache.New(time.Duration(config.DefaultExpirationInSecond)*time.Second, time.Duration(config.CleanupIntervalInSecond)*time.Second),
 	}
 	return &cache, nil
 }
 
 func init() {
-	cache.Register("freecache", func(conf cache.Config, prefix string) (cache.Driver, error) {
+	cache.Register("gocache", func(conf cache.Config, prefix string) (cache.Driver, error) {
 		c := &Config{}
-		conf.Get(prefix+"Size", &c.Size)
+		conf.Get(prefix+"DefaultExpirationInSecond", &c.DefaultExpirationInSecond)
+		if c.DefaultExpirationInSecond == 0 {
+			c.DefaultExpirationInSecond = defaultExpirationInsecond
+		}
+		conf.Get(prefix+"CleanupIntervalInSecond", &c.CleanupIntervalInSecond)
+		if c.CleanupIntervalInSecond == 0 {
+			c.CleanupIntervalInSecond = defaultCleanupIntervalInSecond
+		}
 		return c.Create()
 	})
 }
