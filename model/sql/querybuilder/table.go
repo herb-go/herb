@@ -43,7 +43,6 @@ func (t *Table) NewInsert() *Insert {
 //NewUpdate : new update query for table
 func (t *Table) NewUpdate() *Update {
 	Update := t.QueryBuilder().NewUpdate(t.TableName())
-	Update.Update.SetAlias(t.TableName())
 	return Update
 }
 
