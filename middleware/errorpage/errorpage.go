@@ -78,17 +78,23 @@ func (e *ErrorPage) IgnoreStatus(status int) *ErrorPage {
 }
 
 func (e *ErrorPage) newResponseWriter(w http.ResponseWriter, r *http.Request) errorResponseWriter {
+	writer := w.(Writer)
 	return errorResponseWriter{
-		ResponseWriter: w,
-		req:            r,
-		status:         0,
-		ErrorPage:      *e,
-		matched:        nil,
+		Writer:    writer,
+		req:       r,
+		status:    0,
+		ErrorPage: *e,
+		matched:   nil,
 	}
 }
 
-type errorResponseWriter struct {
+type Writer interface {
 	http.ResponseWriter
+	http.Hijacker
+}
+
+type errorResponseWriter struct {
+	Writer
 	req       *http.Request
 	status    int
 	ErrorPage ErrorPage
@@ -102,7 +108,7 @@ func (w *errorResponseWriter) Write(bytes []byte) (int, error) {
 	if w.matched != nil {
 		return 0, nil
 	}
-	return w.ResponseWriter.Write(bytes)
+	return w.Writer.Write(bytes)
 }
 func (w *errorResponseWriter) WriteHeader(status int) {
 	w.status = status
@@ -115,5 +121,5 @@ func (w *errorResponseWriter) WriteHeader(status int) {
 			return
 		}
 	}
-	w.ResponseWriter.WriteHeader(status)
+	w.Writer.WriteHeader(status)
 }

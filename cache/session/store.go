@@ -258,8 +258,9 @@ func (s *Store) CookieMiddleware() func(w http.ResponseWriter, r *http.Request, 
 		if err != nil {
 			panic(err)
 		}
+		writer := w.(ResponseWriter)
 		cw := cookieResponseWriter{
-			ResponseWriter: w,
+			ResponseWriter: writer,
 			r:              r,
 			store:          s,
 			written:        false,

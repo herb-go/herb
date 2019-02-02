@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+type ResponseWriter interface {
+	http.ResponseWriter
+	http.Hijacker
+}
 type cookieResponseWriter struct {
 	http.ResponseWriter
 	r       *http.Request
