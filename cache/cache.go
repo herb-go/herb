@@ -268,7 +268,7 @@ func (c *Cache) Lock(key string) (func(), error) {
 	return c.Driver.Util().Lock(key)
 }
 
-//Wait wait any useD lock unlcok.
+//Wait wait any used lock unlcok.
 //Return whether waited and any error if rasied.
 func (c *Cache) Wait(key string) (bool, error) {
 	return c.Driver.Util().Wait(key)
