@@ -31,7 +31,7 @@ type ValidatedResult struct {
 //Model model struct.
 type Model struct {
 	modelID     string
-	errors      []FieldError
+	errors      []*FieldError
 	messages    MessagesCollection
 	fieldLabels map[string]string
 }
@@ -83,7 +83,7 @@ func (model *Model) AddPlainError(field string, msg string) {
 		Label: model.GetFieldLabel(field),
 		Msg:   msg,
 	}
-	model.errors = append(model.Errors(), f)
+	model.errors = append(model.Errors(), &f)
 }
 
 //SetFieldLabels set field labels to model
@@ -139,9 +139,9 @@ func (model *Model) ValidateFieldf(validated bool, field string, msg string) *Va
 }
 
 //Errors return error list of model
-func (model *Model) Errors() []FieldError {
+func (model *Model) Errors() []*FieldError {
 	if model.errors == nil {
-		return []FieldError{}
+		return []*FieldError{}
 	}
 	return model.errors
 }
@@ -164,7 +164,7 @@ type Validator interface {
 	//HasError return if model has any error.
 	HasError() bool
 	//Errors return error list of model
-	Errors() []FieldError
+	Errors() []*FieldError
 	//AddError add error by given field and plain msg.
 	AddError(field string, msg string)
 	//AddErrorf add error by given field and formatted msg.
