@@ -1,4 +1,4 @@
-package cacheloader
+package cachestore
 
 import (
 	"testing"
@@ -202,9 +202,9 @@ func TestLoader(t *testing.T) {
 	c := newTestCache(-1)
 	var err error
 	var Loader = &Loader{
-		Cache:   c,
-		Loader:  loader(),
-		Creator: creator(),
+		Cache:        c,
+		SourceLoader: loader(),
+		Creator:      creator(),
 	}
 	var tm = NewSyncMapStore()
 	err = Loader.Load(tm, valueKey, valueKeyAadditional)

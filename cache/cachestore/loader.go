@@ -1,46 +1,8 @@
-package cacheloader
+package cachestore
 
 import (
-	"sync"
-
 	"github.com/herb-go/herb/cache"
 )
-
-type Store interface {
-	Load(key string) (value interface{}, ok bool)
-	Store(key string, value interface{})
-}
-
-type MapStore map[string]interface{}
-
-func (m MapStore) Load(key string) (value interface{}, ok bool) {
-	v, ok := m[key]
-	return v, ok
-}
-func (m MapStore) Store(key string, value interface{}) {
-	m[key] = value
-}
-
-func NewMapStore() Store {
-	return MapStore(map[string]interface{}{})
-}
-
-type SyncMapStore struct {
-	Map *sync.Map
-}
-
-func (m SyncMapStore) Load(key string) (value interface{}, ok bool) {
-	return m.Map.Load(key)
-}
-func (m SyncMapStore) Store(key string, value interface{}) {
-	m.Map.Store(key, value)
-}
-
-func NewSyncMapStore() Store {
-	return SyncMapStore{
-		Map: &sync.Map{},
-	}
-}
 
 func unmarshalMapElement(cm Store, creator func() interface{}, key string, data []byte, c cache.Cacheable) (err error) {
 	v := creator()
@@ -131,11 +93,11 @@ func Load(cm Store, c cache.Cacheable, loader func(...string) (map[string]interf
 }
 
 type Loader struct {
-	Cache   cache.Cacheable
-	Creator func() interface{}
-	Loader  func(...string) (map[string]interface{}, error)
+	Cache        cache.Cacheable
+	Creator      func() interface{}
+	SourceLoader func(...string) (map[string]interface{}, error)
 }
 
 func (l *Loader) Load(m Store, keys ...string) error {
-	return Load(m, l.Cache, l.Loader, l.Creator, keys...)
+	return Load(m, l.Cache, l.SourceLoader, l.Creator, keys...)
 }
