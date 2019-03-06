@@ -17,7 +17,7 @@ func (m MapStore) Store(key string, value interface{}) {
 	m[key] = value
 }
 
-func NewMapStore() Store {
+func NewMapStore() MapStore {
 	return MapStore(map[string]interface{}{})
 }
 
@@ -32,8 +32,8 @@ func (m SyncMapStore) Store(key string, value interface{}) {
 	m.Map.Store(key, value)
 }
 
-func NewSyncMapStore() Store {
-	return SyncMapStore{
+func NewSyncMapStore() *SyncMapStore {
+	return &SyncMapStore{
 		Map: &sync.Map{},
 	}
 }

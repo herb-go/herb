@@ -5,6 +5,8 @@ import (
 	"crypto/rand"
 	"time"
 
+	"github.com/herb-go/herb/cache"
+
 	"crypto/aes"
 	"crypto/cipher"
 
@@ -184,6 +186,10 @@ func MustClientStore(key []byte, TokenLifetime time.Duration) *Store {
 		panic(err)
 	}
 	store := New()
+	store.Marshaler, err = cache.NewMarshaler(DefaultMarshaler)
+	if err != nil {
+		panic(err)
+	}
 	soc := NewOptionConfig()
 	soc.Driver = driver
 	soc.TokenLifetime = TokenLifetime

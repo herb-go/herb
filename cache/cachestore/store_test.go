@@ -258,10 +258,12 @@ func TestLoader(t *testing.T) {
 	}
 	c := newTestCache(-1)
 	var err error
-	var datasource = &DataSource{
-		Cache:        c,
-		SourceLoader: loader(),
-		Creator:      creator(),
+	var datasource = &CachedDataSource{
+		Cache: c,
+		DataSource: &DataSource{
+			SourceLoader: loader(),
+			Creator:      creator(),
+		},
 	}
 	var Loader = datasource.NewMapStoreLoader()
 	tm := Loader.Store
@@ -321,10 +323,12 @@ func TestSyncLoader(t *testing.T) {
 	}
 	c := newTestCache(-1)
 	var err error
-	var datasource = &DataSource{
-		Cache:        c,
-		SourceLoader: loader(),
-		Creator:      creator(),
+	var datasource = &CachedDataSource{
+		Cache: c,
+		DataSource: &DataSource{
+			SourceLoader: loader(),
+			Creator:      creator(),
+		},
 	}
 	var Loader = datasource.NewSyncMapStoreLoader()
 	tm := Loader.Store
