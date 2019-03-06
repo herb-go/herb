@@ -46,9 +46,14 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 	if err != nil {
 		return err
 	}
-	results, err := c.MGetBytesValue(filteredKeys...)
-	if err != nil {
-		return err
+	var results map[string][]byte
+	if c != nil {
+		results, err = c.MGetBytesValue(filteredKeys...)
+		if err != nil {
+			return err
+		}
+	} else {
+		results = map[string][]byte{}
 	}
 	var uncachedKeys = make([]string, len(filteredKeys))
 	var uncachedKeysLength = 0
