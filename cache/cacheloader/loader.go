@@ -136,6 +136,6 @@ type Loader struct {
 	Loader  func(...string) (map[string]interface{}, error)
 }
 
-// func (l Loader) Load(m Store, keys ...string) error {
-
-// }
+func (l *Loader) Load(m Store, keys ...string) error {
+	return Load(m, l.Cache, l.Loader, l.Creator, keys...)
+}
