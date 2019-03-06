@@ -201,13 +201,14 @@ func TestLoader(t *testing.T) {
 	}
 	c := newTestCache(-1)
 	var err error
-	var Loader = &Loader{
+	var datasource = &DataSource{
 		Cache:        c,
 		SourceLoader: loader(),
 		Creator:      creator(),
 	}
-	var tm = NewSyncMapStore()
-	err = Loader.Load(tm, valueKey, valueKeyAadditional)
+	var Loader = datasource.NewMapStoreLoader()
+	tm := Loader.Store
+	err = Loader.Load(valueKey, valueKeyAadditional)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,7 +227,70 @@ func TestLoader(t *testing.T) {
 	rawData[valueKey] = changedValue
 	rawData[valueKeyAadditional] = changedValue
 	rawData[valueKeyChanged] = changedValue
-	err = Load(tm, c, loader(), creator(), valueKeyAadditional, valueKeyChanged)
+	err = Loader.Load(valueKeyAadditional, valueKeyChanged)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val := load(tm, valueKey).Content; val != startValue {
+		t.Error(val)
+	}
+	if val := load(tm, valueKey).Keyword; val != creatorKeyword {
+		t.Error(val)
+	}
+	if val := load(tm, valueKeyAadditional).Content; val != startValue {
+		t.Error(val)
+	}
+	if val := load(tm, valueKeyAadditional).Keyword; val != creatorKeyword {
+		t.Error(val)
+	}
+	if val := load(tm, valueKeyChanged).Content; val != changedValue {
+		t.Error(val)
+	}
+	if val := load(tm, valueKeyChanged).Keyword; val != creatorKeyword {
+		t.Error(val)
+	}
+	var tm2 = NewMapStore()
+	err = Load(tm2, c, loader(), creator(), valueKeyAadditional, valueKeyChanged)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSyncLoader(t *testing.T) {
+	rawData = map[string]int{
+		valueKey:            startValue,
+		valueKeyAadditional: startValue,
+		valueKeyChanged:     startValue,
+	}
+	c := newTestCache(-1)
+	var err error
+	var datasource = &DataSource{
+		Cache:        c,
+		SourceLoader: loader(),
+		Creator:      creator(),
+	}
+	var Loader = datasource.NewSyncMapStoreLoader()
+	tm := Loader.Store
+	err = Loader.Load(valueKey, valueKeyAadditional)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val := load(tm, valueKey).Content; val != startValue {
+		t.Error(val)
+	}
+	if val := load(tm, valueKey).Keyword; val != creatorKeyword {
+		t.Error(val)
+	}
+	if val := load(tm, valueKeyAadditional).Content; val != startValue {
+		t.Error(val)
+	}
+	if val := load(tm, valueKeyAadditional).Keyword; val != creatorKeyword {
+		t.Error(val)
+	}
+	rawData[valueKey] = changedValue
+	rawData[valueKeyAadditional] = changedValue
+	rawData[valueKeyChanged] = changedValue
+	err = Loader.Load(valueKeyAadditional, valueKeyChanged)
 	if err != nil {
 		t.Fatal(err)
 	}
