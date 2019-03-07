@@ -45,3 +45,7 @@ func (s *DataSource) NewSyncMapStoreLoader(c cache.Cacheable) *Loader {
 		DataSource: s,
 	}
 }
+
+func NewDataSource() *DataSource {
+	return &DataSource{}
+}
