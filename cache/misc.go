@@ -5,8 +5,8 @@ import (
 	"crypto/rand"
 )
 
-//TokenMask The []bytes of RFC 4648  Base 64 Alphabet to generate token.
-var TokenMask = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
+//TokenMask The []bytes of alphabet and number to generate token.
+var TokenMask = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.")
 
 //RandomBytes Generate a give length random []byte.
 //Return the random [] byte and any error raised.
