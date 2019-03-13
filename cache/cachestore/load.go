@@ -63,7 +63,6 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 	for i := range filteredKeys {
 		k := filteredKeys[i]
 		if results[k] == nil {
-			s.Store(k, creator())
 			uncachedKeys[uncachedKeysLength] = k
 			uncachedKeysLength++
 		} else {

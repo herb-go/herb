@@ -2,6 +2,11 @@ package user
 
 import "strings"
 
+//NewAccount create new account.
+func NewAccount() *Account {
+	return &Account{}
+}
+
 //Account user account struct
 type Account struct {
 	//User accont keyword

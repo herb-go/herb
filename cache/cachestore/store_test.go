@@ -37,6 +37,7 @@ type testmodel struct {
 const valueKey = "valueKey"
 const valueKeyAadditional = "valueKeyAadditional"
 const valueKeyChanged = "valueKeyChanged"
+const valueKeyNotexists = "valueKeyNotExists"
 const wrongDataKey = "wrongdata"
 
 var WrongData = []byte("wrongdata")
@@ -64,9 +65,13 @@ func loader() func(...string) (map[string]interface{}, error) {
 	return func(keys ...string) (map[string]interface{}, error) {
 		var result = map[string]interface{}{}
 		for _, v := range keys {
+			raw, ok := rawData[v]
+			if ok == false {
+				continue
+			}
 			result[v] = &testmodel{
 				Keyword: creatorKeyword,
-				Content: rawData[v],
+				Content: raw,
 			}
 		}
 		return result, nil
@@ -88,9 +93,12 @@ func TestMapLoad(t *testing.T) {
 	c := newTestCache(-1)
 	var err error
 	var tm = NewMapStore()
-	err = Load(tm, c, loader(), creator(), valueKey, valueKeyAadditional)
+	err = Load(tm, c, loader(), creator(), valueKey, valueKeyAadditional, valueKeyNotexists)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if val := load(tm, valueKeyNotexists); val != nil {
+		t.Fatal(val)
 	}
 	if val := load(tm, valueKey).Content; val != startValue {
 		t.Error(val)

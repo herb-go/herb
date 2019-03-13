@@ -51,7 +51,7 @@ func TestDefaultEvents(t *testing.T) {
 	if result1 != true || result2 != true {
 		t.Error(e)
 	}
-	if DefaultEventService.Trigger(e2) != false {
+	if DefaultEventService.Emit(e2) != false {
 		t.Error(e2)
 	}
 }
