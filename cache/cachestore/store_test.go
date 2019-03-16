@@ -207,7 +207,7 @@ func TestNilcache(t *testing.T) {
 		valueKeyAadditional: startValue,
 		valueKeyChanged:     startValue,
 	}
-	var c cache.Cacheable = nil
+	var c cache.Cacheable
 	var err error
 	var tm = NewMapStore()
 	err = Load(tm, c, loader(), creator(), valueKey, valueKeyAadditional)
