@@ -174,9 +174,6 @@ func (c *Cache) GetCounter(key string) (int64, error) {
 	defer unlocker()
 
 	bytes, err := c.freecache.Get([]byte(key))
-	if err != nil {
-		return 0, err
-	}
 
 	if err == freecache.ErrNotFound || bytes == nil || len(bytes) != 8 {
 		err = cache.ErrNotFound

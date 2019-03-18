@@ -7,8 +7,12 @@ type Store interface {
 	// Load load value with given key
 	// Return value and whether load successfully
 	Load(key string) (value interface{}, ok bool)
-	// Store sotre value with given key
+	// Store store value with given key
 	Store(key string, value interface{})
+	// Delete delete value from store with given key
+	Delete(key string)
+	// Flush flush store
+	Flush()
 	// LoadInterface Load load value with given key
 	// Return loaded value or nil if load fail
 	LoadInterface(key string) interface{}
@@ -36,6 +40,16 @@ func (m MapStore) LoadInterface(key string) interface{} {
 	return m[key]
 }
 
+// Delete delete value from store with given key
+func (m MapStore) Delete(key string) {
+	delete(m, key)
+}
+
+// Flush flush store
+func (m MapStore) Flush() {
+	m = map[string]interface{}{}
+}
+
 // NewMapStore create new map store
 func NewMapStore() MapStore {
 	return MapStore(map[string]interface{}{})
@@ -48,18 +62,28 @@ type SyncMapStore struct {
 
 // Load load value with given key
 // Return value and whether load successfully
-func (m SyncMapStore) Load(key string) (value interface{}, ok bool) {
+func (m *SyncMapStore) Load(key string) (value interface{}, ok bool) {
 	return m.Map.Load(key)
 }
 
 // Store sotre value with given key
-func (m SyncMapStore) Store(key string, value interface{}) {
+func (m *SyncMapStore) Store(key string, value interface{}) {
 	m.Map.Store(key, value)
+}
+
+// Delete delete value from store with given key
+func (m *SyncMapStore) Delete(key string) {
+	m.Map.Delete(key)
+}
+
+// Flush flush store
+func (m *SyncMapStore) Flush() {
+	m.Map = &sync.Map{}
 }
 
 // LoadInterface Load load value with given key
 // Return loaded value or nil if load fail
-func (m SyncMapStore) LoadInterface(key string) interface{} {
+func (m *SyncMapStore) LoadInterface(key string) interface{} {
 	v, _ := m.Load(key)
 	return v
 }
