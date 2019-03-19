@@ -13,6 +13,7 @@ import (
 
 	"github.com/herb-go/herb/cache"
 	_ "github.com/herb-go/herb/cache/drivers/freecache"
+	_ "github.com/herb-go/herb/cache/marshalers/msgpackmarshaler"
 )
 
 func getStore(ttl time.Duration) *Store {
