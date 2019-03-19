@@ -11,11 +11,12 @@ import (
 //ContextKey string type used in Context key
 type ContextKey string
 
-var defaultTokenLength = 64
 var defaultCookieName = "herb-csrf-token"
 var defaultCookiePath = "/"
 var defaultHeaderName = "X-CSRF-TOKEN"
 var defaultFormField = "X-CSRF-TOKEN"
+var defaultFailHeader = "herb-go-csrf-token-status"
+var defaultFailValue = "failed"
 var defaultFailStatus = http.StatusBadRequest
 var defaultRequestContextKey = ContextKey("herb-csrf-token")
 
@@ -111,7 +112,7 @@ func (csrf *Csrf) SetCsrfToken(w http.ResponseWriter, r *http.Request) error {
 			HttpOnly: false,
 		}
 		http.SetCookie(w, c)
-	} else if err == nil {
+	} else if err != nil {
 		return err
 	}
 	ctx := r.Context()
@@ -142,7 +143,6 @@ func DefaultTokenGenerater() (string, error) {
 //New return a new Csrf Component with default values.
 func New() *Csrf {
 	c := Csrf{
-		TokenLength:       defaultTokenLength,
 		CookieName:        defaultCookieName,
 		CookiePath:        defaultCookiePath,
 		HeaderName:        defaultHeaderName,
@@ -159,7 +159,6 @@ func New() *Csrf {
 //You can use Csrf.SetCsrfTokenMiddleware,Csrf.VerifyFormMiddleware,Csrf.VerifyHeaderMiddleware or Csrf.CsrfInput to protected your web app.
 //All value can be change after creation.
 type Csrf struct {
-	TokenLength       int                    //Length of csrf token.Default value is 64.Generaged tokenbytes will convert to base64encoded,so actual length will be longer than TokenValue.
 	CookieName        string                 //Name of cookie which the token stored in.Default value is "herb-csrf-token".
 	CookiePath        string                 //Path of cookie the token stored in.Default value is "/".
 	HeaderName        string                 //Name of Header which the token stroed in.Default value is "X-CSRF-TOKEN".
@@ -167,12 +166,13 @@ type Csrf struct {
 	FailStatus        int                    //Http status code returned when csrf verify failed.Default value is  http.StatusBadRequest (int 400).
 	RequestContextKey ContextKey             //Context key of requst which token stored in.Default value is csrf.ContextKey("herb-csrf-token").
 	Enabled           bool                   //Enabled if this middleware if enabled.
+	FailHeader        string                 //FailedHeader resoponse header field send when failed
+	FailValue         string                 //FailedValue resoponse header value send when failed
 	TokenGenerater    func() (string, error) //TokenGenerater func to create csrf token.
 }
 
 //Config csrf config struct
 type Config struct {
-	TokenLength       int    //Length of csrf token.Default value is 64.Generaged tokenbytes will convert to base64encoded,so actual length will be longer than TokenValue.
 	CookieName        string //Name of cookie which the token stored in.Default value is "herb-csrf-token".
 	CookiePath        string //Path of cookie the token stored in.Default value is "/".
 	HeaderName        string //Name of Header which the token stroed in.Default value is "X-CSRF-TOKEN".
@@ -180,13 +180,13 @@ type Config struct {
 	FailStatus        int    //Http status code returned when csrf verify failed.Default value is  http.StatusBadRequest (int 400).
 	RequestContextKey string //Context key of requst which token stored in.Default value is "herb-csrf-token")
 	Enabled           bool   //Enabled if this middleware if enabled.
+	FailHeader        string //FailedHeader resoponse header field send when failed
+	FailValue         string //FailedValue resoponse header value send when failed
 }
 
 //ApplyTo apply csrf config to csrf instance.
 func (c *Config) ApplyTo(csrf *Csrf) error {
-	if c.TokenLength != 0 {
-		csrf.TokenLength = c.TokenLength
-	}
+
 	if c.CookieName != "" {
 		csrf.CookieName = c.CookieName
 	}
@@ -204,6 +204,16 @@ func (c *Config) ApplyTo(csrf *Csrf) error {
 	}
 	if c.RequestContextKey != "" {
 		csrf.RequestContextKey = ContextKey(c.RequestContextKey)
+	}
+	if c.FailHeader != "" {
+		csrf.FailHeader = c.FailHeader
+	} else {
+		csrf.FailHeader = defaultFailHeader
+	}
+	if c.FailValue != "" {
+		csrf.FailValue = c.FailValue
+	} else {
+		csrf.FailValue = defaultFailValue
 	}
 	csrf.Enabled = c.Enabled
 	return nil

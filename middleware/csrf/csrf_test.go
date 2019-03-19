@@ -12,8 +12,39 @@ import (
 
 var successMsg = "ok"
 
+func newDefaultCsrf() *Csrf {
+	c := New()
+	config := Config{}
+	config.Enabled = true
+	err := config.ApplyTo(c)
+	if err != nil {
+		panic(err)
+	}
+	return c
+
+}
+func newTestCsrf() *Csrf {
+	c := New()
+	config := Config{
+		CookieName:        "herb-test-csrf-token",
+		CookiePath:        "/",
+		HeaderName:        "X-Csrf-Token",
+		FormField:         "X-Csrf-Token",
+		FailStatus:        400,
+		RequestContextKey: "herb-csrf-token",
+		Enabled:           true,
+		FailHeader:        defaultFailHeader,
+		FailValue:         defaultFailValue,
+	}
+	err := config.ApplyTo(c)
+	if err != nil {
+		panic(err)
+	}
+
+	return c
+}
 func TestHeader(t *testing.T) {
-	Csrf := New()
+	Csrf := newDefaultCsrf()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Csrf.ServeSetCsrfTokenMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +113,7 @@ func TestHeader(t *testing.T) {
 }
 
 func TestForm(t *testing.T) {
-	Csrf := New()
+	Csrf := newTestCsrf()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Csrf.ServeSetCsrfTokenMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
