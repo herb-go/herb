@@ -4,28 +4,6 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-// CachedDataSource data source with cache
-type CachedDataSource struct {
-	Cache      cache.Cacheable
-	DataSource *DataSource
-}
-
-//Load load data by give keys to store.
-// Return any error if raised.
-func (s *CachedDataSource) Load(m Store, keys ...string) error {
-	return s.DataSource.Load(m, s.Cache, keys...)
-}
-
-// NewMapStoreLoader create map store lodaer.
-func (s *CachedDataSource) NewMapStoreLoader() *Loader {
-	return s.DataSource.NewMapStoreLoader(s.Cache)
-}
-
-// NewSyncMapStoreLoader create sync map store lodaer.
-func (s *CachedDataSource) NewSyncMapStoreLoader() *Loader {
-	return s.DataSource.NewSyncMapStoreLoader(s.Cache)
-}
-
 //DataSource cache store datasource
 type DataSource struct {
 	// Creator empty createor.

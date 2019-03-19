@@ -93,7 +93,7 @@ func TestMapLoad(t *testing.T) {
 	c := newTestCache(-1)
 	var err error
 	var tm = NewMapStore()
-	err = Load(tm, c, loader(), creator(), valueKey, valueKeyAadditional, valueKeyNotexists)
+	err = Load(tm, c, loader(), creator(), valueKey, valueKey, valueKeyAadditional, valueKeyNotexists)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -266,14 +266,10 @@ func TestLoader(t *testing.T) {
 	}
 	c := newTestCache(-1)
 	var err error
-	var datasource = &CachedDataSource{
-		Cache: c,
-		DataSource: &DataSource{
-			SourceLoader: loader(),
-			Creator:      creator(),
-		},
-	}
-	var Loader = datasource.NewMapStoreLoader()
+	var datasource = NewDataSource()
+	datasource.SourceLoader = loader()
+	datasource.Creator = creator()
+	var Loader = datasource.NewMapStoreLoader(c)
 	tm := Loader.Store
 	err = Loader.Load(valueKey, valueKeyAadditional)
 	if err != nil {
@@ -320,6 +316,28 @@ func TestLoader(t *testing.T) {
 	err = Load(tm2, c, loader(), creator(), valueKeyAadditional, valueKeyChanged)
 	if err != nil {
 		t.Fatal(err)
+	}
+	val := Loader.Store.LoadInterface(valueKeyAadditional)
+	if val == nil {
+		t.Fatal(val)
+	}
+	val = Loader.Store.LoadInterface(valueKeyChanged)
+	if val == nil {
+		t.Fatal(val)
+	}
+	val = Loader.Store.LoadInterface(valueKeyNotexists)
+	if val != nil {
+		t.Fatal(val)
+	}
+	err = Loader.Del(valueKeyAadditional)
+	val = Loader.Store.LoadInterface(valueKeyAadditional)
+	if val != nil {
+		t.Fatal(val)
+	}
+	err = Loader.Flush()
+	val = Loader.Store.LoadInterface(valueKeyChanged)
+	if val != nil {
+		t.Fatal(val)
 	}
 }
 
@@ -331,14 +349,11 @@ func TestSyncLoader(t *testing.T) {
 	}
 	c := newTestCache(-1)
 	var err error
-	var datasource = &CachedDataSource{
-		Cache: c,
-		DataSource: &DataSource{
-			SourceLoader: loader(),
-			Creator:      creator(),
-		},
+	var datasource = &DataSource{
+		SourceLoader: loader(),
+		Creator:      creator(),
 	}
-	var Loader = datasource.NewSyncMapStoreLoader()
+	var Loader = datasource.NewSyncMapStoreLoader(c)
 	tm := Loader.Store
 	err = Loader.Load(valueKey, valueKeyAadditional)
 	if err != nil {
@@ -385,5 +400,27 @@ func TestSyncLoader(t *testing.T) {
 	err = Load(tm2, c, loader(), creator(), valueKeyAadditional, valueKeyChanged)
 	if err != nil {
 		t.Fatal(err)
+	}
+	val := Loader.Store.LoadInterface(valueKeyAadditional)
+	if val == nil {
+		t.Fatal(val)
+	}
+	val = Loader.Store.LoadInterface(valueKeyChanged)
+	if val == nil {
+		t.Fatal(val)
+	}
+	val = Loader.Store.LoadInterface(valueKeyNotexists)
+	if val != nil {
+		t.Fatal(val)
+	}
+	err = Loader.Del(valueKeyAadditional)
+	val = Loader.Store.LoadInterface(valueKeyAadditional)
+	if val != nil {
+		t.Fatal(val)
+	}
+	err = Loader.Flush()
+	val = Loader.Store.LoadInterface(valueKeyChanged)
+	if val != nil {
+		t.Fatal(val)
 	}
 }

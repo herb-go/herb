@@ -24,35 +24,37 @@ type MapStore map[string]interface{}
 
 // Load load value with given key
 // Return value and whether load successfully
-func (m MapStore) Load(key string) (value interface{}, ok bool) {
-	v, ok := m[key]
+func (m *MapStore) Load(key string) (value interface{}, ok bool) {
+	v, ok := (*m)[key]
 	return v, ok
 }
 
 // Store sotre value with given key
-func (m MapStore) Store(key string, value interface{}) {
-	m[key] = value
+func (m *MapStore) Store(key string, value interface{}) {
+	(*m)[key] = value
 }
 
 // LoadInterface Load load value with given key
 // Return loaded value or nil if load fail
-func (m MapStore) LoadInterface(key string) interface{} {
-	return m[key]
+func (m *MapStore) LoadInterface(key string) interface{} {
+	return (*m)[key]
 }
 
 // Delete delete value from store with given key
-func (m MapStore) Delete(key string) {
-	delete(m, key)
+func (m *MapStore) Delete(key string) {
+	delete(*m, key)
 }
 
 // Flush flush store
-func (m MapStore) Flush() {
-	m = map[string]interface{}{}
+func (m *MapStore) Flush() {
+	s := MapStore(map[string]interface{}{})
+	*m = s
 }
 
 // NewMapStore create new map store
-func NewMapStore() MapStore {
-	return MapStore(map[string]interface{}{})
+func NewMapStore() *MapStore {
+	s := MapStore(map[string]interface{}{})
+	return &s
 }
 
 // SyncMapStore store which stores value in sync.map.
