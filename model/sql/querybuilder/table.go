@@ -7,6 +7,7 @@ type DBTable interface {
 	DB() *sql.DB
 	TableName() string
 	Alias() string
+	SetAlias(string)
 	Driver() string
 }
 
