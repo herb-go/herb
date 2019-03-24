@@ -1,6 +1,10 @@
 package cachestore
 
-import "sync"
+import (
+	"sync"
+	"sync/atomic"
+	"unsafe"
+)
 
 // Store interface of cache store
 type Store interface {
@@ -59,28 +63,36 @@ func NewMapStore() *MapStore {
 
 // SyncMapStore store which stores value in sync.map.
 type SyncMapStore struct {
-	Map *sync.Map
+	syncmap unsafe.Pointer
+}
+
+func (m *SyncMapStore) Map() *sync.Map {
+	return (*sync.Map)(atomic.LoadPointer(&m.syncmap))
+}
+
+func (m *SyncMapStore) SetMap(smap *sync.Map) {
+	atomic.StorePointer(&m.syncmap, unsafe.Pointer(smap))
 }
 
 // Load load value with given key
 // Return value and whether load successfully
 func (m *SyncMapStore) Load(key string) (value interface{}, ok bool) {
-	return m.Map.Load(key)
+	return m.Map().Load(key)
 }
 
 // Store sotre value with given key
 func (m *SyncMapStore) Store(key string, value interface{}) {
-	m.Map.Store(key, value)
+	m.Map().Store(key, value)
 }
 
 // Delete delete value from store with given key
 func (m *SyncMapStore) Delete(key string) {
-	m.Map.Delete(key)
+	m.Map().Delete(key)
 }
 
 // Flush flush store
 func (m *SyncMapStore) Flush() {
-	m.Map = &sync.Map{}
+	m.SetMap(&sync.Map{})
 }
 
 // LoadInterface Load load value with given key
@@ -92,7 +104,7 @@ func (m *SyncMapStore) LoadInterface(key string) interface{} {
 
 // NewSyncMapStore create new sync.map store
 func NewSyncMapStore() *SyncMapStore {
-	return &SyncMapStore{
-		Map: &sync.Map{},
-	}
+	m := &SyncMapStore{}
+	m.SetMap(&sync.Map{})
+	return m
 }
