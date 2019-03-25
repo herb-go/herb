@@ -2,7 +2,9 @@
 package syncmapcache
 
 import (
+	"sync/atomic"
 	"time"
+	"unsafe"
 
 	"encoding/binary"
 
@@ -23,37 +25,60 @@ type entry struct {
 //Cache The gocache cache Driver.
 type Cache struct {
 	cache.DriverUtil
-	datamap      *sync.Map
-	Size         int64
-	used         int64
-	writelock    sync.Mutex
-	GCInterval   time.Duration
-	gcErrHandler func(err error)
-	C            chan int
+	datamapPointer  unsafe.Pointer
+	Size            int64
+	used            int64
+	writelock       sync.Mutex
+	GCInterval      time.Duration
+	gcErrHandler    func(err error)
+	C               chan int
+	flushC          chan int
+	forceDeleteKeyC chan interface{}
 }
 
+func (c *Cache) datamap() *sync.Map {
+	return (*sync.Map)(atomic.LoadPointer(&c.datamapPointer))
+}
+func (c *Cache) setDatamap(m *sync.Map) {
+	atomic.StorePointer(&c.datamapPointer, unsafe.Pointer(m))
+}
 func (c *Cache) flush() {
-	c.datamap.Range(func(key interface{}, value interface{}) bool {
-		c.delete(key.(string))
-		return true
-	})
+	c.writelock.Lock()
+	c.writelock.Unlock()
+	close(c.flushC)
+	c.flushC = make(chan int)
+	c.setDatamap(&sync.Map{})
+	go c.forceDeleteKeyQueue()
 }
-
+func (c *Cache) forceDeleteKeyQueue() {
+	var ok = true
+	for ok {
+		c.datamap().Range(func(key interface{}, value interface{}) bool {
+			select {
+			case c.forceDeleteKeyC <- key:
+			case <-c.flushC:
+				ok = false
+				return false
+			}
+			return true
+		})
+	}
+}
 func (c *Cache) gc() {
 	c.writelock.Lock()
 	c.writelock.Unlock()
-	c.datamap.Range(func(key interface{}, value interface{}) bool {
+	c.datamap().Range(func(key interface{}, value interface{}) bool {
 		e := value.(*entry)
 		if !e.NeverExpired && e.Expired.Before(time.Now()) {
 			size := int64(len(e.Data))
 			c.used = c.used - size
 		}
-		c.datamap.Delete(key)
+		c.datamap().Delete(key)
 		return true
 	})
 }
 func (c *Cache) get(key string) ([]byte, bool) {
-	v, ok := c.datamap.Load(key)
+	v, ok := c.datamap().Load(key)
 	if ok == false || v == nil {
 		return nil, false
 	}
@@ -63,11 +88,10 @@ func (c *Cache) get(key string) ([]byte, bool) {
 	}
 	return nil, false
 }
-func (c *Cache) delete(key string) {
-	c.writelock.Lock()
-	defer c.writelock.Unlock()
-	defer c.datamap.Delete(key)
-	v, ok := c.datamap.Load(key)
+
+func (c *Cache) rm(key interface{}) {
+	defer c.datamap().Delete(key)
+	v, ok := c.datamap().Load(key)
 	if ok == false || v == nil {
 		return
 	}
@@ -75,32 +99,30 @@ func (c *Cache) delete(key string) {
 	size := int64(len(e.Data))
 	c.used = c.used - size
 }
-
-func (c *Cache) removeAll() {
-	c.datamap.Range(func(key interface{}, value interface{}) bool {
-		e := value.(*entry)
-		size := int64(len(e.Data))
-		c.used = c.used - size
-		c.datamap.Delete(key)
-		return true
-	})
-
+func (c *Cache) delete(key string) {
+	c.writelock.Lock()
+	defer c.writelock.Unlock()
+	c.rm(key)
+}
+func (c *Cache) makeRoom(length int64) {
+	for c.used+length > c.Size {
+		key := <-c.forceDeleteKeyC
+		c.rm(key)
+	}
 }
 func (c *Cache) set(key string, data []byte, ttl time.Duration) {
 	var delta int64
 	c.writelock.Lock()
 	defer c.writelock.Unlock()
-	if c.used+int64(len(data)) > c.Size {
-		c.removeAll()
-	}
+	c.makeRoom(int64(len(data)))
 	defer func() { c.used = c.used + delta }()
-	v, ok := c.datamap.Load(key)
+	v, ok := c.datamap().Load(key)
 	e := &entry{
 		NeverExpired: ttl < 0,
 		Expired:      time.Now().Add(ttl),
 		Data:         data,
 	}
-	c.datamap.Store(key, e)
+	c.datamap().Store(key, e)
 	delta = int64(len(data))
 	if ok == false || v == nil {
 		return
@@ -112,21 +134,17 @@ func (c *Cache) set(key string, data []byte, ttl time.Duration) {
 func (c *Cache) replace(key string, data []byte, ttl time.Duration) {
 	c.writelock.Lock()
 	defer c.writelock.Unlock()
-	v, ok := c.datamap.Load(key)
+	v, ok := c.datamap().Load(key)
 	if ok == false || v == nil {
 		return
 	}
+	c.makeRoom(int64(len(data)))
 	e := &entry{
 		NeverExpired: ttl < 0,
 		Expired:      time.Now().Add(ttl),
 		Data:         data,
 	}
-
-	if c.used+int64(len(data))-int64(len(e.Data)) > c.Size {
-		c.removeAll()
-		e.Data = nil
-	}
-	c.datamap.Store(key, e)
+	c.datamap().Store(key, e)
 	size := int64(len(data)) - int64(len(e.Data))
 	c.used = c.used + size
 }
@@ -139,15 +157,21 @@ func (c *Cache) SetGCErrHandler(f func(err error)) {
 
 //SetBytesValue Set bytes data to cache by given key.
 //Return any error raised.
-func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
-	c.set(key, bytes, ttl)
+func (c *Cache) SetBytesValue(key string, bs []byte, ttl time.Duration) error {
+	if int64(len(bs)) >= c.Size {
+		return cache.ErrEntryTooLarge
+	}
+	c.set(key, bs, ttl)
 	return nil
 }
 
 //UpdateBytesValue Update bytes data to cache by given key only if the cache exist.
 //Return any error raised.
-func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
-	c.replace(key, bytes, ttl)
+func (c *Cache) UpdateBytesValue(key string, bs []byte, ttl time.Duration) error {
+	if int64(len(bs)) >= c.Size {
+		return cache.ErrEntryTooLarge
+	}
+	c.replace(key, bs, ttl)
 	return nil
 }
 
@@ -199,6 +223,7 @@ func (c *Cache) Flush() error {
 //Return any error if raised
 func (c *Cache) Close() error {
 	close(c.C)
+	close(c.flushC)
 	return nil
 }
 
@@ -320,11 +345,15 @@ type Config struct {
 //Return cache driver created and any error if raised.
 func (config *Config) Create() (cache.Driver, error) {
 	cache := Cache{
-		datamap: &sync.Map{},
-		Size:    config.Size,
-		C:       make(chan int),
+		Size:            config.Size,
+		C:               make(chan int),
+		forceDeleteKeyC: make(chan interface{}),
+		flushC:          make(chan int),
 	}
+	cache.setDatamap(&sync.Map{})
+
 	gctick := time.Tick(time.Duration(config.CleanupIntervalInSecond) * time.Second)
+	go cache.forceDeleteKeyQueue()
 	go func() {
 		for {
 			select {
