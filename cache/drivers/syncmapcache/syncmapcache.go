@@ -193,7 +193,6 @@ func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	for k := range keys {
 		b, err := c.GetBytesValue(keys[k])
 		if err == cache.ErrNotFound {
-			result[keys[k]] = nil
 		} else if err != nil {
 			return result, err
 		} else {

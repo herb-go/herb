@@ -95,7 +95,7 @@ func TestMSetMGet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if d[deletedkey] != nil {
+	if _, ok := d[deletedkey]; ok != false {
 		t.Errorf("%s", d[unusedKey])
 	}
 }

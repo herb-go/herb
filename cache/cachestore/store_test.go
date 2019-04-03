@@ -82,6 +82,9 @@ func load(s Store, key string) *testmodel {
 	if ok == false {
 		return nil
 	}
+	if v == nil {
+		return nil
+	}
 	return v.(*testmodel)
 }
 func TestMapLoad(t *testing.T) {
@@ -112,12 +115,17 @@ func TestMapLoad(t *testing.T) {
 	if val := load(tm, valueKeyAadditional).Keyword; val != creatorKeyword {
 		t.Error(val)
 	}
+	rawData[valueKeyNotexists] = changedValue
 	rawData[valueKey] = changedValue
 	rawData[valueKeyAadditional] = changedValue
 	rawData[valueKeyChanged] = changedValue
-	err = Load(tm, c, loader(), creator(), valueKeyAadditional, valueKeyChanged)
+
+	err = Load(tm, c, loader(), creator(), valueKeyAadditional, valueKeyChanged, valueKeyNotexists)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if val := load(tm, valueKeyNotexists); val != nil {
+		t.Error(val)
 	}
 	if val := load(tm, valueKey).Content; val != startValue {
 		t.Error(val)

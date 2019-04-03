@@ -4,9 +4,13 @@ import "github.com/herb-go/herb/cache"
 
 func unmarshalMapElement(s Store, creator func() interface{}, key string, data []byte, c cache.Cacheable) (err error) {
 	v := creator()
-	err = c.Unmarshal(data, v)
-	if err != nil {
-		return err
+	if len(data) != 0 {
+		err = c.Unmarshal(data, v)
+		if err != nil {
+			return err
+		}
+	} else {
+		v = nil
 	}
 	s.Store(key, v)
 	return nil
@@ -62,7 +66,7 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 	var uncachedKeysLength = 0
 	for i := range filteredKeys {
 		k := filteredKeys[i]
-		if results[k] == nil {
+		if _, ok := results[k]; !ok {
 			uncachedKeys[uncachedKeysLength] = k
 			uncachedKeysLength++
 		} else {
@@ -100,11 +104,7 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 	}
 	for k := range uncachedKeys {
 		if _, ok := data[uncachedKeys[k]]; ok == false {
-			v, err := c.Marshal(nil)
-			if err != nil {
-				return err
-			}
-			data[uncachedKeys[k]] = v
+			data[uncachedKeys[k]] = []byte{}
 		}
 	}
 	if c == nil {
