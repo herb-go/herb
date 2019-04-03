@@ -48,6 +48,7 @@ func (c *Cache) flush() {
 	close(c.flushC)
 	c.flushC = make(chan int)
 	c.setDatamap(&sync.Map{})
+	c.used = 0
 	go c.forceDeleteKeyQueue()
 }
 func (c *Cache) forceDeleteKeyQueue() {

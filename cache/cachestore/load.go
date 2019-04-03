@@ -98,6 +98,15 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 			}
 		}
 	}
+	for k := range uncachedKeys {
+		if _, ok := data[uncachedKeys[k]]; ok == false {
+			v, err := c.Marshal(nil)
+			if err != nil {
+				return err
+			}
+			data[uncachedKeys[k]] = v
+		}
+	}
 	if c == nil {
 		return nil
 	}

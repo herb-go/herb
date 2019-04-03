@@ -29,6 +29,59 @@ func newGCTestCache(ttl int64) *cache.Cache {
 	return c
 }
 
+func TestFlush(t *testing.T) {
+	c := newGCTestCache(300)
+	d := c.Driver.(*Cache)
+	err := c.SetBytesValue("test", []byte("test"), 10*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetBytesValue("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.used != 4 {
+		t.Fatal(d.used)
+	}
+	err = c.Flush()
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetBytesValue("test")
+	if err != cache.ErrNotFound {
+		t.Fatal(err)
+	}
+	if d.used != 0 {
+		t.Fatal(d.used)
+	}
+}
+
+func TestDel(t *testing.T) {
+	c := newGCTestCache(300)
+	d := c.Driver.(*Cache)
+	err := c.SetBytesValue("test", []byte("test"), 10*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetBytesValue("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.used != 4 {
+		t.Fatal(d.used)
+	}
+	err = c.Del("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetBytesValue("test")
+	if err != cache.ErrNotFound {
+		t.Fatal(err)
+	}
+	if d.used != 0 {
+		t.Fatal(d.used)
+	}
+}
 func TestGc(t *testing.T) {
 	c := newGCTestCache(300)
 	d := c.Driver.(*Cache)
