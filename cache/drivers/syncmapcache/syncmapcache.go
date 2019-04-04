@@ -63,18 +63,20 @@ func (c *Cache) forceDeleteKeyQueue() {
 			}
 			return true
 		})
+		c.forceDeleteKeyC <- nil
 	}
 }
 func (c *Cache) gc() {
 	c.writelock.Lock()
-	c.writelock.Unlock()
-	c.datamap().Range(func(key interface{}, value interface{}) bool {
+	defer c.writelock.Unlock()
+	m := c.datamap()
+	m.Range(func(key interface{}, value interface{}) bool {
 		e := value.(*entry)
 		if !e.NeverExpired && e.Expired.Before(time.Now()) {
 			size := int64(len(e.Data))
 			c.used = c.used - size
 		}
-		c.datamap().Delete(key)
+		m.Delete(key)
 		return true
 	})
 }
@@ -108,7 +110,9 @@ func (c *Cache) delete(key string) {
 func (c *Cache) makeRoom(length int64) {
 	for c.used+length > c.Size {
 		key := <-c.forceDeleteKeyC
-		c.rm(key)
+		if key != nil {
+			c.rm(key)
+		}
 	}
 }
 func (c *Cache) set(key string, data []byte, ttl time.Duration) {
