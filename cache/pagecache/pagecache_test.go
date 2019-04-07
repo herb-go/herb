@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/herb-go/herb/cache/drivers/freecache"
+	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
 
 	"github.com/herb-go/herb/cache"
 )
@@ -18,8 +18,8 @@ func newTestCache(ttl int64) *cache.Cache {
 	config.Set("Size", 10000000)
 	c := cache.New()
 	oc := &cache.OptionConfigMap{
-		Driver:    "freecache",
-		TTL:       int64(ttl),
+		Driver:    "syncmapcache",
+		TTL:       ttl * int64(time.Second),
 		Config:    nil,
 		Marshaler: "json",
 	}
@@ -63,7 +63,7 @@ func TestPageCacheField(t *testing.T) {
 	fg := fieldGenerator(newTestCache(3600))
 	mux.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("rawts", strconv.FormatInt(time.Now().UnixNano(), 10))
-		FieldMiddleware(fg, 3600, nil)(w, r, testAction)
+		FieldMiddleware(fg, 3600*time.Second, nil)(w, r, testAction)
 	})
 	mux.HandleFunc("/raw", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("rawts", strconv.FormatInt(time.Now().UnixNano(), 10))
@@ -71,7 +71,7 @@ func TestPageCacheField(t *testing.T) {
 	})
 	mux.HandleFunc("/nil", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("rawts", strconv.FormatInt(time.Now().UnixNano(), 10))
-		FieldMiddleware(nilFieldGenerator, 3600, nil)(w, r, testAction)
+		FieldMiddleware(nilFieldGenerator, 3600*time.Second, nil)(w, r, testAction)
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()

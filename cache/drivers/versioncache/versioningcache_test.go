@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"time"
 
-	_ "github.com/herb-go/herb/cache/drivers/freecache"
+	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
 )
 
 func newTestCache(ttl int64) *cache.Cache {

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/herb-go/herb/cache"
-	_ "github.com/herb-go/herb/cache/drivers/freecache"
+	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
 )
 
 func newTestCache(ttl int64) *cache.Cache {
@@ -15,7 +15,7 @@ func newTestCache(ttl int64) *cache.Cache {
 	config.Set("Size", 10000000)
 	c := cache.New()
 	oc := &cache.OptionConfigMap{
-		Driver:    "freecache",
+		Driver:    "syncmapcache",
 		TTL:       int64(ttl),
 		Config:    nil,
 		Marshaler: "json",

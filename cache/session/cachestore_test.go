@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/herb-go/herb/cache"
-	_ "github.com/herb-go/herb/cache/drivers/freecache"
+	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
 	_ "github.com/herb-go/herb/cache/marshalers/msgpackmarshaler"
 )
 
@@ -21,7 +21,7 @@ func getStore(ttl time.Duration) *Store {
 	config.Set("Size", 10000000)
 	c := cache.New()
 	oc := &cache.OptionConfigJSON{
-		Driver:    "freecache",
+		Driver:    "syncmapcache",
 		TTL:       int64(ttl / time.Second),
 		Config:    *config,
 		Marshaler: "json",

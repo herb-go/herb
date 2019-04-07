@@ -2,10 +2,10 @@ package cachegroup
 
 var testConfig = `{
 		"Caches":"[\"Cache1\",\"Cache2\"]",
-		"Cache1.Driver":"\"freecache\"",
+		"Cache1.Driver":"\"syncmapcache\"",
 		"Cache1.Config.Size": "10000000",
 		"Cache1.TTL":"-1",
-		"Cache2.Driver":"\"freecache\"",
+		"Cache2.Driver":"\"syncmapcache\"",
 		"Cache2.Config.Size": "10000000",
 		"Cache2.TTL":"-1"
 		}`

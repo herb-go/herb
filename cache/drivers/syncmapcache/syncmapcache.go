@@ -83,8 +83,11 @@ func (c *Cache) gc() {
 }
 func (c *Cache) get(key string) ([]byte, bool) {
 	v, ok := c.datamap().Load(key)
-	if ok == false || v == nil {
+	if ok == false {
 		return nil, false
+	}
+	if v == nil {
+		return nil, true
 	}
 	e := v.(*entry)
 	if e.NeverExpired || time.Now().Before(e.Expired) {

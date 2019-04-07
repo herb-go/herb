@@ -182,14 +182,14 @@ func (c *Cache) mGetLocalData(data *map[string][]byte, values map[string]string,
 		if err != nil {
 			return
 		}
-		for k := range LocalData {
-			if LocalData[k] != nil {
-				key, ok := values[k]
+		for k := range versions {
+			if LocalData[versions[k]] != nil {
+				key, ok := values[versions[k]]
 				if ok == true {
-					(*data)[key] = LocalData[k]
+					(*data)[key] = LocalData[versions[k]]
 				}
 			} else {
-				RemoteVersions[RemoteVersionsLength] = k
+				RemoteVersions[RemoteVersionsLength] = versions[k]
 				RemoteVersionsLength++
 			}
 		}
