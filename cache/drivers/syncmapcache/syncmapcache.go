@@ -63,7 +63,7 @@ func (c *Cache) forceDeleteKeyQueue() {
 			}
 			return true
 		})
-		// Add a nil key to chan for preventing empty loop
+		// Add a nil key to chan for preventing empty loop when map is empty.
 		c.forceDeleteKeyC <- nil
 	}
 }
