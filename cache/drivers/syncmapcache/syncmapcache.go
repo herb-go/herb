@@ -63,6 +63,7 @@ func (c *Cache) forceDeleteKeyQueue() {
 			}
 			return true
 		})
+		// Add a nil key to chan for preventing empty loop
 		c.forceDeleteKeyC <- nil
 	}
 }
@@ -251,8 +252,6 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 		return 0, err
 	}
 	defer unlocker()
-	c.writelock.Lock()
-	defer c.writelock.Unlock()
 
 	data, found := c.get(key)
 	if found == false {
@@ -276,8 +275,6 @@ func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 		return err
 	}
 	defer unlocker()
-	c.writelock.Lock()
-	defer c.writelock.Unlock()
 
 	bytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(bytes, uint64(v))
@@ -312,8 +309,6 @@ func (c *Cache) DelCounter(key string) error {
 		return err
 	}
 	defer unlocker()
-	c.writelock.Lock()
-	defer c.writelock.Unlock()
 
 	c.delete(key)
 	return nil
@@ -326,8 +321,6 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 		return err
 	}
 	defer unlocker()
-	c.writelock.Lock()
-	defer c.writelock.Unlock()
 
 	bs, found := c.get(key)
 	if found == false {
@@ -344,8 +337,6 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 		return err
 	}
 	defer unlocker()
-	c.writelock.Lock()
-	defer c.writelock.Unlock()
 
 	bs, found := c.get(key)
 	if found == false {

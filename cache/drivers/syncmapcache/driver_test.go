@@ -10,7 +10,7 @@ import (
 func newGCTestCache(ttl int64) *cache.Cache {
 	config := cache.ConfigMap{}
 	config.Set("Size", 10000000)
-	config.Set("CleanupIntervalInSecond", 4)
+	config.Set("CleanupIntervalInSecond", 2)
 	c := cache.New()
 	oc := &cache.OptionConfigMap{
 		Driver:    "syncmapcache",
@@ -85,7 +85,7 @@ func TestDel(t *testing.T) {
 func TestGc(t *testing.T) {
 	c := newGCTestCache(300)
 	d := c.Driver.(*Cache)
-	err := c.SetBytesValue("test", []byte("test"), 2*time.Second)
+	err := c.SetBytesValue("test", []byte("test"), 3*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +96,16 @@ func TestGc(t *testing.T) {
 	if d.used != 4 {
 		t.Fatal(d.used)
 	}
-	time.Sleep(3 * time.Second)
+	time.Sleep(100 * time.Microsecond)
+	time.Sleep(2 * time.Second)
+	_, err = c.GetBytesValue("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.used != 4 {
+		t.Fatal(d.used)
+	}
+	time.Sleep(1 * time.Second)
 	_, err = c.GetBytesValue("test")
 	if err != cache.ErrNotFound {
 		t.Fatal(err)
