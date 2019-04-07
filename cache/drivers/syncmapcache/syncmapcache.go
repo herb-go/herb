@@ -75,8 +75,8 @@ func (c *Cache) gc() {
 		if !e.NeverExpired && e.Expired.Before(time.Now()) {
 			size := int64(len(e.Data))
 			c.used = c.used - size
+			m.Delete(key)
 		}
-		m.Delete(key)
 		return true
 	})
 }
@@ -211,6 +211,9 @@ func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 //Return  any error if raised.
 func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
 	for k := range data {
+		if int64(len(data[k])) >= c.Size {
+			return cache.ErrEntryTooLarge
+		}
 		c.set(k, data[k], ttl)
 	}
 	return nil
@@ -248,6 +251,9 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 		return 0, err
 	}
 	defer unlocker()
+	c.writelock.Lock()
+	defer c.writelock.Unlock()
+
 	data, found := c.get(key)
 	if found == false {
 		v = 0
@@ -270,6 +276,8 @@ func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 		return err
 	}
 	defer unlocker()
+	c.writelock.Lock()
+	defer c.writelock.Unlock()
 
 	bytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(bytes, uint64(v))
@@ -304,6 +312,8 @@ func (c *Cache) DelCounter(key string) error {
 		return err
 	}
 	defer unlocker()
+	c.writelock.Lock()
+	defer c.writelock.Unlock()
 
 	c.delete(key)
 	return nil
@@ -316,6 +326,9 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 		return err
 	}
 	defer unlocker()
+	c.writelock.Lock()
+	defer c.writelock.Unlock()
+
 	bs, found := c.get(key)
 	if found == false {
 		return cache.ErrNotFound
@@ -331,6 +344,9 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 		return err
 	}
 	defer unlocker()
+	c.writelock.Lock()
+	defer c.writelock.Unlock()
+
 	bs, found := c.get(key)
 	if found == false {
 		return cache.ErrNotFound
