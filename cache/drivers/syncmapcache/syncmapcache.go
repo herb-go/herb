@@ -381,7 +381,8 @@ func (config *Config) Create() (cache.Driver, error) {
 	return &cache, nil
 }
 
-func init() {
+// Register syncmap cache to cache module
+func Register() {
 	cache.Register("syncmapcache", func(conf cache.Config, prefix string) (cache.Driver, error) {
 		c := &Config{}
 
@@ -395,4 +396,7 @@ func init() {
 		}
 		return c.Create()
 	})
+}
+func init() {
+	Register()
 }

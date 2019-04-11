@@ -50,3 +50,10 @@ func TestDupTestMarshler(t *testing.T) {
 	cache.RegisterMarshaler("test", testmarshaler)
 	stage = 2
 }
+
+func TestNotExistMarshler(t *testing.T) {
+	_, err := cache.NewMarshaler("notexist")
+	if err == nil {
+		t.Fatal(err)
+	}
+}

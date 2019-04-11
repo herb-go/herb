@@ -51,7 +51,7 @@ func Register(name string, f Factory) {
 	}
 	factories[name] = f
 }
-func unregisterAll() {
+func UnregisterAll() {
 	factorysMu.Lock()
 	defer factorysMu.Unlock()
 	// For tests.
