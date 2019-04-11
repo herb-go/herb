@@ -37,7 +37,7 @@ func RegisterMarshaler(name string, f MarshalerFactory) {
 	}
 	marshalerFactories[name] = f
 }
-func unregisterAllMarshaler() {
+func UnregisterAllMarshaler() {
 	marshalerFactorysMu.Lock()
 	defer marshalerFactorysMu.Unlock()
 	// For tests.
@@ -72,24 +72,24 @@ func NewMarshaler(name string) (Marshaler, error) {
 	return factoryi()
 }
 
-type jsonMarshaler struct {
+type JsonMarshaler struct {
 }
 
 //Marshal Marshal data model to  bytes.
 //Return marshaled bytes and any erro rasied.
-func (m *jsonMarshaler) Marshal(v interface{}) ([]byte, error) {
+func (m *JsonMarshaler) Marshal(v interface{}) ([]byte, error) {
 	return json.Marshal(v)
 }
 
 //Unmarshal Unmarshal bytes to data model.
 //Parameter v should be pointer to empty data model which data filled in.
 //Return any error raseid.
-func (m *jsonMarshaler) Unmarshal(bytes []byte, v interface{}) error {
+func (m *JsonMarshaler) Unmarshal(bytes []byte, v interface{}) error {
 	return json.Unmarshal(bytes, v)
 }
 
 func init() {
 	RegisterMarshaler("json", func() (Marshaler, error) {
-		return &jsonMarshaler{}, nil
+		return &JsonMarshaler{}, nil
 	})
 }

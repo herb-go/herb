@@ -47,7 +47,7 @@ func (n *Node) Set(key string, v interface{}, ttl time.Duration) error {
 //Return any error raised.
 func (n *Node) Update(key string, v interface{}, TTL time.Duration) error {
 	k := n.MustGetCacheKey(key)
-	return n.Cache.Set(k, v, TTL)
+	return n.Cache.Update(k, v, TTL)
 }
 
 //Get Get data model from cache by given key.

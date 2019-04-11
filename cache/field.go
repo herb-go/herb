@@ -14,9 +14,15 @@ func (f *Field) Set(v interface{}, ttl time.Duration) error {
 	return f.Cache.Set(f.FieldName, v, ttl)
 }
 
-//Get value from field with given key.
+//Update update field value with given ttl.
 //Return any error if raised.
-func (f *Field) Get(key string, v interface{}) error {
+func (f *Field) Update(v interface{}, ttl time.Duration) error {
+	return f.Cache.Update(f.FieldName, v, ttl)
+}
+
+//Get value from field .
+//Return any error if raised.
+func (f *Field) Get(v interface{}) error {
 	return f.Cache.Get(f.FieldName, v)
 }
 
@@ -24,6 +30,12 @@ func (f *Field) Get(key string, v interface{}) error {
 //Return any error if raised.
 func (f *Field) SetBytesValue(bytes []byte, ttl time.Duration) error {
 	return f.Cache.SetBytesValue(f.FieldName, bytes, ttl)
+}
+
+//UpdateBytesValue update bytes to field with given ttl.
+//Return any error if raised.
+func (f *Field) UpdateBytesValue(bytes []byte, ttl time.Duration) error {
+	return f.Cache.UpdateBytesValue(f.FieldName, bytes, ttl)
 }
 
 //GetBytesValue get bytes value from field

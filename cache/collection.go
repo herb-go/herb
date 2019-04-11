@@ -132,7 +132,7 @@ func (c *Collection) GetBytesValue(key string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return c.GetBytesValue(k)
+	return c.Cache.GetBytesValue(k)
 }
 
 //UpdateBytesValue Update bytes data to cache by given key only if the cache exist.
