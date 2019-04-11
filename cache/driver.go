@@ -94,6 +94,7 @@ func NewSubCache(conf Config, prefix string) (*Cache, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.TTL = time.Duration(TTL) * time.Second
 	err = conf.Get(prefix+"Driver", &DriverName)
 	if err != nil {
 		return nil, err

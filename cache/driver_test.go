@@ -2,6 +2,7 @@ package cache_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/herb-go/herb/cache"
 	"github.com/herb-go/herb/cache/drivers/syncmapcache"
@@ -76,4 +77,26 @@ func TestMustNewDriver(t *testing.T) {
 	stage = 1
 	_ = cache.MustNewDriver("notexist", nil, "")
 	stage = 2
+}
+
+func TestNewSubCache(t *testing.T) {
+	prefix := "test"
+	c := &cache.ConfigJSON{}
+	c.Set(prefix+"Driver", "syncmapcache")
+	c.Set(prefix+"TTL", -1)
+	c.Set(prefix+"Config.Size", 100000)
+	ca, err := cache.NewSubCache(c, prefix)
+	if err != nil {
+		panic(err)
+	}
+	if ca.TTL != -1*time.Second {
+		t.Fatal(ca.TTL)
+	}
+	driver := ca.Driver.(*syncmapcache.Cache)
+	if driver == nil {
+		t.Fatal(driver)
+	}
+	if driver.Size != 100000 {
+		t.Fatal(driver)
+	}
 }
