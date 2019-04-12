@@ -262,36 +262,26 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	return err
 }
 
-// Lock lock cache value by given key.
-//Return  unlock function and any error if rasied
-func (c *Cache) Lock(key string) (func(), error) {
-	return c.Driver.Util().Lock(key)
-}
-
-//Wait wait any used lock unlcok.
-//Return whether waited and any error if rasied.
-func (c *Cache) Wait(key string) (bool, error) {
-	return c.Driver.Util().Wait(key)
+func (c *Cache) Locker(key string) (*Locker, error) {
+	return c.Driver.Util().Locker(key), nil
 }
 
 //Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader Loader) error {
+	var err error
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	_, err := c.Wait(key)
-	if err != nil {
-		return err
-	}
+	locker := c.Util().Locker(key)
+	locker.RLock()
+	locker.RUnlock()
+
 	err = c.Get(key, v)
 	if err == ErrNotFound {
-		unlocker, err := c.Lock(key)
-		if err != nil {
-			return err
-		}
-		defer unlocker()
+		locker.Lock()
+		defer locker.Unlock()
 		v2, err2 := loader(key)
 		if err2 != nil {
 			return err2

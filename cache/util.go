@@ -6,34 +6,50 @@ func NewUtil() *Util {
 	return &Util{}
 }
 
+type Locker struct {
+	Map      *sync.Map
+	Key      string
+	rwlocker *sync.RWMutex
+	locker   *sync.RWMutex
+}
+
+func (l *Locker) RLock() {
+	lock, ok := l.Map.Load(l.Key)
+	if ok {
+		l.rwlocker = lock.(*sync.RWMutex)
+		l.rwlocker.RLock()
+	}
+}
+
+func (l *Locker) RUnlock() {
+	if l.rwlocker != nil {
+		l.rwlocker.RUnlock()
+	}
+}
+func (l *Locker) Lock() {
+	var locker *sync.RWMutex
+	v, _ := l.Map.LoadOrStore(l.Key, &sync.RWMutex{})
+	locker = v.(*sync.RWMutex)
+	l.locker = locker
+	l.locker.Lock()
+}
+func (l *Locker) Unlock() {
+	if l.locker != nil {
+		l.locker.Unlock()
+		l.Map.Delete(l.Key)
+	}
+}
+
 type Util struct {
 	Marshaler Marshaler
 	locks     sync.Map
 }
 
-// Lock lock cache value by given key.
-//Return  unlock function and any error if rasied
-func (u *Util) Lock(key string) (func(), error) {
-	lock := &sync.RWMutex{}
-	u.locks.Store(key, lock)
-	lock.Lock()
-	return func() {
-		lock.Unlock()
-		u.locks.Delete(key)
-	}, nil
-}
-
-//Wait wait any usef lock unlcok.
-//Return whether waited and any error if rasied.
-func (u *Util) Wait(key string) (bool, error) {
-	l, _ := u.locks.Load(key)
-	if l != nil {
-		lock := l.(*sync.RWMutex)
-		lock.RLock()
-		lock.RUnlock()
-		return true, nil
+func (u *Util) Locker(key string) *Locker {
+	return &Locker{
+		Map: &u.locks,
+		Key: key,
 	}
-	return false, nil
 }
 
 type DriverUtil struct {

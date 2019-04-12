@@ -186,24 +186,13 @@ func (n *Node) ExpireCounter(key string, ttl time.Duration) error {
 	return n.Cache.ExpireCounter(k, ttl)
 }
 
-// Lock lock cache value by given key.
-//Return  unlock function and any error if rasied
-func (n *Node) Lock(key string) (unlocker func(), err error) {
+func (n *Node) Locker(key string) (*Locker, error) {
 	k, err := n.GetCacheKey(key)
 	if err != nil {
 		return nil, err
 	}
-	return n.Cache.Lock(k)
-}
-
-//Wait wait any usef lock unlcok.
-//Return whether waited and any error if rasied.
-func (n *Node) Wait(key string) (bool, error) {
-	k, err := n.GetCacheKey(key)
-	if err != nil {
-		return false, err
-	}
-	return n.Cache.Wait(k)
+	l, err := n.Cache.Locker(k)
+	return l, err
 }
 
 //Marshal Marshal data model to  bytes.

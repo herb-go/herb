@@ -249,12 +249,9 @@ func (c *Cache) Del(key string) error {
 //Return int data value and any error raised.
 func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
 	var v int64
-	var err error
-	unlocker, err := c.Util().Lock(key)
-	if err != nil {
-		return 0, err
-	}
-	defer unlocker()
+	locker := c.Util().Locker(key)
+	locker.Lock()
+	defer locker.Unlock()
 
 	data, found := c.get(key)
 	if found == false {
@@ -273,12 +270,9 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 //SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return any error raised.
 func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
-	unlocker, err := c.Util().Lock(key)
-	if err != nil {
-		return err
-	}
-	defer unlocker()
-
+	locker := c.Util().Locker(key)
+	locker.Lock()
+	defer locker.Unlock()
 	bytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(bytes, uint64(v))
 	c.set(key, bytes, ttl)
@@ -289,12 +283,10 @@ func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 //Return int data value and any error raised.
 func (c *Cache) GetCounter(key string) (int64, error) {
 	var v int64
-	unlocker, err := c.Util().Lock(key)
-	if err != nil {
-		return 0, err
-	}
-	defer unlocker()
-
+	locker := c.Util().Locker(key)
+	locker.Lock()
+	defer locker.Unlock()
+	var err error
 	bs, found := c.get(key)
 	if found == false {
 		err = cache.ErrNotFound
@@ -307,23 +299,18 @@ func (c *Cache) GetCounter(key string) (int64, error) {
 //DelCounter Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return any error raisegrd.
 func (c *Cache) DelCounter(key string) error {
-	unlocker, err := c.Util().Lock(key)
-	if err != nil {
-		return err
-	}
-	defer unlocker()
-
+	locker := c.Util().Locker(key)
+	locker.Lock()
+	defer locker.Unlock()
 	c.delete(key)
 	return nil
 }
 
 //Expire set cache value expire duration by given key and ttl
 func (c *Cache) Expire(key string, ttl time.Duration) error {
-	unlocker, err := c.Util().Lock(key)
-	if err != nil {
-		return err
-	}
-	defer unlocker()
+	locker := c.Util().Locker(key)
+	locker.Lock()
+	defer locker.Unlock()
 
 	bs, found := c.get(key)
 	if found == false {
@@ -335,11 +322,9 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 
 //ExpireCounter set cache counter  expire duration by given key and ttl
 func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
-	unlocker, err := c.Util().Lock(key)
-	if err != nil {
-		return err
-	}
-	defer unlocker()
+	locker := c.Util().Locker(key)
+	locker.Lock()
+	defer locker.Unlock()
 
 	bs, found := c.get(key)
 	if found == false {

@@ -293,24 +293,13 @@ func (c *Collection) ExpireCounter(key string, TTL time.Duration) error {
 	return c.Cache.ExpireCounter(k, TTL)
 }
 
-// Lock lock cache value by given key.
-//Return  unlock function and any error if rasied
-func (c *Collection) Lock(key string) (unlocker func(), err error) {
+func (c *Collection) Locker(key string) (*Locker, error) {
 	k, err := c.GetCacheKey(key)
 	if err != nil {
 		return nil, err
 	}
-	return c.Cache.Lock(k)
-}
-
-//Wait wait any usef lock unlcok.
-//Return whether waited and any error if rasied.
-func (c *Collection) Wait(key string) (bool, error) {
-	k, err := c.GetCacheKey(key)
-	if err != nil {
-		return false, err
-	}
-	return c.Cache.Wait(k)
+	l, err := c.Cache.Locker(k)
+	return l, err
 }
 
 //Marshal Marshal data model to  bytes.
