@@ -10,37 +10,6 @@ type DummyCache struct {
 	DriverUtil
 }
 
-//Create create new dummy cache driver.
-//Return driver created and any error if raised.
-func (c *DummyCache) Create() (Driver, error) {
-	return &DummyCache{}, nil
-}
-
-//SearchByPrefix Search All key start with given prefix.
-//Return All matched key and any error raised.
-func (c *DummyCache) SearchByPrefix(prefix string) ([]string, error) {
-	return nil, ErrFeatureNotSupported
-}
-
-//Set Set data model to cache by given key.
-//Return any error raised.
-func (c *DummyCache) Set(key string, v interface{}, ttl time.Duration) error {
-	return nil
-}
-
-//Update Update data model to cache by given key only if the cache exist.
-//Return any error raised.
-func (c *DummyCache) Update(key string, v interface{}, ttl time.Duration) error {
-	return nil
-}
-
-//Get Get data model from cache by given key.
-//Parameter v should be pointer to empty data model which data filled in.
-//Return any error raised.
-func (c *DummyCache) Get(key string, v interface{}) error {
-	return ErrNotFound
-}
-
 //SetBytesValue Set bytes data to cache by given key.
 //Return any error raised.
 func (c *DummyCache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {

@@ -298,7 +298,7 @@ func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader Loader
 		}
 		reflect.Indirect(reflect.ValueOf(v)).Set(reflect.Indirect(reflect.ValueOf(v2)))
 		err3 := c.Set(key, v, ttl)
-		if err3 == ErrNotCacheable {
+		if err3 == ErrNotCacheable || err3 == ErrEntryTooLarge {
 			return nil
 		} else if err3 != nil {
 			return err3

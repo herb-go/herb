@@ -1,11 +1,14 @@
-package cache
+package cache_test
 
-import "testing"
+import (
+	"testing"
+	"time"
 
-import "time"
+	"github.com/herb-go/herb/cache"
+)
 
 func TestDummyCache(t *testing.T) {
-	c := New()
+	c := cache.New()
 	testKey := "key"
 	testData := []string{"123"}
 	testBytes := []byte("123")
@@ -13,7 +16,7 @@ func TestDummyCache(t *testing.T) {
 	testIncrement := int64(1)
 	testIntValue := int64(2)
 	var model string
-	oc := &OptionConfigMap{
+	oc := &cache.OptionConfigMap{
 		Driver:    "dummycache",
 		TTL:       int64(testTTL),
 		Config:    nil,
@@ -32,7 +35,7 @@ func TestDummyCache(t *testing.T) {
 		t.Errorf("Update error %s", err)
 	}
 	err = c.Get(testKey, &model)
-	if err != ErrNotFound {
+	if err != cache.ErrNotFound {
 		t.Errorf("Get error %s", err)
 	}
 	err = c.SetBytesValue(testKey, testBytes, testTTL)
@@ -44,7 +47,7 @@ func TestDummyCache(t *testing.T) {
 		t.Errorf("UpdateBytesValue error %s", err)
 	}
 	_, err = c.GetBytesValue(testKey)
-	if err != ErrNotFound {
+	if err != cache.ErrNotFound {
 		t.Errorf("GetBytesValue error %s", err)
 	}
 	err = c.Del(testKey)
@@ -60,7 +63,7 @@ func TestDummyCache(t *testing.T) {
 		t.Errorf("SetCounter error %s", err)
 	}
 	_, err = c.GetCounter(testKey)
-	if err != ErrNotFound {
+	if err != cache.ErrNotFound {
 		t.Errorf("GetCounter error %s", err)
 	}
 	err = c.DelCounter(testKey)

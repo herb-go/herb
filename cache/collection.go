@@ -63,13 +63,13 @@ func (c *Collection) persist() bool {
 //MustGetCacheKey return raw cache key by given key.
 //Return key.
 //Panic if any error raised.
-func (c *Collection) MustGetCacheKey(key string) string {
-	k, err := c.GetCacheKey(key)
-	if err != nil {
-		panic(err)
-	}
-	return k
-}
+// func (c *Collection) MustGetCacheKey(key string) string {
+// 	k, err := c.GetCacheKey(key)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return k
+// }
 
 //Set Set data model to cache by given key.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
@@ -270,21 +270,27 @@ func (c *Collection) DefualtTTL() time.Duration {
 }
 
 //Expire set cache value expire duration by given key and ttl
-func (c *Collection) Expire(key string, ttl time.Duration) error {
+func (c *Collection) Expire(key string, TTL time.Duration) error {
+	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
+		return ErrPermanentCacheNotSupport
+	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
 		return err
 	}
-	return c.Cache.Expire(k, ttl)
+	return c.Cache.Expire(k, TTL)
 }
 
 //ExpireCounter set cache counter  expire duration by given key and ttl
-func (c *Collection) ExpireCounter(key string, ttl time.Duration) error {
+func (c *Collection) ExpireCounter(key string, TTL time.Duration) error {
+	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
+		return ErrPermanentCacheNotSupport
+	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
 		return err
 	}
-	return c.Cache.ExpireCounter(k, ttl)
+	return c.Cache.ExpireCounter(k, TTL)
 }
 
 // Lock lock cache value by given key.

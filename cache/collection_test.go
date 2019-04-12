@@ -9,7 +9,7 @@ import (
 	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
 )
 
-func newCollectionTestCache(ttl int64) cache.Cacheable {
+func newCollectionTestCache(ttl int64) *cache.Collection {
 	config := &cache.ConfigJSON{}
 	config.Set("Size", 10000000)
 	c := cache.New()
@@ -649,4 +649,67 @@ func TestCollectionTTL(t *testing.T) {
 		t.Fatal(err)
 	}
 
+}
+
+func TestCollectionLoader(t *testing.T) {
+	var err error
+	var result string
+	c := newCollectionTestCache(3600)
+	result = ""
+	err = c.Load("test", &result, 0, testLoader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	k, err := c.GetCacheKey("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != k {
+		t.Fatal(result)
+	}
+	err = c.Load("test", &result, 0, testLoader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != k {
+		t.Fatal(result)
+	}
+}
+
+func TestCollectionForever(t *testing.T) {
+	var err error
+	var result = []byte{}
+	c := newCollectionTestCache(3600)
+	err = c.Set("test", result, -1)
+	if err != cache.ErrPermanentCacheNotSupport {
+		t.Fatal(err)
+	}
+	err = c.Update("test", result, -1)
+	if err != cache.ErrPermanentCacheNotSupport {
+		t.Fatal(err)
+	}
+	err = c.SetBytesValue("test", result, -1)
+	if err != cache.ErrPermanentCacheNotSupport {
+		t.Fatal(err)
+	}
+	err = c.UpdateBytesValue("test", result, -1)
+	if err != cache.ErrPermanentCacheNotSupport {
+		t.Fatal(err)
+	}
+	err = c.Expire("test", -1)
+	if err != cache.ErrPermanentCacheNotSupport {
+		t.Fatal(err)
+	}
+	err = c.SetCounter("test", 1, -1)
+	if err != cache.ErrPermanentCacheNotSupport {
+		t.Fatal(err)
+	}
+	_, err = c.IncrCounter("test", 1, -1)
+	if err != cache.ErrPermanentCacheNotSupport {
+		t.Fatal(err)
+	}
+	err = c.Load("test", &result, -1, testLoader)
+	if err != cache.ErrPermanentCacheNotSupport {
+		t.Fatal(err)
+	}
 }
