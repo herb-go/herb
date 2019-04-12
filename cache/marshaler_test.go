@@ -1,6 +1,7 @@
 package cache_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/herb-go/herb/cache"
@@ -54,6 +55,16 @@ func TestDupTestMarshler(t *testing.T) {
 func TestNotExistMarshler(t *testing.T) {
 	_, err := cache.NewMarshaler("notexist")
 	if err == nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(err.Error(), "github.com/herb-go/herb/cache/marshalers/msgpackmarshaler") {
+		t.Fatal(err)
+	}
+	_, err = cache.NewMarshaler("msgpack")
+	if err == nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(err.Error(), "github.com/herb-go/herb/cache/marshalers/msgpackmarshaler") {
 		t.Fatal(err)
 	}
 }
