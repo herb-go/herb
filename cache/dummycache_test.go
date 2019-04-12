@@ -50,6 +50,17 @@ func TestDummyCache(t *testing.T) {
 	if err != cache.ErrNotFound {
 		t.Errorf("GetBytesValue error %s", err)
 	}
+	r, err := c.MGetBytesValue("test", "test2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(r) != 0 {
+		t.Fatal(err)
+	}
+	err = c.MSetBytesValue(map[string][]byte{}, testTTL)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = c.Del(testKey)
 	if err != nil {
 		t.Errorf("Del error %s", err)
@@ -74,8 +85,18 @@ func TestDummyCache(t *testing.T) {
 	if err != nil {
 		t.Errorf("Flush error %s", err)
 	}
+	err = c.Expire(testKey, testTTL)
+	if err != nil {
+		t.Errorf("Flush error %s", err)
+	}
+	err = c.ExpireCounter(testKey, testTTL)
+	if err != nil {
+		t.Errorf("Flush error %s", err)
+	}
+	c.SetGCErrHandler(nil)
 	err = c.Close()
 	if err != nil {
 		t.Errorf("Close error %s", err)
 	}
+
 }

@@ -144,8 +144,11 @@ func (n *Node) GetCounter(key string) (int64, error) {
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (n *Node) Load(key string, v interface{}, TTL time.Duration, loader Loader) error {
-	k := n.MustGetCacheKey(key)
-	return n.Cache.Load(k, v, TTL, loader)
+	k, err := n.GetCacheKey(key)
+	if err != nil {
+		return err
+	}
+	return loadFromCache(n, k, v, TTL, loader)
 }
 
 //Flush Delete all data in cache.

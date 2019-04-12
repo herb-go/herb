@@ -265,16 +265,15 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 func (c *Cache) Locker(key string) (*Locker, error) {
 	return c.Driver.Util().Locker(key), nil
 }
-
-//Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
-//Return any error raised.
-func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader Loader) error {
+func loadFromCache(c Cacheable, key string, v interface{}, ttl time.Duration, loader Loader) error {
 	var err error
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	locker := c.Util().Locker(key)
+	locker, err := c.Locker(key)
+	if err != nil {
+		return err
+	}
 	locker.RLock()
 	locker.RUnlock()
 
@@ -297,6 +296,13 @@ func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader Loader
 		return err
 	}
 	return nil
+}
+
+//Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
+//If ttl is DefualtTTL(0),use default ttl in config instead.
+//Return any error raised.
+func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader Loader) error {
+	return loadFromCache(c, key, v, ttl, loader)
 }
 
 //FinalKey get final key which passed to cache driver .

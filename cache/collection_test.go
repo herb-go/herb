@@ -197,7 +197,10 @@ func TestCollectionCloseAndFlush(t *testing.T) {
 	if err != cache.ErrNotFound {
 		t.Fatal(err)
 	}
-
+	ttl := c.DefualtTTL()
+	if ttl != time.Duration(defaultTTL)*time.Second {
+		t.Fatal(ttl)
+	}
 }
 func TestCollectionUpdate(t *testing.T) {
 	var err error
@@ -648,7 +651,14 @@ func TestCollectionTTL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	err = c.DelCounter(testKeyTTLExpireCounter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetCounter(testKeyTTLExpireCounter)
+	if err != cache.ErrNotFound {
+		t.Fatal(err)
+	}
 }
 
 func TestCollectionLoader(t *testing.T) {
@@ -661,9 +671,6 @@ func TestCollectionLoader(t *testing.T) {
 		t.Fatal(err)
 	}
 	k, err := c.GetCacheKey("test")
-	if err != nil {
-		t.Fatal(err)
-	}
 	if result != k {
 		t.Fatal(result)
 	}
@@ -675,7 +682,43 @@ func TestCollectionLoader(t *testing.T) {
 		t.Fatal(result)
 	}
 }
+func TestCollectionMisc(t *testing.T) {
+	var err error
+	var result string
+	c := newCollectionTestCache(3600)
+	result = ""
+	bs, err := c.Marshal("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Unmarshal(bs, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != "test" {
+		t.Fatal(result)
+	}
+	k, err := c.FinalKey("testkey")
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	if k != cache.KeyPrefix+c.Prefix+cache.KeyPrefix+"testkey" {
+		t.Fatal(k)
+	}
+	sc := c.Collection("c")
+	if sc == nil {
+		t.Fatal(sc)
+	}
+	sn := c.Node("n")
+	if sn == nil {
+		t.Fatal(sn)
+	}
+	sf := c.Field("n")
+	if sf == nil {
+		t.Fatal(sf)
+	}
+}
 func TestCollectionForever(t *testing.T) {
 	var err error
 	var result = []byte{}
@@ -705,6 +748,10 @@ func TestCollectionForever(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err = c.IncrCounter("test", 1, -1)
+	if err != cache.ErrPermanentCacheNotSupport {
+		t.Fatal(err)
+	}
+	err = c.ExpireCounter("test", -1)
 	if err != cache.ErrPermanentCacheNotSupport {
 		t.Fatal(err)
 	}

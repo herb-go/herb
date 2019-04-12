@@ -13,6 +13,13 @@ func TestDriver(t *testing.T) {
 	if len(factories) != 2 {
 		t.Fatal(factories)
 	}
+	dc, err := cache.NewDriver("dummycache", nil, "")
+	if err != nil {
+		t.Errorf("New driver  error %s", err)
+	}
+	if dc == nil {
+		t.Fatal(dc)
+	}
 	cache.UnregisterAll()
 	factories = cache.Factories()
 	if len(factories) != 0 {

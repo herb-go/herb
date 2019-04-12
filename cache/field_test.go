@@ -126,4 +126,12 @@ func TestFieldCounter(t *testing.T) {
 	if resultDataInt != testTargetResultInt {
 		t.Errorf("GetCounter error %d ", resultDataInt)
 	}
+	err = c.DelCounter()
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetCounter()
+	if err != cache.ErrNotFound {
+		t.Fatal(err)
+	}
 }

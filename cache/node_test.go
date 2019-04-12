@@ -9,7 +9,7 @@ import (
 	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
 )
 
-func newNodeTestCache(ttl int64) cache.Cacheable {
+func newNodeTestCache(ttl int64) *cache.Node {
 	config := &cache.ConfigJSON{}
 	config.Set("Size", 10000000)
 	c := cache.New()
@@ -27,7 +27,7 @@ func newNodeTestCache(ttl int64) cache.Cacheable {
 	if err != nil {
 		panic(err)
 	}
-	return c.Node("testnode")
+	return c.Node("testNodet")
 }
 
 func TestNodeMSetMGet(t *testing.T) {
@@ -189,11 +189,10 @@ func TestNodeCloseAndFlush(t *testing.T) {
 	if err != cache.ErrFeatureNotSupported {
 		t.Fatal(err)
 	}
-	// err = c.Get(testKey, &resultDataModel)
-	// if err != cache.ErrNotFound {
-	// 	t.Fatal(err)
-	// }
-
+	ttl := c.DefualtTTL()
+	if ttl != time.Duration(defaultTTL)*time.Second {
+		t.Fatal(ttl)
+	}
 }
 func TestNodeUpdate(t *testing.T) {
 	var err error
@@ -206,7 +205,7 @@ func TestNodeUpdate(t *testing.T) {
 	testDataModel := "test"
 	var resultDataModel string
 	testDataBytes := []byte("testbytes")
-	err = c.Set(testKey, testDataModel, cache.TTLForever)
+	err = c.Set(testKey, testDataModel, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -214,7 +213,7 @@ func TestNodeUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.Set(testKeyUpdate, testDataModel, cache.TTLForever)
+	err = c.Set(testKeyUpdate, testDataModel, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,7 +225,7 @@ func TestNodeUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.Update(testKeyUpdate, testDataModel, cache.TTLForever)
+	err = c.Update(testKeyUpdate, testDataModel, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,7 +234,7 @@ func TestNodeUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.SetBytesValue(testKeyBytes, testDataBytes, cache.TTLForever)
+	err = c.SetBytesValue(testKeyBytes, testDataBytes, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +242,7 @@ func TestNodeUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.SetBytesValue(testKeyBytesUpdate, testDataBytes, cache.TTLForever)
+	err = c.SetBytesValue(testKeyBytesUpdate, testDataBytes, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -255,7 +254,7 @@ func TestNodeUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.UpdateBytesValue(testKeyBytesUpdate, testDataBytes, cache.TTLForever)
+	err = c.UpdateBytesValue(testKeyBytesUpdate, testDataBytes, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -383,15 +382,15 @@ func TestNodeTTL(t *testing.T) {
 	testDataBytes := []byte("12345byte")
 	testDataInt := int64(99999)
 	var resultModelData string
-	err = c.Set(testKeyTTLForver, testDataModel, -1)
+	err = c.Set(testKeyTTLForver, testDataModel, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.SetBytesValue(testKeyTTLForverBytes, testDataBytes, -1)
+	err = c.SetBytesValue(testKeyTTLForverBytes, testDataBytes, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.SetCounter(testKeyTTLForverCounter, testDataInt, -1)
+	err = c.SetCounter(testKeyTTLForverCounter, testDataInt, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -644,5 +643,71 @@ func TestNodeTTL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	err = c.DelCounter(testKeyTTLExpireCounter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetCounter(testKeyTTLExpireCounter)
+	if err != cache.ErrNotFound {
+		t.Fatal(err)
+	}
+}
 
+func TestNodeLoader(t *testing.T) {
+	var err error
+	var result string
+	c := newNodeTestCache(3600)
+	result = ""
+	err = c.Load("test", &result, 0, testLoader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	k, err := c.GetCacheKey("test")
+	if result != k {
+		t.Fatal(result)
+	}
+	err = c.Load("test", &result, 0, testLoader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != k {
+		t.Fatal(result)
+	}
+}
+func TestNodeMisc(t *testing.T) {
+	var err error
+	var result string
+	c := newNodeTestCache(3600)
+	result = ""
+	bs, err := c.Marshal("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Unmarshal(bs, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != "test" {
+		t.Fatal(result)
+	}
+	k, err := c.FinalKey("testkey")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if k != cache.KeyPrefix+c.Prefix+cache.KeyPrefix+"testkey" {
+		t.Fatal(k)
+	}
+	sc := c.Collection("c")
+	if sc == nil {
+		t.Fatal(sc)
+	}
+	sn := c.Node("n")
+	if sn == nil {
+		t.Fatal(sn)
+	}
+	sf := c.Field("n")
+	if sf == nil {
+		t.Fatal(sf)
+	}
 }

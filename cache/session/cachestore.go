@@ -21,7 +21,7 @@ const (
 	DefaultPrefixMode = PrefixModeRaw
 )
 
-const DefaultTokenLength = 256
+const DefaultTokenLength = 64
 
 var defaultUpdateActiveInterval = 5 * time.Minute
 

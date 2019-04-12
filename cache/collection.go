@@ -256,7 +256,7 @@ func (c *Collection) Load(key string, v interface{}, TTL time.Duration, loader L
 	if err != nil {
 		return err
 	}
-	return c.Cache.Load(k, v, TTL, loader)
+	return loadFromCache(c, k, v, TTL, loader)
 }
 
 //Flush Delete all data in cache.
