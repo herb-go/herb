@@ -679,3 +679,32 @@ func TestClientTimeout(t *testing.T) {
 		t.Errorf("Timeout error %s", err)
 	}
 }
+
+func TestCacheDriverPrefix(t *testing.T) {
+	c := NewCacheDriver()
+	p := "test"
+	c.PrefixMode = PrefixModeEmpty
+	t1, err := c.ConvertPrefix(p)
+	if err != nil {
+		panic(err)
+	}
+	if t1 != "" {
+		t.Fatal(t1)
+	}
+	c.PrefixMode = PrefixModeRaw
+	t1, err = c.ConvertPrefix(p)
+	if err != nil {
+		panic(err)
+	}
+	if t1 != p {
+		t.Fatal(t1)
+	}
+	c.PrefixMode = PrefixModeMd5
+	t1, err = c.ConvertPrefix(p)
+	if err != nil {
+		panic(err)
+	}
+	if len(t1) != 32 {
+		t.Fatal(t1)
+	}
+}
