@@ -78,24 +78,6 @@ func (f *Field) Login(w http.ResponseWriter, r *http.Request, id string) error {
 	return f.Set(r, id)
 }
 
-//LoginSession login into session with given id.
-//Return session and any error if raised.
-func (f *Field) LoginSession(id string) (*Session, error) {
-	s, err := f.Store.GenerateSession("")
-	if err != nil {
-		return nil, err
-	}
-	err = s.RegenerateToken(id)
-	if err != nil {
-		return nil, err
-	}
-	err = f.SaveTo(s, id)
-	if err != nil {
-		return nil, err
-	}
-	return s, nil
-}
-
 //Logout  logout form request.
 func (f *Field) Logout(w http.ResponseWriter, r *http.Request) error {
 	s, err := f.Store.GetRequestSession(r)
@@ -104,22 +86,4 @@ func (f *Field) Logout(w http.ResponseWriter, r *http.Request) error {
 	}
 	s.SetToken("")
 	return nil
-}
-
-//CookieMiddleware return a Middleware which install the token which special by cookie.
-//This middleware will save token after request finished if the token changed,and update cookie if necessary.
-func (f *Field) CookieMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	return f.Store.CookieMiddleware()
-}
-
-//HeaderMiddleware return a Middleware which install the token which special by Header with given name.
-//This middleware will save token after request finished if the token changed.
-func (f *Field) HeaderMiddleware(Name string) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	return f.Store.HeaderMiddleware(Name)
-}
-
-//InstallMiddleware middleware which auto install session depand on store mode.
-//Cookie middleware will be installed if no valid store mode given.
-func (f *Field) InstallMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	return f.Store.InstallMiddleware()
 }

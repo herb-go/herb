@@ -78,6 +78,7 @@ func TestField(t *testing.T) {
 	testKey := "testkey"
 	testOwner := "testowner"
 	testHeaderName := "token"
+	testuid := "testuid"
 
 	field := s.Field(testKey)
 	token, err := s.GenerateToken(testOwner)
@@ -108,7 +109,60 @@ func TestField(t *testing.T) {
 	if result != model {
 		t.Errorf("Reuslt error %s", result)
 	}
-
+	ActionTestField := func(w http.ResponseWriter, r *http.Request) {
+		result = ""
+		err := field.Get(r, &result)
+		if err != nil {
+			panic(err)
+		}
+		if result != model {
+			t.Errorf("Reuslt error %s", result)
+		}
+		err = field.Flush(r)
+		if err != nil {
+			panic(err)
+		}
+		err = field.Get(r, &result)
+		if err != ErrDataNotFound {
+			panic(err)
+		}
+		session := field.MustGetSession(r)
+		if session.token != ts.token {
+			t.Fatal(session)
+		}
+		session, err = field.GetSession(r)
+		if session.token != ts.token {
+			t.Fatal(session)
+		}
+		if err != nil {
+			panic(err)
+		}
+		w.Write([]byte("ok"))
+	}
+	ActionLogin := func(w http.ResponseWriter, r *http.Request) {
+		uid := r.Header.Get("uid")
+		err = field.Login(w, r, uid)
+		if err != nil {
+			panic(err)
+		}
+		s := field.MustGetSession(r)
+		ts.token = s.token
+		w.Write([]byte(uid))
+	}
+	ActionUID := func(w http.ResponseWriter, r *http.Request) {
+		uid, err := field.IdentifyRequest(r)
+		if err != nil {
+			panic(err)
+		}
+		w.Write([]byte(uid))
+	}
+	ActionLogout := func(w http.ResponseWriter, r *http.Request) {
+		err := field.Logout(w, r)
+		if err != nil {
+			panic(err)
+		}
+		w.Write([]byte("ok"))
+	}
 	ActionGetField := func(w http.ResponseWriter, r *http.Request) {
 		result = ""
 		err := field.Get(r, &result)
@@ -128,6 +182,12 @@ func TestField(t *testing.T) {
 	var mux = http.NewServeMux()
 	mux.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) { s.HeaderMiddleware(testHeaderName)(w, r, ActionGetField) })
 	mux.HandleFunc("/set", func(w http.ResponseWriter, r *http.Request) { s.HeaderMiddleware(testHeaderName)(w, r, ActionSetField) })
+	mux.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		s.HeaderMiddleware(testHeaderName)(w, r, ActionTestField)
+	})
+	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) { s.HeaderMiddleware(testHeaderName)(w, r, ActionLogin) })
+	mux.HandleFunc("/uid", func(w http.ResponseWriter, r *http.Request) { s.HeaderMiddleware(testHeaderName)(w, r, ActionUID) })
+	mux.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) { s.HeaderMiddleware(testHeaderName)(w, r, ActionLogout) })
 	hs := httptest.NewServer(mux)
 	defer hs.Close()
 	c := &http.Client{}
@@ -140,6 +200,16 @@ func TestField(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	TestRequest, err := http.NewRequest("POST", hs.URL+"/test", nil)
+	TestRequest.Header.Set(testHeaderName, ts.MustToken())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.Do(TestRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	SetRequest, err := http.NewRequest("POST", hs.URL+"/set", nil)
 	SetRequest.Header.Set(testHeaderName, ts.MustToken())
 	if err != nil {
@@ -157,6 +227,62 @@ func TestField(t *testing.T) {
 	}
 	if result != model2 {
 		t.Errorf("Reuslt error %s", result)
+	}
+	LoginRequest, err := http.NewRequest("POST", hs.URL+"/login", nil)
+	LoginRequest.Header.Set("uid", testuid)
+	LoginRequest.Header.Set(testHeaderName, ts.MustToken())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.Do(LoginRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	UIDRequest, err := http.NewRequest("POST", hs.URL+"/uid", nil)
+	UIDRequest.Header.Set(testHeaderName, ts.MustToken())
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := c.Do(UIDRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if string(body) != testuid {
+		t.Fatal(string(body))
+	}
+
+	LogoutRequest, err := http.NewRequest("POST", hs.URL+"/logout", nil)
+	LogoutRequest.Header.Set(testHeaderName, ts.MustToken())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.Do(LogoutRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	UIDRequest, err = http.NewRequest("POST", hs.URL+"/uid", nil)
+	UIDRequest.Header.Set(testHeaderName, ts.MustToken())
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err = c.Do(UIDRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if string(body) != "" {
+		t.Fatal(string(body))
 	}
 }
 func TestTD(t *testing.T) {
