@@ -13,7 +13,7 @@ import (
 
 	"github.com/herb-go/herb/cache"
 
-	_ "github.com/herb-go/herb/cache/drivers/freecache"
+	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
 )
 
 func getClientDriver(ttl time.Duration) *Store {

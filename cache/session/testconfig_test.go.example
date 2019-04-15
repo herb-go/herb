@@ -1,7 +1,7 @@
 package session
 
 var testCache = `{
-	"Driver":"freecache",
+	"Driver":"syncmapcache",
 	"Config":{"Size": "10000000"},
 	"TTL":-1
 	}
