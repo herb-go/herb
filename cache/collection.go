@@ -293,13 +293,8 @@ func (c *Collection) ExpireCounter(key string, TTL time.Duration) error {
 	return c.Cache.ExpireCounter(k, TTL)
 }
 
-func (c *Collection) Locker(key string) (*Locker, error) {
-	k, err := c.GetCacheKey(key)
-	if err != nil {
-		return nil, err
-	}
-	l, err := c.Cache.Locker(k)
-	return l, err
+func (c *Collection) Locker(key string) (*Locker, bool) {
+	return c.Cache.Locker(key)
 }
 
 //Marshal Marshal data model to  bytes.

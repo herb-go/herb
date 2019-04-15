@@ -66,7 +66,7 @@ type Cacheable interface {
 	DefualtTTL() time.Duration
 	// Lock lock cache value by given key.
 	//Return  unlock function and any error if rasied
-	Locker(key string) (*Locker, error)
+	Locker(key string) (*Locker, bool)
 	//Marshal Marshal data model to  bytes.
 	//Return marshaled bytes and any error rasied.
 	Marshal(v interface{}) ([]byte, error)

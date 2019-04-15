@@ -126,7 +126,7 @@ func (c *Cache) Del(key string) error {
 //Return int data value and any error raised.
 func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
 	var v int64
-	locker := c.Util().Locker(key)
+	locker, _ := c.Util().Locker(key)
 	locker.Lock()
 	defer locker.Unlock()
 
@@ -149,7 +149,7 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 //Return any error raised.
 func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 	var err error
-	locker := c.Util().Locker(key)
+	locker, _ := c.Util().Locker(key)
 	locker.Lock()
 	defer locker.Unlock()
 
@@ -163,7 +163,7 @@ func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 //Return int data value and any error raised.
 func (c *Cache) GetCounter(key string) (int64, error) {
 	var v int64
-	locker := c.Util().Locker(key)
+	locker, _ := c.Util().Locker(key)
 	locker.Lock()
 	defer locker.Unlock()
 
@@ -182,7 +182,7 @@ func (c *Cache) GetCounter(key string) (int64, error) {
 //DelCounter Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return any error raised.
 func (c *Cache) DelCounter(key string) error {
-	locker := c.Util().Locker(key)
+	locker, _ := c.Util().Locker(key)
 	locker.Lock()
 	defer locker.Unlock()
 
@@ -210,7 +210,7 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 
 //ExpireCounter set cache counter  expire duration by given key and ttl
 func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
-	locker := c.Util().Locker(key)
+	locker, _ := c.Util().Locker(key)
 	locker.Lock()
 	defer locker.Unlock()
 

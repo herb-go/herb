@@ -7,41 +7,14 @@ func NewUtil() *Util {
 }
 
 type Locker struct {
-	Map     *sync.Map
-	Key     string
-	rlocker *sync.Mutex
-	locker  *sync.Mutex
+	sync.RWMutex
+	Map *sync.Map
+	Key string
 }
 
-func (l *Locker) RLock() {
-	lock, ok := l.Map.Load(l.Key)
-	if ok {
-		l.rlocker = lock.(*sync.Mutex)
-		l.rlocker.Lock()
-	}
-}
-
-func (l *Locker) Lock() {
-	var locker *sync.Mutex
-	if l.rlocker != nil {
-		l.locker = l.rlocker
-	} else {
-		v, _ := l.Map.LoadOrStore(l.Key, &sync.Mutex{})
-		locker = v.(*sync.Mutex)
-		l.locker = locker
-		l.locker.Lock()
-	}
-}
 func (l *Locker) Unlock() {
-	if l.locker != nil {
-		l.locker.Unlock()
-		l.Map.Delete(l.Key)
-		l.locker = nil
-		l.rlocker = nil
-	} else if l.rlocker != nil {
-		l.rlocker.Unlock()
-		l.rlocker = nil
-	}
+	l.RWMutex.Unlock()
+	l.Map.Delete(l.Key)
 }
 
 type Util struct {
@@ -49,11 +22,13 @@ type Util struct {
 	locks     sync.Map
 }
 
-func (u *Util) Locker(key string) *Locker {
-	return &Locker{
+func (u *Util) Locker(key string) (*Locker, bool) {
+	newlocker := &Locker{
 		Map: &u.locks,
 		Key: key,
 	}
+	v, ok := u.locks.LoadOrStore(key, newlocker)
+	return v.(*Locker), ok
 }
 
 type DriverUtil struct {

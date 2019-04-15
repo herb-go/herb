@@ -189,13 +189,8 @@ func (n *Node) ExpireCounter(key string, ttl time.Duration) error {
 	return n.Cache.ExpireCounter(k, ttl)
 }
 
-func (n *Node) Locker(key string) (*Locker, error) {
-	k, err := n.GetCacheKey(key)
-	if err != nil {
-		return nil, err
-	}
-	l, err := n.Cache.Locker(k)
-	return l, err
+func (n *Node) Locker(key string) (*Locker, bool) {
+	return n.Cache.Locker(key)
 }
 
 //Marshal Marshal data model to  bytes.

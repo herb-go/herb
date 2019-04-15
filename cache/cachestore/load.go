@@ -1,6 +1,10 @@
 package cachestore
 
-import "github.com/herb-go/herb/cache"
+import (
+	"sort"
+
+	"github.com/herb-go/herb/cache"
+)
 
 func unmarshalMapElement(s Store, creator func() interface{}, key string, data []byte, c cache.Cacheable) (err error) {
 	v := creator()
@@ -47,21 +51,7 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 		return nil
 	}
 	var results map[string][]byte
-	lockers := map[string]*cache.Locker{}
 	if c != nil {
-		for k := range filteredKeys {
-			key, err := c.FinalKey(filteredKeys[k])
-			if err != nil {
-				return err
-			}
-			locker, err := c.Locker(key)
-			if err != nil {
-				return err
-			}
-			locker.RLock()
-			lockers[filteredKeys[k]] = locker
-			defer locker.Unlock()
-		}
 
 		results, err = c.MGetBytesValue(filteredKeys...)
 		if err != nil {
@@ -85,17 +75,54 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 		}
 	}
 	uncachedKeys = uncachedKeys[:uncachedKeysLength]
+
 	if uncachedKeysLength == 0 {
 		return nil
 	}
+	var unreloadkeys = make([]string, len(uncachedKeys))
+	var unreloadkeysLength = 0
+
+	sort.Strings(uncachedKeys)
 	if c != nil {
 		for k := range uncachedKeys {
-			locker := lockers[filteredKeys[k]]
-			locker.Lock()
+			key, err := c.FinalKey(uncachedKeys[k])
+			if err != nil {
+				return err
+			}
+			locker, ok := c.Locker(key)
+			if ok {
+				locker.RLock()
+				defer locker.RUnlock()
+				bs, err := c.GetBytesValue(uncachedKeys[k])
+				if err == nil {
+					err = unmarshalMapElement(s, creator, uncachedKeys[k], bs, c)
+					if err != nil {
+						return err
+					}
+					continue
+				}
+				if err != cache.ErrNotFound {
+					return err
+				}
+			} else {
+				locker.Lock()
+				defer locker.Unlock()
+			}
+			unreloadkeys[unreloadkeysLength] = uncachedKeys[k]
+			unreloadkeysLength++
+
 		}
 
+	} else {
+		unreloadkeys = uncachedKeys
+		unreloadkeysLength = uncachedKeysLength
 	}
-	loaded, err := loader(uncachedKeys...)
+	unreloadkeys = unreloadkeys[:unreloadkeysLength]
+
+	if unreloadkeysLength == 0 {
+		return nil
+	}
+	loaded, err := loader(unreloadkeys...)
 	if err != nil {
 		return err
 	}
@@ -110,9 +137,9 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 			}
 		}
 	}
-	for k := range uncachedKeys {
-		if _, ok := data[uncachedKeys[k]]; ok == false {
-			data[uncachedKeys[k]] = []byte{}
+	for k := range unreloadkeys {
+		if _, ok := data[unreloadkeys[k]]; ok == false {
+			data[unreloadkeys[k]] = []byte{}
 		}
 	}
 	if c == nil {

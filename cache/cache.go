@@ -262,23 +262,32 @@ func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	return err
 }
 
-func (c *Cache) Locker(key string) (*Locker, error) {
-	return c.Driver.Util().Locker(key), nil
+func (c *Cache) Locker(key string) (*Locker, bool) {
+	return c.Util().Locker(key)
 }
 func loadFromCache(c Cacheable, key string, v interface{}, ttl time.Duration, loader Loader) error {
 	var err error
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	locker, err := c.Locker(key)
-	if err != nil {
-		return err
-	}
-	locker.RLock()
-	defer locker.Unlock()
 	err = c.Get(key, v)
 	if err == ErrNotFound {
-		locker.Lock()
+		k, err := c.FinalKey(key)
+		if err != nil {
+			return err
+		}
+		locker, ok := c.Locker(k)
+		if ok {
+			locker.RLock()
+			defer locker.RUnlock()
+			err = c.Get(key, v)
+			if err == nil || err != ErrNotFound {
+				return err
+			}
+		} else {
+			locker.Lock()
+			defer locker.Unlock()
+		}
 		v2, err2 := loader(key)
 		if err2 != nil {
 			return err2

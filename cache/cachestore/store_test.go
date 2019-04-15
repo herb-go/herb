@@ -436,15 +436,21 @@ func TestSyncLoader(t *testing.T) {
 }
 
 func TestConcurrent(t *testing.T) {
-	rawdata := map[string]int{}
+	rawdata := sync.Map{}
 	c := newTestCache(-1)
 	loader := func(keys ...string) (map[string]interface{}, error) {
 		result := map[string]interface{}{}
 		time.Sleep(300 * time.Microsecond)
 		for _, v := range keys {
-			data := rawdata[v]
+			var data int
+			val, _ := rawdata.Load(v)
+			if val == nil {
+				data = 0
+			} else {
+				data = val.(int)
+			}
 			data++
-			rawdata[v] = data
+			rawdata.Store(v, data)
 			result[v] = &data
 		}
 		return result, nil
@@ -453,9 +459,9 @@ func TestConcurrent(t *testing.T) {
 		v := int(0)
 		return &v
 	}
-	var tm = NewMapStore()
-	var tm2 = NewMapStore()
-	var tm3 = NewMapStore()
+	var tm = NewSyncMapStore()
+	var tm2 = NewSyncMapStore()
+	var tm3 = NewSyncMapStore()
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -478,11 +484,12 @@ func TestConcurrent(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := Load(tm3, c, loader, creator, valueKeyAadditional, valueKeyNotexists)
+		err := Load(tm3, c, loader, creator, valueKey, valueKeyNotexists)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}()
+
 	wg.Wait()
 	if *(tm.LoadInterface(valueKey).(*int)) != 1 {
 		t.Fatal(tm)
@@ -496,13 +503,15 @@ func TestConcurrent(t *testing.T) {
 	if *(tm2.LoadInterface(valueKeyChanged).(*int)) != 1 {
 		t.Fatal(tm2)
 	}
-	if *(tm3.LoadInterface(valueKeyAadditional).(*int)) != 1 {
+	if *(tm3.LoadInterface(valueKey).(*int)) != 1 {
 		t.Fatal(tm3)
 	}
 	if *(tm3.LoadInterface(valueKeyNotexists).(*int)) != 1 {
 		t.Fatal(tm3)
 	}
-	locker := c.Util().Locker("test")
+	locker, _ := c.Util().Locker("test")
+	locker.Lock()
+	locker.Unlock()
 	locker.Map.Range(func(key interface{}, value interface{}) bool {
 		//check unlocked locker
 		t.Fatal(key, value)
