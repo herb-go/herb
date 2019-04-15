@@ -7,13 +7,13 @@ import "bytes"
 import "time"
 
 func newTestCache(ttl int64) *cache.Cache {
-	config := &cache.ConfigJSON{}
+	config := cache.ConfigMap{}
 	config.Set("Size", 10000000)
 	c := cache.New()
 	oc := &cache.OptionConfigMap{
 		Driver:    "syncmapcache",
 		TTL:       int64(ttl),
-		Config:    nil,
+		Config:    config,
 		Marshaler: "json",
 	}
 	err := c.Init(oc)

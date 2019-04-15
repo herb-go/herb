@@ -7,36 +7,40 @@ func NewUtil() *Util {
 }
 
 type Locker struct {
-	Map      *sync.Map
-	Key      string
-	rwlocker *sync.RWMutex
-	locker   *sync.RWMutex
+	Map     *sync.Map
+	Key     string
+	rlocker *sync.Mutex
+	locker  *sync.Mutex
 }
 
 func (l *Locker) RLock() {
 	lock, ok := l.Map.Load(l.Key)
 	if ok {
-		l.rwlocker = lock.(*sync.RWMutex)
-		l.rwlocker.RLock()
+		l.rlocker = lock.(*sync.Mutex)
+		l.rlocker.Lock()
 	}
 }
 
-func (l *Locker) RUnlock() {
-	if l.rwlocker != nil {
-		l.rwlocker.RUnlock()
-	}
-}
 func (l *Locker) Lock() {
-	var locker *sync.RWMutex
-	v, _ := l.Map.LoadOrStore(l.Key, &sync.RWMutex{})
-	locker = v.(*sync.RWMutex)
-	l.locker = locker
-	l.locker.Lock()
+	var locker *sync.Mutex
+	if l.rlocker != nil {
+		l.locker = l.rlocker
+	} else {
+		v, _ := l.Map.LoadOrStore(l.Key, &sync.Mutex{})
+		locker = v.(*sync.Mutex)
+		l.locker = locker
+		l.locker.Lock()
+	}
 }
 func (l *Locker) Unlock() {
 	if l.locker != nil {
 		l.locker.Unlock()
 		l.Map.Delete(l.Key)
+		l.locker = nil
+		l.rlocker = nil
+	} else if l.rlocker != nil {
+		l.rlocker.Unlock()
+		l.rlocker = nil
 	}
 }
 

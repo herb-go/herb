@@ -1,6 +1,7 @@
 package cache_test
 
 import (
+	"sync"
 	"testing"
 	"time"
 )
@@ -13,20 +14,48 @@ var testLaterLoader = func(key string) (interface{}, error) {
 func TestLaterLoader(t *testing.T) {
 	var result string
 	var result2 string
+	var result3 string
+	var result4 string
+	var result5 string
+
 	var err error
 	var err2 error
+	var err3 error
+	var err4 error
+	var err5 error
 	c := newTestCache(3600)
 	result = ""
 	result2 = ""
+	result3 = ""
+	result4 = ""
+	result5 = ""
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
 		err = c.Load("test", &result, 0, testLaterLoader)
-
+		wg.Done()
 	}()
+	wg.Add(1)
 	go func() {
 		err2 = c.Load("test", &result2, 0, testLaterLoader)
-
+		wg.Done()
 	}()
-	time.Sleep(200 * time.Millisecond)
+	wg.Add(1)
+	go func() {
+		err3 = c.Load("test2", &result3, 0, testLaterLoader)
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		err4 = c.Load("test2", &result4, 0, testLaterLoader)
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		err5 = c.Load("test3", &result5, 0, testLaterLoader)
+		wg.Done()
+	}()
+	wg.Wait()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,6 +66,24 @@ func TestLaterLoader(t *testing.T) {
 		t.Fatal(err)
 	}
 	if result2 != "test" {
-		t.Fatal(result)
+		t.Fatal(result2)
+	}
+	if err3 != nil {
+		t.Fatal(err)
+	}
+	if result3 != "test2" {
+		t.Fatal(result3)
+	}
+	if err4 != nil {
+		t.Fatal(err)
+	}
+	if result4 != "test2" {
+		t.Fatal(result4)
+	}
+	if err5 != nil {
+		t.Fatal(err)
+	}
+	if result5 != "test3" {
+		t.Fatal(result5)
 	}
 }

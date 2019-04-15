@@ -275,12 +275,10 @@ func loadFromCache(c Cacheable, key string, v interface{}, ttl time.Duration, lo
 		return err
 	}
 	locker.RLock()
-	locker.RUnlock()
-
+	defer locker.Unlock()
 	err = c.Get(key, v)
 	if err == ErrNotFound {
 		locker.Lock()
-		defer locker.Unlock()
 		v2, err2 := loader(key)
 		if err2 != nil {
 			return err2

@@ -27,7 +27,6 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 	var keysmap = make(map[string]bool, len(keys))
 	var filteredKeys = make([]string, len(keys))
 	var filteredKeysLength = 0
-	var locker *cache.Locker
 	var err error
 	if len(keys) == 0 {
 		return nil
@@ -48,14 +47,20 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 		return nil
 	}
 	var results map[string][]byte
-	var lockKey string
+	lockers := map[string]*cache.Locker{}
 	if c != nil {
-		lockKey = filteredKeys[0]
-		locker, err = c.Locker(lockKey)
-		locker.RLock()
-		locker.RUnlock()
-		if err != nil {
-			return err
+		for k := range filteredKeys {
+			key, err := c.FinalKey(filteredKeys[k])
+			if err != nil {
+				return err
+			}
+			locker, err := c.Locker(key)
+			if err != nil {
+				return err
+			}
+			locker.RLock()
+			lockers[filteredKeys[k]] = locker
+			defer locker.Unlock()
 		}
 
 		results, err = c.MGetBytesValue(filteredKeys...)
@@ -84,8 +89,11 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 		return nil
 	}
 	if c != nil {
-		locker.Lock()
-		defer locker.Unlock()
+		for k := range uncachedKeys {
+			locker := lockers[filteredKeys[k]]
+			locker.Lock()
+		}
+
 	}
 	loaded, err := loader(uncachedKeys...)
 	if err != nil {

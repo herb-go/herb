@@ -1,7 +1,9 @@
 package cachestore
 
 import (
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/herb-go/herb/cache"
 	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
@@ -431,4 +433,79 @@ func TestSyncLoader(t *testing.T) {
 	if val != nil {
 		t.Fatal(val)
 	}
+}
+
+func TestConcurrent(t *testing.T) {
+	rawdata := map[string]int{}
+	c := newTestCache(-1)
+	loader := func(keys ...string) (map[string]interface{}, error) {
+		result := map[string]interface{}{}
+		time.Sleep(300 * time.Microsecond)
+		for _, v := range keys {
+			data := rawdata[v]
+			data++
+			rawdata[v] = data
+			result[v] = &data
+		}
+		return result, nil
+	}
+	creator := func() interface{} {
+		v := int(0)
+		return &v
+	}
+	var tm = NewMapStore()
+	var tm2 = NewMapStore()
+	var tm3 = NewMapStore()
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := Load(tm, c, loader, creator, valueKey, valueKeyAadditional)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+	time.Sleep(100 * time.Microsecond)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := Load(tm2, c, loader, creator, valueKey, valueKeyChanged)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+	time.Sleep(100 * time.Microsecond)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := Load(tm3, c, loader, creator, valueKeyAadditional, valueKeyNotexists)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+	wg.Wait()
+	if *(tm.LoadInterface(valueKey).(*int)) != 1 {
+		t.Fatal(tm)
+	}
+	if *(tm.LoadInterface(valueKeyAadditional).(*int)) != 1 {
+		t.Fatal(tm)
+	}
+	if *(tm2.LoadInterface(valueKey).(*int)) != 1 {
+		t.Fatal(tm2)
+	}
+	if *(tm2.LoadInterface(valueKeyChanged).(*int)) != 1 {
+		t.Fatal(tm2)
+	}
+	if *(tm3.LoadInterface(valueKeyAadditional).(*int)) != 1 {
+		t.Fatal(tm3)
+	}
+	if *(tm3.LoadInterface(valueKeyNotexists).(*int)) != 1 {
+		t.Fatal(tm3)
+	}
+	locker := c.Util().Locker("test")
+	locker.Map.Range(func(key interface{}, value interface{}) bool {
+		//check unlocked locker
+		t.Fatal(key, value)
+		return true
+	})
 }
