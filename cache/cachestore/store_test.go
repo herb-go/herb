@@ -1,6 +1,8 @@
 package cachestore
 
 import (
+	"math/rand"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -517,4 +519,57 @@ func TestConcurrent(t *testing.T) {
 		t.Fatal(key, value)
 		return true
 	})
+}
+
+func TestMutliConcurrent(t *testing.T) {
+	rawdata := sync.Map{}
+	c := newTestCache(-1)
+	loader := func(keys ...string) (map[string]interface{}, error) {
+		result := map[string]interface{}{}
+		time.Sleep(10 * time.Millisecond)
+		for _, v := range keys {
+			var data int
+			val, _ := rawdata.Load(v)
+			if val == nil {
+				data = 0
+			} else {
+				data = val.(int)
+			}
+			data++
+			rawdata.Store(v, data)
+			result[v] = &data
+		}
+		return result, nil
+	}
+	creator := func() interface{} {
+		v := int(0)
+		return &v
+	}
+	wg := &sync.WaitGroup{}
+	for i := 0; i < 10000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			keys := []string{}
+			length := rand.Intn(10)
+			for n := 0; n < length; n++ {
+				keys = append(keys, strconv.Itoa(rand.Intn(100)))
+			}
+			tm := NewSyncMapStore()
+			err := Load(tm, c, loader, creator, keys...)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}()
+	}
+	wg.Wait()
+	locker, _ := c.Util().Locker("test")
+	locker.Lock()
+	locker.Unlock()
+	locker.Map.Range(func(key interface{}, value interface{}) bool {
+		//check unlocked locker
+		t.Fatal(key, value)
+		return true
+	})
+
 }

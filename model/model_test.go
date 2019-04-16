@@ -45,6 +45,10 @@ func TestModel(t *testing.T) {
 	DefaultMessages = nil
 	DefaultMessages.Use(defaultMessage)
 	m := newTestModel()
+	m.SetModelID("test")
+	if m.ModelID() != "test" {
+		t.Fatal(m.ModelID())
+	}
 	MustValidate(m)
 	if !m.HasError() {
 		t.Error(m.HasError())

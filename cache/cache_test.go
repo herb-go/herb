@@ -1,6 +1,9 @@
 package cache_test
 
 import (
+	"math/rand"
+	"strconv"
+	"sync"
 	"testing"
 
 	"github.com/herb-go/herb/cache"
@@ -27,7 +30,7 @@ func NewEntiyTooLargeCache(ttl int64) cache.Cacheable {
 	return c
 
 }
-func newTestCache(ttl int64) cache.Cacheable {
+func newTestCache(ttl int64) *cache.Cache {
 	config := &cache.ConfigMap{}
 	config.Set("Size", 10000000)
 	c := cache.New()
@@ -203,4 +206,31 @@ func TestFinalKey(t *testing.T) {
 	if k != cache.KeyPrefix+"key" {
 		t.Fatal(k)
 	}
+}
+
+func TestMutliConcurrent(t *testing.T) {
+	c := newTestCache(-1)
+	wg := &sync.WaitGroup{}
+	for i := 0; i < 100000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			var result = ""
+			key := strconv.Itoa(rand.Intn(10))
+			err := c.Load(key, &result, 0, testLoader)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}()
+	}
+	wg.Wait()
+	locker, _ := c.Util().Locker("test")
+	locker.Lock()
+	locker.Unlock()
+	locker.Map.Range(func(key interface{}, value interface{}) bool {
+		//check unlocked locker
+		t.Fatal(key, value)
+		return true
+	})
+
 }

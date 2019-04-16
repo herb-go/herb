@@ -98,7 +98,7 @@ func (s *Store) GenerateSession(token string) (ts *Session, err error) {
 func (s *Store) LoadSession(v *Session) error {
 	token := v.token
 	if token == "" {
-		return cache.ErrKeyUnavailable
+		return ErrTokenNotValidated
 	}
 	err := s.Driver.Load(v)
 	if err != nil {
@@ -111,7 +111,7 @@ func (s *Store) LoadSession(v *Session) error {
 	if s.TokenMaxLifetime > 0 && time.Unix(v.CreatedTime, 0).Add(s.TokenMaxLifetime).Before(time.Now()) {
 		return ErrDataNotFound
 	}
-	return err
+	return nil
 }
 
 //SaveSession Save Session if necessary.
@@ -141,10 +141,6 @@ func (s *Store) SaveSession(t *Session) error {
 	return nil
 }
 func (s *Store) save(ts *Session) error {
-	token := ts.token
-	if token == "" {
-		return cache.ErrKeyUnavailable
-	}
 	if ts.ExpiredAt > 0 && ts.ExpiredAt < time.Now().Unix() {
 		return nil
 	}

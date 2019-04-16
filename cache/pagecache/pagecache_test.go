@@ -58,6 +58,7 @@ func nilFieldGenerator(r *http.Request) *cache.Field {
 	return nil
 }
 func TestPageCacheField(t *testing.T) {
+	Debug = true
 	content = 200
 	mux := http.NewServeMux()
 	fg := fieldGenerator(newTestCache(3600))

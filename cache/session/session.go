@@ -147,6 +147,8 @@ func (s *Session) Load() error {
 	err := s.Store.LoadSession(s)
 	if err == ErrDataNotFound {
 		if s.tokenChanged == false {
+			s.notFound = true
+			s.loaded = true
 			return ErrDataNotFound
 		}
 		err = nil
@@ -185,9 +187,11 @@ func (s *Session) Marshal() ([]byte, error) {
 }
 
 //Unmarshal Unmarshal bytes to Session.
+// All data in session will be overwrited.
 //Return   any error raised.
 func (s *Session) Unmarshal(token string, bytes []byte) error {
 	var err error
+
 	var Data = tokenCachedSession{}
 	s.Mutex.Lock()
 	defer s.Mutex.Unlock()
@@ -262,11 +266,11 @@ func (s *Session) Get(name string, v interface{}) (err error) {
 	}
 	s.Mutex.RLock()
 	defer s.Mutex.RUnlock()
-	vt := reflect.TypeOf(v)
-	if vt.Kind() != reflect.Ptr {
+	if v == nil {
 		return ErrNilPointer
 	}
-	if v == nil || reflect.ValueOf(v).IsNil() {
+	vt := reflect.TypeOf(v)
+	if vt.Kind() != reflect.Ptr {
 		return ErrNilPointer
 	}
 
