@@ -299,21 +299,6 @@ func (s *Store) GetRequestSession(r *http.Request) (ts *Session, err error) {
 	return ts, ErrRequestTokenNotFound
 }
 
-//MustRegenerateRequsetSession rregenerate request session with given prefix.
-//Return session regenerated.
-func (s *Store) MustRegenerateRequsetSession(r *http.Request, prefix string) (ts *Session) {
-	var err error
-	ts, err = s.GetRequestSession(r)
-	if err != nil {
-		panic(err)
-	}
-	err = ts.RegenerateToken(prefix)
-	if err != nil {
-		panic(err)
-	}
-	return ts
-}
-
 //Set set value to request with given field name.
 //Return any error if raised.
 func (s *Store) Set(r *http.Request, fieldName string, v interface{}) (err error) {

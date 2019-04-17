@@ -381,7 +381,15 @@ func TestClientRequest(t *testing.T) {
 		s.CookieMiddleware()(w, r, actionTest)
 	}
 	actionLogin := func(w http.ResponseWriter, r *http.Request) {
-		ts := s.MustRegenerateRequsetSession(r, testOwner)
+		ts, err := s.GetRequestSession(r)
+		if err != nil {
+			panic(err)
+		}
+		err = ts.RegenerateToken(testOwner)
+		if err != nil {
+			panic(err)
+		}
+
 		ts.Set(testKey, model)
 		w.Write([]byte(ts.MustToken()))
 	}
