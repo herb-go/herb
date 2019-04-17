@@ -8,13 +8,13 @@ import (
 )
 
 func NewTestCacheStore(ttl time.Duration) *Store {
-	config := &cache.ConfigJSON{}
+	config := cache.ConfigJSON{}
 	config.Set("Size", 10000000)
 	c := cache.New()
 	oc := &cache.OptionConfigJSON{
 		Driver:    "syncmapcache",
 		TTL:       int64(ttl / time.Second),
-		Config:    *config,
+		Config:    config,
 		Marshaler: "json",
 	}
 	err := c.Init(oc)
@@ -130,6 +130,12 @@ func TestEmptyKey(t *testing.T) {
 	}
 	result := ""
 	err = s.Get("testkey", &result)
+	if err != ErrTokenNotValidated {
+		t.Fatal(err)
+	}
+	s = NewSession("test", store)
+	s.token = ""
+	err = store.LoadSession(s)
 	if err != ErrTokenNotValidated {
 		t.Fatal(err)
 	}

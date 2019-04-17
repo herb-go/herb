@@ -46,7 +46,7 @@ type Driver interface {
 type Store struct {
 	Driver               Driver
 	Marshaler            cache.Marshaler
-	TokenLifetime        time.Duration //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
+	TokenLifetime        time.Duration //Token initial expired time.Token life time can be refreshed when accessed if UpdateActiveInterval is greater than 0.
 	TokenMaxLifetime     time.Duration //Token max life time.Token can't live more than TokenMaxLifetime if TokenMaxLifetime if greater than 0.
 	TokenContextName     ContextKey    //Name in request context store the token  data.Default Session is "token".
 	CookieName           string        //Cookie name used in CookieMiddleware.Default Session is "herb-session".
@@ -54,7 +54,7 @@ type Store struct {
 	CookieSecure         bool          //Cookie secure value used in cookie middleware.
 	AutoGenerate         bool          //Whether auto generate token when guset visit.Default Session is false.
 	Mode                 string        //Mode used in auto install middleware.
-	UpdateActiveInterval time.Duration //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
+	UpdateActiveInterval time.Duration //The interval between what token active time refreshed.If less than or equal to 0,the token life time will not be refreshed.
 	DefaultSessionFlag   Flag          //Default flag when creating session.
 }
 
@@ -119,6 +119,7 @@ func (s *Store) LoadSession(v *Session) error {
 func (s *Store) SaveSession(t *Session) error {
 	if s.UpdateActiveInterval > 0 {
 		nextUpdateTime := time.Unix(t.LastActiveTime, 0).Add(s.UpdateActiveInterval)
+		//session lifetime will not be updated if saved too close.
 		if nextUpdateTime.Before(time.Now()) {
 			t.LastActiveTime = time.Now().Unix()
 			t.updated = true
@@ -291,10 +292,9 @@ func (s *Store) GetRequestSession(r *http.Request) (ts *Session, err error) {
 	t := r.Context().Value(s.TokenContextName)
 	if t != nil {
 		ts, ok = t.(*Session)
-		if ok == false {
-			return ts, ErrDataTypeWrong
+		if ok {
+			return ts, nil
 		}
-		return ts, nil
 	}
 	return ts, ErrRequestTokenNotFound
 }
