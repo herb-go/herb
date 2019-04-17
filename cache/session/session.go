@@ -59,7 +59,6 @@ func (s *Session) HasFlag(flag Flag) bool {
 }
 
 type tokenCachedSession struct {
-	Nonce          []byte
 	Data           map[string][]byte
 	CreatedTime    int64
 	LastActiveTime int64
@@ -180,7 +179,6 @@ func (s *Session) Marshal() ([]byte, error) {
 			Data:           s.data,
 			ExpiredAt:      s.ExpiredAt,
 			CreatedTime:    s.CreatedTime,
-			Nonce:          s.Nonce,
 			LastActiveTime: s.LastActiveTime,
 			Flag:           s.Flag,
 		})

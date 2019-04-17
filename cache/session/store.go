@@ -382,20 +382,6 @@ func (s *Store) DestoryMiddleware() func(w http.ResponseWriter, r *http.Request,
 	}
 }
 
-//RegenerateRequestToken Regenerate the token name and data with give owner,and save to request.
-//Panic if any error raised.
-func (s Store) RegenerateRequestToken(r *http.Request, owner string) (*Session, error) {
-	v, err := s.GetRequestSession(r)
-	if err != nil {
-		return nil, err
-	}
-	err = v.RegenerateToken(owner)
-	if err != nil {
-		return nil, err
-	}
-	return v, nil
-}
-
 //IsNotFoundError return if given error if a not found error.
 func (s Store) IsNotFoundError(err error) bool {
 	return err == ErrDataNotFound

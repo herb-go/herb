@@ -16,7 +16,8 @@ const (
 	//PrefixModeRaw prefix mode which dont convert prefix
 	PrefixModeRaw = "raw"
 	//PrefixModeMd5 prefix mode which  convert prefix to md5 sum
-	PrefixModeMd5     = "md5"
+	PrefixModeMd5 = "md5"
+	//PrefixModeEmpty prefix mode which  convert prefix to empty string
 	PrefixModeEmpty   = "empty"
 	DefaultPrefixMode = PrefixModeRaw
 )
