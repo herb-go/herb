@@ -1,10 +1,10 @@
-package cachestore
+package datastore
 
 import (
 	"github.com/herb-go/herb/cache"
 )
 
-//DataSource cache store datasource
+//DataSource data store datasource
 type DataSource struct {
 	// Creator empty createor.
 	// Must return pointer of data.

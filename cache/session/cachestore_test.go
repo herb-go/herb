@@ -126,11 +126,7 @@ func TestField(t *testing.T) {
 		if err != ErrDataNotFound {
 			panic(err)
 		}
-		session := field.MustGetSession(r)
-		if session.token != ts.token {
-			t.Fatal(session)
-		}
-		session, err = field.GetSession(r)
+		session, err := field.GetSession(r)
 		if session.token != ts.token {
 			t.Fatal(session)
 		}
@@ -145,7 +141,10 @@ func TestField(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		s := field.MustGetSession(r)
+		s, err := field.GetSession(r)
+		if err != nil {
+			panic(err)
+		}
 		ts.token = s.token
 		w.Write([]byte(uid))
 	}

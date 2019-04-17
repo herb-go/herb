@@ -1,4 +1,4 @@
-package cachestore
+package datastore
 
 import (
 	"sort"
@@ -20,7 +20,7 @@ func unmarshalMapElement(s Store, creator func() interface{}, key string, data [
 	return nil
 }
 
-//Load load data by given key list into cache store.
+//Load load data by given key list into data store.
 //Param s target data map pointer.
 //Param c map cache
 //Param loader func by which data load.

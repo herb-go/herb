@@ -57,7 +57,7 @@ func NewCacheDriver() *CacheDriver {
 	}
 }
 
-// MustCacheStore create new cache store with given token lifetime.
+// MustCacheStore create new data store with given token lifetime.
 //Return store created.
 //Panic if any error raised.
 func MustCacheStore(Cache *cache.Cache, TokenLifetime time.Duration) *Store {

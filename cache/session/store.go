@@ -182,17 +182,6 @@ func (s *Store) GetSessionToken(ts *Session) (token string, err error) {
 	return s.Driver.GetSessionToken(ts)
 }
 
-// MustGetSessionToken Get the token string from token data.
-//Return token.
-//Panic if any error raised.
-func (s *Store) MustGetSessionToken(ts *Session) (token string) {
-	token, err := s.Driver.GetSessionToken(ts)
-	if err != nil {
-		panic(err)
-	}
-	return
-}
-
 //RegenerateToken regenerate session token with given prefix.
 //Return session and any error if raised.
 func (s *Store) RegenerateToken(prefix string) (ts *Session, err error) {
@@ -223,11 +212,14 @@ func (s *Store) Install(r *http.Request, token string) (ts *Session, err error) 
 //AutoGenerateMiddleware middleware that auto generate session.
 func (s *Store) AutoGenerateMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		var ts = s.MustGetRequestSession(r)
+		var ts, err = s.GetRequestSession(r)
+		if err != nil {
+			panic(err)
+		}
 		if ts.token == "" || ts.token == clientStoreNewToken {
 			err := ts.RegenerateToken("")
 			if err != nil {
-				return
+				panic(err)
 			}
 			ctx := context.WithValue(r.Context(), s.TokenContextName, ts)
 			*r = *r.WithContext(ctx)
@@ -381,31 +373,27 @@ func (s *Store) SaveRequestSession(r *http.Request) error {
 //DestoryMiddleware return a middleware clear the token in request.
 func (s *Store) DestoryMiddleware() func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		v := s.MustGetRequestSession(r)
+		v, err := s.GetRequestSession(r)
+		if err != nil {
+			panic(err)
+		}
 		v.SetToken("")
 		next(w, r)
 	}
 }
 
-//MustGetRequestSession get stored  token data from request.
+//RegenerateRequestToken Regenerate the token name and data with give owner,and save to request.
 //Panic if any error raised.
-func (s Store) MustGetRequestSession(r *http.Request) (v *Session) {
+func (s Store) RegenerateRequestToken(r *http.Request, owner string) (*Session, error) {
 	v, err := s.GetRequestSession(r)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return v
-}
-
-//MustRegenerateRequestToken Regenerate the token name and data with give owner,and save to request.
-//Panic if any error raised.
-func (s Store) MustRegenerateRequestToken(r *http.Request, owner string) *Session {
-	v := s.MustGetRequestSession(r)
-	err := v.RegenerateToken(owner)
+	err = v.RegenerateToken(owner)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return v
+	return v, nil
 }
 
 //IsNotFoundError return if given error if a not found error.

@@ -1,4 +1,4 @@
-package cachestore
+package datastore
 
 import (
 	"sync"
@@ -6,7 +6,7 @@ import (
 	"unsafe"
 )
 
-// Store interface of cache store
+// Store interface of data store
 type Store interface {
 	// Load load value with given key
 	// Return value and whether load successfully

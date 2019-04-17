@@ -1,8 +1,8 @@
-package cachestore
+package datastore
 
 import "github.com/herb-go/herb/cache"
 
-// Loader cache store loader
+// Loader data store loader
 type Loader struct {
 	Cache      cache.Cacheable
 	Store      Store

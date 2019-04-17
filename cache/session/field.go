@@ -46,13 +46,6 @@ func (f *Field) GetSession(r *http.Request) (ts *Session, err error) {
 	return f.Store.GetRequestSession(r)
 }
 
-//MustGetSession get Session from http request.
-//Return session.
-//Panic if any error raised.
-func (f *Field) MustGetSession(r *http.Request) *Session {
-	return f.Store.MustGetRequestSession(r)
-}
-
 //IdentifyRequest indentify request with field.
 //Return  id and any error if raised.
 func (f *Field) IdentifyRequest(r *http.Request) (string, error) {

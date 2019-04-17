@@ -9,7 +9,7 @@ import (
 //DefaultMarshaler default session Marshaler
 var DefaultMarshaler = "msgpack"
 
-//DriverNameCacheStore driver name for cache store
+//DriverNameCacheStore driver name for data store
 const DriverNameCacheStore = "cache"
 
 //DriverNameClientStore driver name for client store

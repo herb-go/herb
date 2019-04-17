@@ -1,4 +1,4 @@
-package cachestore
+package datastore
 
 import (
 	"math/rand"
