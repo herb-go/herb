@@ -245,9 +245,9 @@ func TestMaxLifeTime(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	for i := 0; i < 4; i++ {
-		time.Sleep(time.Second)
+		time.Sleep(900 * time.Millisecond)
 
 		go func() {
 			var n = i

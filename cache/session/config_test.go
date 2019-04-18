@@ -18,6 +18,8 @@ func TestCacheStoreConfig(t *testing.T) {
 	config.CookiePath = "/"
 	config.CookieSecure = true
 	config.UpdateActiveIntervalInSecond = 100
+	config.TokenLength = 32
+	config.TokenPrefixMode = PrefixModeRaw
 	store := New()
 	err = config.ApplyTo(store)
 	if err != nil {
@@ -40,7 +42,12 @@ func TestCacheStoreConfig(t *testing.T) {
 	}
 	if store.UpdateActiveInterval != 100*time.Second {
 		t.Fatal(store.UpdateActiveInterval)
-
+	}
+	if store.Driver.(*CacheDriver).Length != 32 {
+		t.Fatal(store.Driver.(*CacheDriver).Length)
+	}
+	if store.Driver.(*CacheDriver).PrefixMode != PrefixModeRaw {
+		t.Fatal(store.Driver.(*CacheDriver).Length)
 	}
 }
 

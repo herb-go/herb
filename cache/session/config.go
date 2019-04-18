@@ -30,6 +30,8 @@ type StoreConfig struct {
 	UpdateActiveIntervalInSecond int64  //The interval between who token active time update.If less than or equal to 0,the token life time will not be refreshed.
 	DefaultSessionFlag           Flag   //Default flag when creating session.
 	ClientStoreKey               string
+	TokenPrefixMode              string
+	TokenLength                  int
 	Cache                        cache.OptionConfigMap
 }
 
@@ -81,6 +83,8 @@ func (s *StoreConfig) ApplyTo(store *Store) error {
 		driver := NewCacheDriver()
 		coc := NewCacheDriverOptionConfig()
 		coc.Cache = c
+		coc.Length = s.TokenLength
+		coc.PrefixMode = s.TokenPrefixMode
 		err = driver.Init(coc)
 		if err != nil {
 			return err
