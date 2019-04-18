@@ -13,12 +13,6 @@ import (
 //Debug if pagecache module is in debug mode.
 var Debug bool
 
-// var pagePool = sync.Pool{
-// 	New: func() interface{} {
-// 		return []byte{}
-// 	},
-// }
-
 //PageCacheKeyHeader http respnose header wihch will echo page cache key when debug is on.
 var PageCacheKeyHeader = "herbgo-debug-pagecache"
 

@@ -32,6 +32,7 @@ func (m *Middleware) SetTokenFailedAction(action func(w http.ResponseWriter, r *
 	m.tokenFailedAction = action
 }
 
+//DefaultTokenFailedAction return default token failed action
 func (m *Middleware) DefaultTokenFailedAction(w http.ResponseWriter, r *http.Request) {
 	if m.FailStatusCode == 0 {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -82,6 +83,7 @@ func (m *Middleware) ServeMiddleware(w http.ResponseWriter, r *http.Request, nex
 	next(w, r)
 }
 
+// Warnings show warnings if forwarded middleware settings is not safe.
 func (m *Middleware) Warnings() []string {
 	if m.Enabled && (m.ForwardedForHeader != "" ||
 		m.ForwardedHostHeader != "" ||

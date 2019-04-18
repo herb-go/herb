@@ -5,12 +5,14 @@ import (
 	"time"
 )
 
+//Redirector redirector request when condition is true.
 type Redirector struct {
 	TargetURL string
 	Cookie    *http.Cookie
 	Condition func(w http.ResponseWriter, req *http.Request) bool
 }
 
+// NewRedirector create new redirector wotj govem cookie name and condition
 func NewRedirector(url string, cookiename string, condition func(w http.ResponseWriter, req *http.Request) bool) *Redirector {
 	return &Redirector{
 		TargetURL: url,
@@ -22,6 +24,8 @@ func NewRedirector(url string, cookiename string, condition func(w http.Response
 		Condition: condition,
 	}
 }
+
+// RedirectAction  redirect action of redirector
 func (r *Redirector) RedirectAction(w http.ResponseWriter, req *http.Request) {
 	cookie := &http.Cookie{
 		Name:     r.Cookie.Name,

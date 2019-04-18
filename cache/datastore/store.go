@@ -66,10 +66,12 @@ type SyncMapStore struct {
 	syncmap unsafe.Pointer
 }
 
+//Map return sync map from store
 func (m *SyncMapStore) Map() *sync.Map {
 	return (*sync.Map)(atomic.LoadPointer(&m.syncmap))
 }
 
+//SetMap set sync map to store
 func (m *SyncMapStore) SetMap(smap *sync.Map) {
 	atomic.StorePointer(&m.syncmap, unsafe.Pointer(smap))
 }

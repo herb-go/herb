@@ -5,15 +5,20 @@ type Option interface {
 	ApplyTo(*Renderer) error
 }
 
+// NewOptionCommon create new renderer option
 func NewOptionCommon() *OptionCommon {
 	return &OptionCommon{}
 }
 
+//OptionCommon Common renderer option
 type OptionCommon struct {
-	Engine   Engine
+	//Engine render engine
+	Engine Engine
+	//ViewRoot root path of view
 	ViewRoot string
 }
 
+// ApplyTo apply option to renderer
 func (o *OptionCommon) ApplyTo(r *Renderer) error {
 	r.engine = o.Engine
 	r.engine.SetViewRoot(o.ViewRoot)
