@@ -19,7 +19,8 @@ const DriverNameClientStore = "cookie"
 type StoreConfig struct {
 	DriverName                   string
 	Marshaler                    string
-	TokenLifetimeInDay           int64  //Token initial expired time.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
+	TokenLifetimeInHour          int64  //Token initial expired time in second.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
+	TokenLifetimeInDay           int64  //Token initial expired time in day.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.Skipped if  TokenLifetimeInHour is set.
 	TokenMaxLifetimeInDay        int64  //Token max life time.Token can't live more than TokenMaxLifetime if TokenMaxLifetime if greater than 0.
 	TokenContextName             string //Name in request context store the token  data.Default Session is "token".
 	CookieName                   string //Cookie name used in CookieMiddleware.Default Session is "herb-session".
@@ -35,8 +36,10 @@ type StoreConfig struct {
 //ApplyTo apply config to store.
 //Return any error if raised.
 func (s *StoreConfig) ApplyTo(store *Store) error {
-	if s.TokenLifetimeInDay != 0 {
-		store.TokenLifetime = time.Duration(s.TokenLifetimeInDay) * time.Hour * 24
+	if s.TokenLifetimeInHour != 0 {
+		store.TokenLifetime = time.Duration(s.TokenLifetimeInHour) * time.Hour
+	} else if s.TokenLifetimeInDay != 0 {
+		store.TokenLifetime = time.Duration(s.TokenLifetimeInDay) * 24 * time.Hour
 	}
 	if s.TokenMaxLifetimeInDay != 0 {
 		store.TokenMaxLifetime = time.Duration(s.TokenMaxLifetimeInDay) * time.Hour * 24
@@ -49,6 +52,9 @@ func (s *StoreConfig) ApplyTo(store *Store) error {
 	}
 	if s.CookiePath != "" {
 		store.CookiePath = s.CookiePath
+	}
+	if s.CookieSecure {
+		store.CookieSecure = s.CookieSecure
 	}
 	store.AutoGenerate = s.AutoGenerate
 	if s.UpdateActiveIntervalInSecond != 0 {

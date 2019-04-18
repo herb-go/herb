@@ -26,6 +26,8 @@ const DefaultTokenLength = 64
 
 var defaultUpdateActiveInterval = 5 * time.Minute
 
+var defaultTokenLifetime = 2 * time.Hour
+
 var defaultTokenMaxLifetime = 365 * 24 * time.Hour
 var (
 	defaultCookieName = "herb-session"

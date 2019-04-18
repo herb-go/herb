@@ -944,4 +944,14 @@ func TestCacheDriverPrefix(t *testing.T) {
 	if len(r) != 10 {
 		t.Fatal(r)
 	}
+	c.PrefixMode = ""
+	c.Length = 10
+	r, err = defaultTokenGenerater(c, p)
+	t1, err = c.ConvertPrefix(p)
+	if err != nil {
+		panic(err)
+	}
+	if t1 != "" {
+		t.Fatal(t1)
+	}
 }

@@ -66,6 +66,7 @@ func New() *Store {
 		CookiePath:           defaultCookiePath,
 		UpdateActiveInterval: defaultUpdateActiveInterval,
 		TokenMaxLifetime:     defaultTokenMaxLifetime,
+		TokenLifetime:        defaultTokenLifetime,
 	}
 }
 
