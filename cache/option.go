@@ -5,15 +5,17 @@ import (
 	"time"
 )
 
-//Option cache option
+//Option cache option interface.
 type Option interface {
 	ApplyTo(*Cache) error
 }
 
+//NewOptionConfig create new cache option.
 func NewOptionConfig() *OptionConfig {
 	return &OptionConfig{}
 }
 
+//OptionConfig cache option
 type OptionConfig struct {
 	Driver    string
 	TTL       int64
@@ -21,6 +23,8 @@ type OptionConfig struct {
 	Config    Config
 }
 
+//ApplyTo apply option to given cache.
+//Return any error if raised.
 func (o *OptionConfig) ApplyTo(cache *Cache) error {
 	driver, err := NewDriver(o.Driver, o.Config, "")
 	if err != nil {

@@ -189,6 +189,8 @@ func (n *Node) ExpireCounter(key string, ttl time.Duration) error {
 	return n.Cache.ExpireCounter(k, ttl)
 }
 
+//Locker create new locker with given key.
+//return locker and if locker aleady locked
 func (n *Node) Locker(key string) (*Locker, bool) {
 	return n.Cache.Locker(key)
 }

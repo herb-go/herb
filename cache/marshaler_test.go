@@ -12,13 +12,13 @@ func TestMarshaler(t *testing.T) {
 	if len(marshalers) != 1 {
 		t.Fatal(marshalers)
 	}
-	cache.UnregisterAllMarshaler()
+	cache.UnregisterAllMarshalers()
 	marshalers = cache.MarshalerFactories()
 	if len(marshalers) != 0 {
 		t.Fatal(marshalers)
 	}
 	cache.RegisterMarshaler("json", func() (cache.Marshaler, error) {
-		return &cache.JsonMarshaler{}, nil
+		return &cache.JSONMarshaler{}, nil
 	})
 }
 

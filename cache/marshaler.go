@@ -7,6 +7,7 @@ import (
 	"sync"
 )
 
+//Marshaler Marshaler inteface
 type Marshaler interface {
 	Marshal(v interface{}) ([]byte, error)
 	Unmarshal(bytes []byte, v interface{}) error
@@ -21,6 +22,7 @@ var (
 	marshalerFactories  = make(map[string]MarshalerFactory)
 )
 
+//DefaultMarshaler default marshaler name
 var DefaultMarshaler = "msgpack"
 
 // RegisterMarshaler makes a marshaler creator available by the provided name.
@@ -37,7 +39,9 @@ func RegisterMarshaler(name string, f MarshalerFactory) {
 	}
 	marshalerFactories[name] = f
 }
-func UnregisterAllMarshaler() {
+
+// UnregisterAllMarshalers Unregister all marshalers
+func UnregisterAllMarshalers() {
 	marshalerFactorysMu.Lock()
 	defer marshalerFactorysMu.Unlock()
 	// For tests.
@@ -72,24 +76,25 @@ func NewMarshaler(name string) (Marshaler, error) {
 	return factoryi()
 }
 
-type JsonMarshaler struct {
+//JSONMarshaler Marshaler which marshal data as JSON format
+type JSONMarshaler struct {
 }
 
 //Marshal Marshal data model to  bytes.
 //Return marshaled bytes and any erro rasied.
-func (m *JsonMarshaler) Marshal(v interface{}) ([]byte, error) {
+func (m *JSONMarshaler) Marshal(v interface{}) ([]byte, error) {
 	return json.Marshal(v)
 }
 
 //Unmarshal Unmarshal bytes to data model.
 //Parameter v should be pointer to empty data model which data filled in.
 //Return any error raseid.
-func (m *JsonMarshaler) Unmarshal(bytes []byte, v interface{}) error {
+func (m *JSONMarshaler) Unmarshal(bytes []byte, v interface{}) error {
 	return json.Unmarshal(bytes, v)
 }
 
 func init() {
 	RegisterMarshaler("json", func() (Marshaler, error) {
-		return &JsonMarshaler{}, nil
+		return &JSONMarshaler{}, nil
 	})
 }

@@ -18,10 +18,10 @@ const (
 	//PrefixModeMd5 prefix mode which  convert prefix to md5 sum
 	PrefixModeMd5 = "md5"
 	//PrefixModeEmpty prefix mode which  convert prefix to empty string
-	PrefixModeEmpty   = "empty"
-	DefaultPrefixMode = PrefixModeRaw
+	PrefixModeEmpty = "empty"
 )
 
+//DefaultTokenLength default token length
 const DefaultTokenLength = 64
 
 var defaultUpdateActiveInterval = 5 * time.Minute
@@ -110,6 +110,7 @@ func (s *CacheDriver) GenerateToken(prefix string) (token string, err error) {
 	return s.TokenGenerater(s, prefix)
 }
 
+//ConvertPrefix convert prefix by driver prefix mode
 func (s *CacheDriver) ConvertPrefix(prefix string) (output string, err error) {
 	switch s.PrefixMode {
 	case PrefixModeEmpty:

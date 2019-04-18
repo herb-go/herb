@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+//ResponseWriter http response writer
 type ResponseWriter interface {
 	http.ResponseWriter
 	http.Hijacker

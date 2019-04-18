@@ -18,6 +18,7 @@ const clientStoreNewToken = "."
 
 var filledByte = []byte{0}
 
+//IVSize AES IV size
 const IVSize = 16
 
 func formatKey(key []byte, size int) []byte {
@@ -25,6 +26,10 @@ func formatKey(key []byte, size int) []byte {
 	copy(data, key)
 	return data
 }
+
+//AESEncrypt aes encrypt with given data,key and iv.
+//Data will be padding with PKCS7Padding
+//Return encrytped data and any error if raised.
 func AESEncrypt(unencrypted []byte, key []byte, iv []byte) (encrypted []byte, err error) {
 	defer func() {
 		r := recover()
@@ -43,6 +48,11 @@ func AESEncrypt(unencrypted []byte, key []byte, iv []byte) (encrypted []byte, er
 	crypter.CryptBlocks(encrypted, data)
 	return
 }
+
+// AESNonceEncrypt aes encrypt data with given key and random bytes as IV.
+//Data will be padding with PKCS7Padding
+//Random IV will prefix encryped data
+//return encrypted data and any error if raisd.
 func AESNonceEncrypt(unencrypted []byte, key []byte) (encrypted []byte, err error) {
 	defer func() {
 		r := recover()
@@ -65,6 +75,10 @@ func AESNonceEncrypt(unencrypted []byte, key []byte) (encrypted []byte, err erro
 	copy(encrypted[IVSize:], rawEncrypted)
 	return
 }
+
+//AESEncryptBase64 aes encrypt with given data,key and iv.
+//Data will be padding with PKCS7Padding
+//Return base64 encoded encrytped data and any error if raised.
 func AESEncryptBase64(unencrypted []byte, key []byte, iv []byte) (encrypted string, err error) {
 	d, err := AESEncrypt(unencrypted, key, iv)
 	if err != nil {
@@ -72,6 +86,11 @@ func AESEncryptBase64(unencrypted []byte, key []byte, iv []byte) (encrypted stri
 	}
 	return base64.StdEncoding.EncodeToString(d), nil
 }
+
+// AESNonceEncryptBase64 aes encrypt data with given key and random bytes as IV.
+//Data will be padding with PKCS7Padding
+//Random IV will prefix encryped data
+//return base64 encoded encrypted data and any error if raisd.
 func AESNonceEncryptBase64(unencrypted []byte, key []byte) (encrypted string, err error) {
 	d, err := AESNonceEncrypt(unencrypted, key)
 	if err != nil {
@@ -79,6 +98,10 @@ func AESNonceEncryptBase64(unencrypted []byte, key []byte) (encrypted string, er
 	}
 	return base64.StdEncoding.EncodeToString(d), nil
 }
+
+//AESDecrypt decrypt data with given key and iv.
+//Data will be unpadding with PKCS7Unpadding.
+//Return decrypted data and any error if raised.
 func AESDecrypt(encrypted []byte, key []byte, iv []byte) (decrypted []byte, err error) {
 	defer func() {
 		r := recover()
@@ -97,6 +120,11 @@ func AESDecrypt(encrypted []byte, key []byte, iv []byte) (decrypted []byte, err 
 	decrypted = PKCS7Unpadding(data)
 	return
 }
+
+//AESNonceDecrypt decrypt data with given key.
+//IV will load form first bytes of data.
+//Data will be unpadding with PKCS7Unpadding.
+//Return decrypted data and any error if raised.
 func AESNonceDecrypt(encrypted []byte, key []byte) (decrypted []byte, err error) {
 	defer func() {
 		r := recover()
@@ -106,6 +134,10 @@ func AESNonceDecrypt(encrypted []byte, key []byte) (decrypted []byte, err error)
 	}()
 	return AESDecrypt(encrypted[IVSize:], key, encrypted[:IVSize])
 }
+
+//AESDecryptBase64 decrypt base64 encoded data with given key and iv.
+//Data will be unpadding with PKCS7Unpadding.
+//Return decrypted data and any error if raised.
 func AESDecryptBase64(encrypted string, key []byte, iv []byte) (decrypted []byte, err error) {
 	d, err := base64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
@@ -114,6 +146,10 @@ func AESDecryptBase64(encrypted string, key []byte, iv []byte) (decrypted []byte
 	return AESDecrypt(d, key, iv)
 }
 
+//AESNonceDecryptBase64 decrypt base64 encoded data with given key.
+//IV will load form first bytes of data.
+//Data will be unpadding with PKCS7Unpadding.
+//Return decrypted data and any error if raised.
 func AESNonceDecryptBase64(encrypted string, key []byte) (decrypted []byte, err error) {
 	d, err := base64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
@@ -255,9 +291,8 @@ func (s *ClientDriver) Close() error {
 	return nil
 }
 
-/**
- *   Reference http://blog.studygolang.com/167.html
- */
+// PKCS7Padding padding data as  PKCS7
+// Reference http://blog.studygolang.com/167.html
 func PKCS7Padding(data []byte, blockSize int) []byte {
 	padding := blockSize - len(data)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
@@ -268,9 +303,8 @@ func PKCS7Padding(data []byte, blockSize int) []byte {
 
 }
 
-/**
- *  Reference http://blog.studygolang.com/167.html
- */
+// PKCS7Unpadding unpadding data as  PKCS7
+// Reference http://blog.studygolang.com/167.html
 func PKCS7Unpadding(data []byte) []byte {
 	length := len(data)
 	unpadding := int(data[length-1])

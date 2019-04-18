@@ -293,6 +293,8 @@ func (c *Collection) ExpireCounter(key string, TTL time.Duration) error {
 	return c.Cache.ExpireCounter(k, TTL)
 }
 
+//Locker create new locker with given key.
+//return locker and if locker aleady locked
 func (c *Collection) Locker(key string) (*Locker, bool) {
 	return c.Cache.Locker(key)
 }

@@ -250,14 +250,13 @@ func TestMaxLifeTime(t *testing.T) {
 		time.Sleep(900 * time.Millisecond)
 
 		go func() {
-			var n = i
 			session, err = s.GenerateSession("test")
 			if err != nil {
 				t.Fatal(err)
 			}
 			err = s.LoadSession(session)
 			if err != nil {
-				t.Fatal(n, err)
+				t.Fatal(err)
 			}
 			err = session.Save()
 			if err != nil {
