@@ -28,7 +28,7 @@ func (d *testDriver) MustCaptcha(s *session.Store, w http.ResponseWriter, r *htt
 		panic(err)
 	}
 	if code == "" || reset {
-		code = strconv.FormatInt(time.Now().Unix(), 10)
+		code = strconv.FormatInt(time.Now().UnixNano(), 10)
 		err = s.Set(r, "captcha", code)
 	}
 	output, err := json.Marshal(map[string]interface{}{"Code": code})

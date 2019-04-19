@@ -4,12 +4,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/herb-go/herb/cache"
+
+	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
 	_ "github.com/herb-go/herb/cache/marshalers/msgpackmarshaler"
+
 	"github.com/herb-go/herb/cache/session"
 )
 
 func NewCatpcha() *Captcha {
-	s := session.MustClientStore([]byte("test"), time.Hour)
+	config := &cache.ConfigJSON{}
+	config.Set("Size", 10000000)
+	sc := cache.New()
+	oc := &cache.OptionConfigMap{
+		Driver:    "syncmapcache",
+		TTL:       3600,
+		Config:    nil,
+		Marshaler: "json",
+	}
+	err := sc.Init(oc)
+	if err != nil {
+		panic(err)
+	}
+	s := session.MustCacheStore(sc, time.Hour)
 	captcha := New(s)
 	c := &Config{}
 	c.Enabled = true
