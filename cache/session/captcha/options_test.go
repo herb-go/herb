@@ -13,6 +13,17 @@ import (
 )
 
 func NewCatpcha() *Captcha {
+	captcha := newEmptyCaptcha()
+	c := &Config{}
+	c.Enabled = true
+	c.Driver = "testcaptcha"
+	err := c.ApplyTo(captcha)
+	if err != nil {
+		panic(err)
+	}
+	return captcha
+}
+func newEmptyCaptcha() *Captcha {
 	config := &cache.ConfigJSON{}
 	config.Set("Size", 10000000)
 	sc := cache.New()
@@ -28,19 +39,27 @@ func NewCatpcha() *Captcha {
 	}
 	s := session.MustCacheStore(sc, time.Hour)
 	captcha := New(s)
-	c := &Config{}
-	c.Enabled = true
-	c.Driver = "testcaptcha"
-	c.ApplyTo(captcha)
 	return captcha
 }
-
 func TestConfig(t *testing.T) {
-	c := NewCatpcha()
-	if c == nil {
-		t.Fatal(c)
+	captcha := newEmptyCaptcha()
+	c := &Config{
+		Driver:         "testcaptcha",
+		Enabled:        false,
+		AddrWhiteList:  []string{"test"},
+		DisabledScenes: map[string]bool{"test": false},
 	}
-	if c.Enabled == false {
-		t.Fatal(c)
+	err := c.ApplyTo(captcha)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if captcha.Enabled != false {
+		t.Fatal(captcha)
+	}
+	if len(captcha.AddrWhiteList) != len(c.AddrWhiteList) {
+		t.Fatal(captcha)
+	}
+	if len(captcha.DisabledScenes) != len(c.DisabledScenes) {
+		t.Fatal(captcha)
 	}
 }

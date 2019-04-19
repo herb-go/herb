@@ -35,6 +35,7 @@ func New(s *session.Store) *Captcha {
 		DisabledScenes: map[string]bool{},
 		SessionStore:   s,
 		EnabledChecker: defaultEnabledChecker,
+		AddrWhiteList:  []string{},
 	}
 }
 
