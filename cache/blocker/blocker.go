@@ -12,15 +12,18 @@ import (
 
 //StatusAny stand for any status when block.
 const StatusAny = 0
+
+//StatusAnyError stand for any status greater than 400 when block.
+const StatusAnyError = -1
 const defaultBlockedStatus = http.StatusTooManyRequests
 
 //New create blocker with given cache and http request udentifier
-func New(cache cache.Cacheable, Identifier func(r *http.Request) (string, error)) *Blocker {
+func New(cache cache.Cacheable) *Blocker {
 	return &Blocker{
 		config:        map[int]statusConfig{},
 		Cache:         cache,
-		StatusBlocked: defaultBlockedStatus,
-		Identifier:    Identifier,
+		StatusCodeBlocked: defaultBlockedStatus,
+		Identifier:    IPIdentifier,
 	}
 }
 
@@ -35,8 +38,8 @@ type Blocker struct {
 	config map[int]statusConfig
 	//Cache cache which store blcok data
 	Cache cache.Cacheable
-	//StatusBlocked error status which will returned when request blcoker.Default value is 429.
-	StatusBlocked int
+	//StatusCodeBlocked error status which will returned when request blcoker.Default value is 429.
+	StatusCodeBlocked int
 	//Identifier http request identifier
 	Identifier func(r *http.Request) (string, error)
 }
@@ -75,6 +78,9 @@ func (b *Blocker) isBlocked(id string) bool {
 }
 func (b *Blocker) incr(ip string, status int) {
 	checklist := []int{status, StatusAny}
+	if status >= 400 {
+		checklist = append(checklist, StatusAnyError)
+	}
 	for k := range checklist {
 		config, ok := b.config[checklist[k]]
 		if ok == true {
@@ -100,7 +106,7 @@ func (b *Blocker) ServeMiddleware(w http.ResponseWriter, r *http.Request, next h
 		panic(err)
 	}
 	if b.isBlocked(id) {
-		http.Error(w, http.StatusText(b.StatusBlocked), b.StatusBlocked)
+		http.Error(w, http.StatusText(b.StatusCodeBlocked), b.StatusCodeBlocked)
 		return
 	}
 	writer := blockWriter{
