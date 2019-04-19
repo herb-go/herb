@@ -8,7 +8,7 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-//Driver captca driver interface.
+//Driver captcha driver interface.
 type Driver interface {
 	//Name return driver name.
 	Name() string

@@ -53,7 +53,7 @@ func (e *ErrorPage) getStatusHandler(status int) func(w http.ResponseWriter, r *
 		return statusHandlers
 
 	}
-	if status > 399 && e.errorHandler != nil {
+	if status >= 400 && e.errorHandler != nil {
 		return e.errorHandler
 	}
 	return nil
@@ -88,6 +88,7 @@ func (e *ErrorPage) newResponseWriter(w http.ResponseWriter, r *http.Request) er
 	}
 }
 
+//Writer http response writer interface.
 type Writer interface {
 	http.ResponseWriter
 	http.Hijacker
