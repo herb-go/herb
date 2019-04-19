@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"testing"
 	"time"
 
+	"github.com/herb-go/herb/cache"
 	"github.com/herb-go/herb/cache/session"
 )
 
@@ -45,4 +47,49 @@ func (d *testDriver) Verify(s *session.Store, r *http.Request, scene string, tok
 		return false, err
 	}
 	return code == token, nil
+}
+
+func registerTestDriver() {
+	Register("testcaptcha", func(conf cache.Config, prefix string) (Driver, error) {
+		return &testDriver{}, nil
+	})
+}
+
+func TestRegisterDriver(t *testing.T) {
+	fs := Factories()
+	if len(fs) != 1 {
+		t.Fatal(fs)
+	}
+	UnregisterAll()
+	fs = Factories()
+	if len(fs) != 0 {
+		t.Fatal(fs)
+	}
+	registerTestDriver()
+}
+
+func TestRegisterEmptyDriver(t *testing.T) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal(r)
+		}
+	}()
+	Register("test", nil)
+}
+
+func TestRegisterDupDriver(t *testing.T) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal(r)
+		}
+	}()
+	Register("testcaptcha", func(conf cache.Config, prefix string) (Driver, error) {
+		return &testDriver{}, nil
+	})
+}
+
+func init() {
+	registerTestDriver()
 }
