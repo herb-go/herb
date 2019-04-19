@@ -6,18 +6,19 @@ import (
 	"sort"
 
 	"github.com/herb-go/herb/cache"
+	"github.com/herb-go/herb/cache/session"
 )
 
 //Driver captcha driver interface.
 type Driver interface {
 	//Name return driver name.
 	Name() string
-	//MustCaptcha execute captcha to giver http request and response and scene or reset value.
+	//MustCaptcha execute captcha to given http request and response and scene or reset value.
 	//Panic if any error rasied.
-	MustCaptcha(scene string, reset bool, w http.ResponseWriter, r *http.Request)
+	MustCaptcha(s *session.Store, w http.ResponseWriter, r *http.Request, scene string, reset bool)
 	//Verify verify if token is validated with given http rquest and scene.
 	//return verify result and any error raised.
-	Verify(r *http.Request, scene string, token string) (bool, error)
+	Verify(s *session.Store, r *http.Request, scene string, token string) (bool, error)
 }
 
 //Factory driver createor with given config and prefix.
@@ -39,8 +40,8 @@ func Register(name string, f Factory) {
 	factories[name] = f
 }
 
-//unregisterAll unregister all drivers.
-func unregisterAll() {
+//UnregisterAll unregister all drivers.
+func UnregisterAll() {
 	factorysMu.Lock()
 	defer factorysMu.Unlock()
 	// For tests.

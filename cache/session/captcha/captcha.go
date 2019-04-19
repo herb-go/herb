@@ -33,7 +33,7 @@ func defaultEnabledChecker(captcha *Captcha, scene string, r *http.Request) (boo
 func New(s *session.Store) *Captcha {
 	return &Captcha{
 		DisabledScenes: map[string]bool{},
-		Session:        s,
+		SessionStore:   s,
 		EnabledChecker: defaultEnabledChecker,
 	}
 }
@@ -42,7 +42,7 @@ func New(s *session.Store) *Captcha {
 type Captcha struct {
 	driver Driver
 	//Session captcha session store.
-	Session *session.Store
+	SessionStore *session.Store
 	//Enabled if captcha is enabled.
 	Enabled bool
 	//AddrWhiteList ip addr white list.Ip start with value in list doesn't need captcha.
@@ -87,7 +87,7 @@ func (c *Captcha) CaptchaAction(scene string) func(w http.ResponseWriter, r *htt
 			w.Header().Set(HeaderCaptchaEnabled, "Enabled")
 		}
 		if enabled {
-			c.driver.MustCaptcha(scene, r.Header.Get(HeaderReset) != "", w, r)
+			c.driver.MustCaptcha(c.SessionStore, w, r, scene, r.Header.Get(HeaderReset) != "")
 			return
 		}
 		_, err = w.Write([]byte("{}"))
@@ -107,7 +107,7 @@ func (c *Captcha) Verify(r *http.Request, scene string, token string) (bool, err
 	if !e {
 		return true, nil
 	}
-	return c.driver.Verify(r, scene, token)
+	return c.driver.Verify(c.SessionStore, r, scene, token)
 }
 
 //Verifier create verifier with given http request and scene.
