@@ -54,7 +54,7 @@ func (f *Assets) Save(filename string, reader io.Reader) (string, int64, error) 
 func (f *Assets) Load(id string, writer io.Writer) error {
 	infile := path.Join(f.Location, id)
 	if !strings.HasPrefix(infile, f.Location) {
-		return errors.New("file local stote:unavailable file path")
+		return errors.New("file local store:unavailable file path")
 	}
 
 	file, err := os.Open(infile)
@@ -119,7 +119,9 @@ func (c *AssetsStoreConfig) Create() (Driver, error) {
 	}
 	return driver, nil
 }
-func init() {
+
+//RegisterAssets register assets driver .
+func RegisterAssets() {
 	Register("assets", func(conf Config, prefix string) (Driver, error) {
 		var err error
 		c := &AssetsStoreConfig{}
@@ -139,14 +141,13 @@ func init() {
 		if err != nil {
 			return nil, err
 		}
-		err = conf.Get(prefix+"URLHRootost", &c.Root)
-		if err != nil {
-			return nil, err
-		}
 		err = conf.Get(prefix+"Location", &c.Location)
 		if err != nil {
 			return nil, err
 		}
 		return c.Create()
 	})
+}
+func init() {
+	RegisterAssets()
 }

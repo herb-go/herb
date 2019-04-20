@@ -13,6 +13,13 @@ type OptionConfigJSON struct {
 	Config ConfigJSON
 }
 
+//NewOptionConfigJSON create new option config.
+func NewOptionConfigJSON() *OptionConfigJSON {
+	return &OptionConfigJSON{
+		Config: map[string]string{},
+	}
+}
+
 //ApplyTo apply option to file store.
 func (o *OptionConfigJSON) ApplyTo(store *Store) error {
 	driver, err := NewDriver(o.Driver, &o.Config, "")
@@ -37,6 +44,13 @@ func (o *OptionConfigMap) ApplyTo(store *Store) error {
 	}
 	store.Driver = driver
 	return nil
+}
+
+//NewOptionConfigMap create new option config.
+func NewOptionConfigMap() *OptionConfigMap {
+	return &OptionConfigMap{
+		Config: map[string]interface{}{},
+	}
 }
 
 // Config confit interface

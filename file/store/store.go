@@ -50,6 +50,11 @@ type Store struct {
 	Driver
 }
 
+//NewStore create new file store.
+func NewStore() *Store {
+	return &Store{}
+}
+
 //Init applu option to store.
 func (s *Store) Init(option Option) error {
 	return option.ApplyTo(s)
@@ -77,7 +82,9 @@ func Register(name string, f Factory) {
 	}
 	factories[name] = f
 }
-func unregisterAll() {
+
+//UnregisterAll unregister all driver
+func UnregisterAll() {
 	factorysMu.Lock()
 	defer factorysMu.Unlock()
 	// For tests.
@@ -106,20 +113,4 @@ func NewDriver(name string, conf Config, prefix string) (Driver, error) {
 		return nil, fmt.Errorf("file: unknown driver %q (forgotten import?)", name)
 	}
 	return factoryi(conf, prefix)
-}
-
-//MustNewDriver create new driver with given name,config and prefix
-//Reutrn driver created.
-//Panic if any error raised.
-func MustNewDriver(name string, conf Config, prefix string) Driver {
-	d, err := NewDriver(name, conf, prefix)
-	if err != nil {
-		panic(err)
-	}
-	return d
-}
-
-//New :Create a empty store..
-func New() *Store {
-	return &Store{}
 }
