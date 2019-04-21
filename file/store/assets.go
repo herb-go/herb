@@ -1,7 +1,6 @@
 package store
 
 import (
-	"errors"
 	"io"
 	"os"
 	"path"
@@ -17,7 +16,7 @@ type Assets struct {
 func (f *Assets) save(filename string, reader io.Reader, flag int) (string, int64, error) {
 	outfile := path.Join(f.Location, filename)
 	if !strings.HasPrefix(outfile, f.Location) {
-		return "", 0, errors.New("file local store:unavailable file path")
+		return "", 0, NewUnavailableIDError(filename)
 	}
 	dir := path.Dir(outfile)
 	_, err := os.Stat(dir)
@@ -51,10 +50,10 @@ func (f *Assets) Save(filename string, reader io.Reader) (string, int64, error) 
 
 //Load load file with given id.
 //Return file reader any error if raised.
-func (f *Assets) Load(id string, writer io.Writer) (io.ReadCloser, error) {
+func (f *Assets) Load(id string) (io.ReadCloser, error) {
 	infile := path.Join(f.Location, id)
 	if !strings.HasPrefix(infile, f.Location) {
-		return nil, errors.New("file local store:unavailable file path")
+		return nil, NewUnavailableIDError(id)
 	}
 
 	file, err := os.Open(infile)
@@ -69,9 +68,13 @@ func (f *Assets) Load(id string, writer io.Writer) (io.ReadCloser, error) {
 func (f *Assets) Remove(id string) error {
 	infile := path.Join(f.Location, id)
 	if !strings.HasPrefix(infile, f.Location) {
-		return errors.New("file local stote:unavailable file path")
+		return NewUnavailableIDError(id)
 	}
-	return os.Remove(infile)
+	err := os.Remove(infile)
+	if os.IsNotExist(err) {
+		err = NewNotExistsError(id)
+	}
+	return err
 
 }
 

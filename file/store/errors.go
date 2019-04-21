@@ -11,6 +11,9 @@ type ErrorType string
 //ErrorTypeNotExists error type file not  exists.
 const ErrorTypeNotExists = "file-not-exists"
 
+//ErrorTypeUnavailableID error type id unavailable
+const ErrorTypeUnavailableID = "unavailable-id"
+
 //Error file store error.
 type Error struct {
 	File string
@@ -35,4 +38,9 @@ func (e *Error) Error() string {
 //NewNotExistsError create new file not exists error.
 func NewNotExistsError(file string) *Error {
 	return NewError(file, ErrorTypeNotExists, errors.New("file \""+file+"\" does not exist"))
+}
+
+//NewUnavailableIDError create new id not unavailablel error.
+func NewUnavailableIDError(file string) *Error {
+	return NewError(file, ErrorTypeUnavailableID, errors.New("ID \""+file+"\" unavailableI"))
 }

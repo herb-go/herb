@@ -10,7 +10,7 @@ import (
 //File file stored.
 type File struct {
 	//Store store which field stored in
-	Store Store
+	Store *Store
 	//ID file id
 	ID  string
 	url string
@@ -21,12 +21,25 @@ func (f *File) SetURL(url string) {
 	f.url = url
 }
 
+// NewFile create new file
+func NewFile(store *Store, id string) *File {
+	return &File{
+		Store: store,
+		ID:    id,
+	}
+}
+
 //URL return file url and any error if raised.
 func (f *File) URL() (url string, err error) {
 	if f.url != "" {
 		return f.url, nil
 	}
-	return f.Store.URL(f.ID)
+	url, err = f.Store.URL(f.ID)
+	if err != nil {
+		return url, err
+	}
+	f.SetURL(url)
+	return url, nil
 }
 
 //Driver store driver interface.
@@ -36,7 +49,7 @@ type Driver interface {
 	Save(filename string, reader io.Reader) (id string, length int64, err error)
 	//Load load file with given id.
 	//Return file reader any error if raised.
-	Load(id string, writer io.Writer) (io.ReadCloser, error)
+	Load(id string) (io.ReadCloser, error)
 	//Remove remove file by id.
 	//Return any error if raised.
 	Remove(id string) error
@@ -50,7 +63,7 @@ type Store struct {
 	Driver
 }
 
-//NewStore create new file store.
+//New create new file store.
 func New() *Store {
 	return &Store{}
 }
@@ -58,6 +71,11 @@ func New() *Store {
 //Init applu option to store.
 func (s *Store) Init(option Option) error {
 	return option.ApplyTo(s)
+}
+
+//File create new store file by given id
+func (s *Store) File(id string) *File {
+	return NewFile(s, id)
 }
 
 // Factory store driver create factory.
