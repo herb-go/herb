@@ -14,7 +14,7 @@ func TestJSONConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := NewStore()
+	s := New()
 	err = s.Init(c)
 	if err != nil {
 		t.Fatal(err)
@@ -33,7 +33,7 @@ func TestConfigMap(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := NewStore()
+	s := New()
 	err = s.Init(c)
 	if err != nil {
 		t.Fatal(err)

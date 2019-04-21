@@ -17,7 +17,7 @@ type Assets struct {
 func (f *Assets) save(filename string, reader io.Reader, flag int) (string, int64, error) {
 	outfile := path.Join(f.Location, filename)
 	if !strings.HasPrefix(outfile, f.Location) {
-		return "", 0, errors.New("file local stote:unavailable file path")
+		return "", 0, errors.New("file local store:unavailable file path")
 	}
 	dir := path.Dir(outfile)
 	_, err := os.Stat(dir)
@@ -49,21 +49,19 @@ func (f *Assets) Save(filename string, reader io.Reader) (string, int64, error) 
 	return f.save(filename, reader, os.O_WRONLY|os.O_CREATE)
 }
 
-//Load load file with given id and write to writer.
-//Return any error if raised.
-func (f *Assets) Load(id string, writer io.Writer) error {
+//Load load file with given id.
+//Return file reader any error if raised.
+func (f *Assets) Load(id string, writer io.Writer) (io.ReadCloser, error) {
 	infile := path.Join(f.Location, id)
 	if !strings.HasPrefix(infile, f.Location) {
-		return errors.New("file local store:unavailable file path")
+		return nil, errors.New("file local store:unavailable file path")
 	}
 
 	file, err := os.Open(infile)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer file.Close()
-	_, err = io.Copy(writer, file)
-	return err
+	return file, nil
 }
 
 //Remove remove file by id.

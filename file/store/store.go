@@ -34,9 +34,9 @@ type Driver interface {
 	//Save save data form reader to named file.
 	//Return file id ,file size and any error if raised.
 	Save(filename string, reader io.Reader) (id string, length int64, err error)
-	//Load load file with given id and write to writer.
-	//Return any error if raised.
-	Load(id string, writer io.Writer) error
+	//Load load file with given id.
+	//Return file reader any error if raised.
+	Load(id string, writer io.Writer) (io.ReadCloser, error)
 	//Remove remove file by id.
 	//Return any error if raised.
 	Remove(id string) error
@@ -51,7 +51,7 @@ type Store struct {
 }
 
 //NewStore create new file store.
-func NewStore() *Store {
+func New() *Store {
 	return &Store{}
 }
 
