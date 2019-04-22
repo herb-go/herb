@@ -90,6 +90,12 @@ func TestRegisterDupDriver(t *testing.T) {
 	})
 }
 
+func TestNotExistDriver(t *testing.T) {
+	_, err := NewDriver("NotExist", nil, "")
+	if err == nil {
+		t.Fatal(err)
+	}
+}
 func init() {
 	registerTestDriver()
 }
