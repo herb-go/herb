@@ -12,13 +12,13 @@ import (
 )
 
 func newTestCache(ttl int64) *cache.Cache {
-	config := &cache.ConfigJSON{}
+	config := cache.ConfigMap{}
 	config.Set("Size", 10000000)
 	c := cache.New()
 	oc := &cache.OptionConfigMap{
 		Driver:    "syncmapcache",
 		TTL:       int64(ttl),
-		Config:    nil,
+		Config:    config,
 		Marshaler: "json",
 	}
 	err := c.Init(oc)
@@ -276,14 +276,14 @@ func TestLoader(t *testing.T) {
 		valueKeyAadditional: startValue,
 		valueKeyChanged:     startValue,
 	}
-	c := newTestCache(-1)
+	c := newTestCache(int64(time.Hour))
 	var err error
 	var datasource = NewDataSource()
 	datasource.SourceLoader = loader()
 	datasource.Creator = creator()
 	var Loader = datasource.NewMapStoreLoader(c)
 	tm := Loader.Store
-	err = Loader.Load(valueKey, valueKeyAadditional)
+	err = datasource.Load(tm, c, valueKey, valueKeyAadditional)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -346,6 +346,13 @@ func TestLoader(t *testing.T) {
 	if val != nil {
 		t.Fatal(val)
 	}
+
+	var Loader2 = datasource.NewMapStoreLoader(c)
+	err = Loader2.Load(valueKeyAadditional, valueKeyChanged)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	err = Loader.Flush()
 	val = Loader.Store.LoadInterface(valueKeyChanged)
 	if val != nil {

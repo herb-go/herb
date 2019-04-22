@@ -1,5 +1,6 @@
 package datastore
 
+// BatchLoader batch data loader interface
 type BatchLoader interface {
 	// NewDataElement create empty data element.
 	// Must return pointer of data.
