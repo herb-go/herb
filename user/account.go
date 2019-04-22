@@ -77,10 +77,10 @@ func (s *PlainAccountProvider) NewAccount(keyword string, account string) (*Acco
 	if s.CaseInsensitive {
 		account = strings.ToLower(account)
 	}
-	return &Account{
-		Keyword: keyword,
-		Account: account,
-	}, nil
+	a := NewAccount()
+	a.Keyword = keyword
+	a.Account = account
+	return a, nil
 }
 
 //CaseInsensitiveAcountProvider plain account provider which case insensitive
