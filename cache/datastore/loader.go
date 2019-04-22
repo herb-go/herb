@@ -4,14 +4,14 @@ import "github.com/herb-go/herb/cache"
 
 // Loader data store loader
 type Loader struct {
-	Cache      cache.Cacheable
-	Store      Store
-	DataSource *DataSource
+	Cache  cache.Cacheable
+	Store  Store
+	Loader BatchLoader
 }
 
 // Load load data to store by given keys.
 func (l *Loader) Load(keys ...string) error {
-	return l.DataSource.Load(l.Store, l.Cache, keys...)
+	return Load(l.Store, l.Cache, l.Loader.BatchLoadData, l.Loader.NewDataElement, keys...)
 }
 
 // Del delete value from store and cache by given key.
