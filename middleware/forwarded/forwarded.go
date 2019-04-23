@@ -83,6 +83,11 @@ func (m *Middleware) ServeMiddleware(w http.ResponseWriter, r *http.Request, nex
 	next(w, r)
 }
 
+//New create new middleware
+func New() *Middleware {
+	return &Middleware{}
+}
+
 // Warnings show warnings if forwarded middleware settings is not safe.
 func (m *Middleware) Warnings() []string {
 	if m.Enabled && (m.ForwardedForHeader != "" ||

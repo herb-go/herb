@@ -221,3 +221,41 @@ func TestMiddleware(t *testing.T) {
 		t.Error(data["scheme"])
 	}
 }
+
+func TestWarning(t *testing.T) {
+	m := New()
+	m.Enabled = true
+	m.ForwardedHostHeader = "test"
+	if m.Warnings() == nil {
+		t.Fatal(m.Warnings())
+	}
+	m.ForwardedTokenHeader = "token"
+	if m.Warnings() != nil {
+		t.Fatal(m.Warnings())
+	}
+
+}
+func TestFailStatusCode(t *testing.T) {
+	m := New()
+	m.Enabled = true
+	m.ForwardedTokenHeader = "token"
+	m.FailStatusCode = 429
+	server := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			m.ServeMiddleware(w, r, func(w http.ResponseWriter, r *http.Request) {
+				w.Write([]byte("ok"))
+			})
+		}))
+	req, err := http.NewRequest("GET", server.URL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 429 {
+		t.Fatal(resp.StatusCode)
+	}
+}
