@@ -56,7 +56,7 @@ func TestHeader(t *testing.T) {
 			w.Write([]byte(successMsg))
 		})
 	})
-	mux.HandleFunc("/Input", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/input", func(w http.ResponseWriter, r *http.Request) {
 		output, err := Csrf.CsrfInput(w, r)
 		if err != nil {
 			t.Fatal(err)
@@ -116,6 +116,20 @@ func TestHeader(t *testing.T) {
 	}
 	if rep.StatusCode != 200 || string(body) != successMsg {
 		t.Errorf("Csrf block fail")
+	}
+	InputRequestWithToken, err := http.NewRequest("GET", s.URL+"/input", nil)
+	token = jar.Cookies(InputRequestWithToken.URL)[0].Value
+	InputRequestWithToken.Header.Set(Csrf.HeaderName, token)
+	rep, err = c.Do(InputRequestWithToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err = ioutil.ReadAll(rep.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.StatusCode != 200 || !strings.Contains(string(body), token) {
+		t.Fatal("Csrf input fail", string(body))
 	}
 	Csrf.Enabled = false
 	HeaderRequest, err = http.NewRequest("GET", s.URL+"/header", nil)

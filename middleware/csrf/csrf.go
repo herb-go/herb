@@ -116,7 +116,7 @@ func (csrf *Csrf) SetCsrfToken(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	ctx := r.Context()
-	r = r.WithContext(context.WithValue(ctx, csrf.RequestContextKey, c.Value))
+	*r = *r.WithContext(context.WithValue(ctx, csrf.RequestContextKey, c.Value))
 	return nil
 }
 
