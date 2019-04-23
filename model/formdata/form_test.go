@@ -30,22 +30,26 @@ func (f *testForm) InitWithRequest(r *http.Request) error {
 func newTestForm() *testForm {
 	return &testForm{}
 }
-func testAction(w http.ResponseWriter, r *http.Request) {
-	form := newTestForm()
-	if MustValidateJSONRequest(r, form) {
-		bytes, err := json.Marshal(form)
-		if err != nil {
-			panic(err)
-		}
-		_, err = w.Write(bytes)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		MustRenderErrorsJSON(w, form)
-	}
-}
 func TestForm(t *testing.T) {
+	var testAction = func(w http.ResponseWriter, r *http.Request) {
+		form := newTestForm()
+		if MustValidateJSONRequest(r, form) {
+			if form.HTTPRequest() != r {
+				t.Fatal(r)
+			}
+			bytes, err := json.Marshal(form)
+			if err != nil {
+				panic(err)
+			}
+			_, err = w.Write(bytes)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			MustRenderErrorsJSON(w, form)
+		}
+	}
+
 	var req *http.Request
 	var resp *http.Response
 	var content []byte
