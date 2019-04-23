@@ -56,6 +56,13 @@ func TestHeader(t *testing.T) {
 			w.Write([]byte(successMsg))
 		})
 	})
+	mux.HandleFunc("/Input", func(w http.ResponseWriter, r *http.Request) {
+		output, err := Csrf.CsrfInput(w, r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w.Write([]byte(output))
+	})
 	s := httptest.NewServer(mux)
 	defer s.Close()
 	jar, err := cookiejar.New(nil)
@@ -110,6 +117,24 @@ func TestHeader(t *testing.T) {
 	if rep.StatusCode != 200 || string(body) != successMsg {
 		t.Errorf("Csrf block fail")
 	}
+	Csrf.Enabled = false
+	HeaderRequest, err = http.NewRequest("GET", s.URL+"/header", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err = c.Do(HeaderRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err = ioutil.ReadAll(rep.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep.Body.Close()
+	if rep.StatusCode != 200 || string(body) != successMsg {
+		t.Errorf("Csrf block fail")
+	}
+
 }
 
 func TestForm(t *testing.T) {

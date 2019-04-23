@@ -52,6 +52,7 @@ func TestMiddleware(t *testing.T) {
 	var data map[string]string
 	var statusCode int
 	var middleware = Middleware{}
+	middleware.Debug = true
 	app.
 		Use(middleware.ServeMiddleware).
 		HandleFunc(func(w http.ResponseWriter, r *http.Request) {
