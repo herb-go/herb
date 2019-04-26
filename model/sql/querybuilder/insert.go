@@ -21,8 +21,8 @@ func (q *InsertQuery) SetAlias(alias string) *InsertQuery {
 	q.alias = alias
 	return q
 }
-func (q *InsertQuery) AddFields(m Fields) *InsertQuery {
-	for _, v := range m {
+func (q *InsertQuery) AddFields(m *Fields) *InsertQuery {
+	for _, v := range *m {
 		q.Add(v.Field, v.Data)
 	}
 	return q

@@ -19,11 +19,11 @@ type SelectQuery struct {
 	Fields  []string
 }
 
-func (q *SelectQuery) AddFields(m Fields) *SelectQuery {
-	var fields = make([]string, len(m))
+func (q *SelectQuery) AddFields(m *Fields) *SelectQuery {
+	var fields = make([]string, len(*m))
 	var i = 0
-	for k := range m {
-		fields[i] = m[k].Field
+	for k := range *m {
+		fields[i] = (*m)[k].Field
 		i++
 	}
 	return q.Add(fields...)
@@ -82,8 +82,8 @@ func (r *SelectResult) Bind(field string, arg interface{}) *SelectResult {
 	return r
 }
 
-func (r *SelectResult) BindFields(m Fields) *SelectResult {
-	for _, v := range m {
+func (r *SelectResult) BindFields(m *Fields) *SelectResult {
+	for _, v := range *m {
 		r.Bind(v.Field, v.Data)
 	}
 	return r

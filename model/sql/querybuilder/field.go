@@ -6,16 +6,16 @@ type Field struct {
 }
 type Fields []Field
 
-func NewFields() Fields {
-	return Fields{}
+func NewFields() *Fields {
+	return &Fields{}
 }
-func (f Fields) Set(field string, data interface{}) Fields {
-	for k, v := range f {
+func (f *Fields) Set(field string, data interface{}) *Fields {
+	for k, v := range *f {
 		if v.Field == field {
-			f[k].Data = data
+			(*f)[k].Data = data
 			return f
 		}
 	}
-	f = append(f, Field{Field: field, Data: data})
+	*f = append(*f, Field{Field: field, Data: data})
 	return f
 }

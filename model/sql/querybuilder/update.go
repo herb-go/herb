@@ -31,8 +31,8 @@ func (q *UpdateQuery) AddSelect(field string, Select *Select) *UpdateQuery {
 	return q
 }
 
-func (q *UpdateQuery) AddFields(m Fields) *UpdateQuery {
-	for _, v := range m {
+func (q *UpdateQuery) AddFields(m *Fields) *UpdateQuery {
+	for _, v := range *m {
 		q.Add(v.Field, v.Data)
 	}
 	return q
