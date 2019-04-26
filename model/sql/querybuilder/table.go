@@ -17,9 +17,9 @@ type Table struct {
 
 //QueryBuilder return querybuilder of  table
 func (t *Table) QueryBuilder() *Builder {
-	return &Builder{
-		Driver: t.DBTable.Driver(),
-	}
+	b := NewBuilder()
+	b.Driver = t.DBTable.Driver()
+	return b
 }
 
 //FieldAlias return field name with table alias.

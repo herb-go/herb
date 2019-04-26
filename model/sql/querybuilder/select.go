@@ -126,8 +126,6 @@ func (s *Select) Result() *SelectResult {
 }
 
 func (s *Select) Query() *PlainQuery {
-	switch s.Builder.Driver {
-	}
 	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.OrderBy, s.Limit, s.Other)
 }
 func (s *Select) QueryRow(db DB) *sql.Row {

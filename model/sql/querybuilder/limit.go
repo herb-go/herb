@@ -18,36 +18,17 @@ func (q *LimitQuery) SetLimit(l int) *LimitQuery {
 }
 
 func (q *LimitQuery) QueryCommand() string {
-	var command = ""
+
 	if q.limit == nil && q.offset == nil {
-		return command
+		return ""
 	}
-	switch q.buidler.Driver {
-	default:
-		if q.limit != nil {
-			command = "LIMIT ? "
-		}
-		if q.offset != nil {
-			command += "OFFSET ? "
-		}
-	}
-	return command
+	return q.buidler.LoadDriver().LimitQueryBuilder(q)
 }
 func (q *LimitQuery) QueryArgs() []interface{} {
-	args := []interface{}{}
 	if q.limit == nil && q.offset == nil {
-		return args
+		return nil
 	}
-	switch q.buidler.Driver {
-	default:
-		if q.limit != nil {
-			args = append(args, q.limit)
-		}
-		if q.offset != nil {
-			args = append(args, q.offset)
-		}
-	}
-	return args
+	return q.buidler.LoadDriver().LimitArgBuilder(q)
 }
 
 func (b *Builder) NewLimitQuery() *LimitQuery {
