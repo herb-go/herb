@@ -4,7 +4,6 @@ import "testing"
 
 func TestInsert(t *testing.T) {
 	fields := NewFields()
-	fields.Set("field1", "")
 	fields.Set("field1", "t1")
 	fields.Set("field2", "t2")
 	builder := NewBuilder()
