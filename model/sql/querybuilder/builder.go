@@ -50,10 +50,10 @@ func (d *EmptyBuilderDriver) LimitQueryBuilder(q *LimitQuery) string {
 func (d *EmptyBuilderDriver) LimitArgBuilder(q *LimitQuery) []interface{} {
 	var args = []interface{}{}
 	if q.limit != nil {
-		args = append(args, q.limit)
+		args = append(args, *q.limit)
 	}
 	if q.offset != nil {
-		args = append(args, q.offset)
+		args = append(args, *q.offset)
 	}
 	return args
 }

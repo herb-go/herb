@@ -156,3 +156,10 @@ func (s *Select) QueryRows(db DB) (*sql.Rows, error) {
 	}
 	return rows, err
 }
+
+func (s *Select) QueryCommand() string {
+	return s.Query().Command
+}
+func (s *Select) QueryArgs() []interface{} {
+	return s.Query().Args
+}
