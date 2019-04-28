@@ -33,3 +33,51 @@ func TestSelect(t *testing.T) {
 		t.Fatal(args)
 	}
 }
+
+func TestUsing(t *testing.T) {
+	testfield1 := ""
+	testfield2 := ""
+	fields := NewFields()
+	fields.Set("testfield1", &testfield1)
+	fields.Set("testfield2", &testfield2)
+	builder := NewBuilder()
+	selectquery := builder.NewSelect()
+	selectquery.Select.AddFields(fields)
+	selectquery.From.Add("tablename")
+	selectquery.From.AddAlias("table2alias", "table2name")
+
+	selectquery.Join.InnerJoin().Using("field1")
+	cmds := selectquery.QueryCommand()
+	if cmds != "SELECT testfield1 , testfield2\nFROM tablename , table2name as table2alias\nINNER Join  USING (field1)" {
+		t.Fatal(cmds)
+	}
+	args := selectquery.QueryArgs()
+
+	if len(args) != 0 {
+		t.Fatal(args)
+	}
+}
+
+func TestRightJoin(t *testing.T) {
+	testfield1 := ""
+	testfield2 := ""
+	fields := NewFields()
+	fields.Set("testfield1", &testfield1)
+	fields.Set("testfield2", &testfield2)
+	builder := NewBuilder()
+	selectquery := builder.NewSelect()
+	selectquery.Select.AddFields(fields)
+	selectquery.From.Add("tablename")
+	selectquery.From.AddAlias("table2alias", "table2name")
+
+	selectquery.Join.RightJoin().On(builder.New("field1=field2"))
+	cmds := selectquery.QueryCommand()
+	if cmds != "SELECT testfield1 , testfield2\nFROM tablename , table2name as table2alias\nRIGHT Join  ON field1=field2" {
+		t.Fatal(cmds)
+	}
+	args := selectquery.QueryArgs()
+
+	if len(args) != 0 {
+		t.Fatal(args)
+	}
+}

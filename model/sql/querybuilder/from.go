@@ -23,9 +23,6 @@ func (q *FromQuery) Add(tableName string) *FromQuery {
 
 func (q *FromQuery) QueryCommand() string {
 	var command = ""
-	if len(q.Tables) == 0 {
-		return command
-	}
 	command = "FROM "
 	for k := range q.Tables {
 		if q.Tables[k][1] == "" {
