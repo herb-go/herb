@@ -61,7 +61,7 @@ var DefaultLogger = func(timestamp int64, cmd string, args []interface{}) {
 	}
 	fmt.Println("Time spent:")
 	for _, v := range timeDurationList {
-		if spent > v.Duration {
+		if spent > 10*v.Duration {
 			fmt.Printf("\t%d %s \n", spent/v.Duration, v.Label)
 			break
 		}
