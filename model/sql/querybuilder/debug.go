@@ -9,6 +9,34 @@ import (
 
 var Debug = false
 
+type timeDuation struct {
+	Label    string
+	Duration time.Duration
+}
+
+var timeDurationList = []timeDuation{
+
+	timeDuation{
+		Label:    "minute",
+		Duration: time.Minute,
+	},
+	timeDuation{
+		Label:    "seconds",
+		Duration: time.Second,
+	},
+	timeDuation{
+		Label:    "milliseconds",
+		Duration: time.Millisecond,
+	},
+	timeDuation{
+		Label:    "microseconds",
+		Duration: time.Microsecond,
+	},
+	timeDuation{
+		Label:    "nanoseconds",
+		Duration: time.Nanosecond,
+	},
+}
 var Logger func(timestamp int64, cmd string, args []interface{})
 var DefaultLogger = func(timestamp int64, cmd string, args []interface{}) {
 	spent := time.Duration((time.Now().UnixNano() - timestamp)) * time.Nanosecond
@@ -32,18 +60,11 @@ var DefaultLogger = func(timestamp int64, cmd string, args []interface{}) {
 		fmt.Println("\t" + stacklines[8])
 	}
 	fmt.Println("Time spent:")
-	if spent > time.Hour {
-		fmt.Printf("\t%f %s \n", spent.Hours(), "hours")
-	} else if spent > time.Minute {
-		fmt.Printf("\t%f %s \n", spent.Minutes(), "minutes")
-	} else if spent > time.Second {
-		fmt.Printf("\t%f %s \n", spent.Seconds(), "seconds")
-	} else if spent > time.Millisecond {
-		fmt.Printf("\t%f %s \n", spent.Seconds()*1000, "milliseconds")
-	} else if spent > time.Microsecond {
-		fmt.Printf("\t%f %s \n", spent.Seconds()*1000*1000, "microseconds")
-	} else {
-		fmt.Printf("\t%d %s \n", spent.Nanoseconds(), "nanoseconds")
+	for _, v := range timeDurationList {
+		if spent > v.Duration {
+			fmt.Printf("\t%d %s \n", spent/v.Duration, v.Label)
+			break
+		}
 	}
 	fmt.Println()
 }
