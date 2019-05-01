@@ -1,4 +1,4 @@
-package querybuilder
+package querybuilder_test
 
 var ConfigJSON = `
 {
