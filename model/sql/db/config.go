@@ -58,3 +58,8 @@ func (c *Config) Apply(d *PlainDB) error {
 	}
 	return nil
 }
+
+//NewConfig create new config
+func NewConfig() *Config {
+	return &Config{}
+}
