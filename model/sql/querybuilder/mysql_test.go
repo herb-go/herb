@@ -10,6 +10,10 @@ import (
 )
 
 func TestMysql(t *testing.T) {
+	type Result struct {
+		ID   string
+		Body string
+	}
 	querybuilder.Debug = true
 	var err error
 	var DB = db.New()
@@ -56,6 +60,7 @@ func TestMysql(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 }
 func init() {
 
