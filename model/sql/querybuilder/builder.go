@@ -11,6 +11,9 @@ type Builder struct {
 	lock   sync.Mutex
 }
 
+func (b *Builder) CountField() string {
+	return b.LoadDriver().CountField()
+}
 func NewBuilder() *Builder {
 	return &Builder{}
 }
@@ -31,11 +34,15 @@ var DefaultBuilder = &EmptyBuilderDriver{}
 type BuilderDriver interface {
 	LimitQueryBuilder(q *LimitQuery) string
 	LimitArgBuilder(q *LimitQuery) []interface{}
+	CountField() string
 }
 
 type EmptyBuilderDriver struct {
 }
 
+func (d *EmptyBuilderDriver) CountField() string {
+	return "count(*)"
+}
 func (d *EmptyBuilderDriver) LimitQueryBuilder(q *LimitQuery) string {
 	var command = ""
 	if q.limit != nil {

@@ -37,7 +37,7 @@ func TestMysql(t *testing.T) {
 	builder := table1.QueryBuilder()
 	fields := querybuilder.NewFields()
 	var count int
-	fields.Set("count(*)", &count)
+	fields.Set(table1.QueryBuilder().CountField(), &count)
 	countquery := table1.BuildCount()
 	r := countquery.QueryRow(table1)
 	err = countquery.Result().BindFields(fields).ScanFrom(r)
