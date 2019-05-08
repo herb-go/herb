@@ -199,6 +199,33 @@ func TestMysql(t *testing.T) {
 		t.Fatal(*results[0])
 	}
 }
+func TestJoin(t *testing.T) {
+	querybuilder.Debug = true
+	var err error
+	var DB = db.New()
+	var config = db.NewConfig()
+	err = json.Unmarshal([]byte(ConfigJSON), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = DB.Init(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	table1 := querybuilder.NewTable(DB.Table("testtable1"))
+	if table1.Driver() != "mysql" {
+		t.Fatal(table1)
+	}
+	truncatequery := table1.QueryBuilder().New("truncate table testtable1")
+	truncatequery.MustExec(table1)
+
+	_, err = DB.Exec("truncate table testtable2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// builder := table1.QueryBuilder()
+}
 func init() {
 
 }
