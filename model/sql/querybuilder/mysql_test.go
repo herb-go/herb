@@ -60,7 +60,144 @@ func TestMysql(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	result := &Result{}
+	fields = querybuilder.NewFields()
+	fields.Set("id", &result.ID).
+		Set("body", &result.Body)
+	selectquery := table1.NewSelect()
+	selectquery.Select.AddFields(fields)
+	row := selectquery.QueryRow(table1)
+	err = selectquery.Result().BindFields(fields).ScanFrom(row)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.ID != "testid" && result.Body != "testbody" {
+		t.Fatal(result)
+	}
+	insertquery = table1.NewInsert()
+	fields = querybuilder.NewFields()
+	fields.Set("id", "testid2").Set("body", "testbody2")
+	insertquery.Insert.AddFields(fields)
+	_, err = insertquery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fields.Set("id", nil).
+		Set("body", nil)
+	selectquery = table1.NewSelect()
+	selectquery.Select.AddFields(fields)
+	selectquery.OrderBy.Add("id", false)
+	rows, err := selectquery.QueryRows(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	results := []*Result{}
+	for rows.Next() {
+		var result = &Result{}
+		fields = querybuilder.NewFields()
+		fields.Set("id", &result.ID).
+			Set("body", &result.Body)
+		err = selectquery.Result().BindFields(fields).ScanFrom(rows)
+		if err != nil {
+			t.Fatal(err)
+		}
+		results = append(results, result)
+	}
+	if len(results) != 2 {
+		t.Fatal(result)
+	}
+	if results[0].ID != "testid2" || results[0].Body != "testbody2" {
+		t.Fatal(*results[0], *results[1])
+	}
+	if results[1].ID != "testid" || results[1].Body != "testbody" {
+		t.Fatal(*results[0], *results[1])
+	}
+	//limit
+	fields.Set("id", nil).
+		Set("body", nil)
+	selectquery = table1.NewSelect()
+	selectquery.Select.AddFields(fields)
+	selectquery.OrderBy.Add("id", false)
+	selectquery.Limit.SetLimit(1)
+	selectquery.Limit.SetOffset(1)
+	rows, err = selectquery.QueryRows(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	results = []*Result{}
+	for rows.Next() {
+		var result = &Result{}
+		fields = querybuilder.NewFields()
+		fields.Set("id", &result.ID).
+			Set("body", &result.Body)
+		err = selectquery.Result().BindFields(fields).ScanFrom(rows)
+		if err != nil {
+			t.Fatal(err)
+		}
+		results = append(results, result)
+	}
+	if len(results) != 1 {
+		t.Fatal(result)
+	}
+	if results[0].ID != "testid" || results[0].Body != "testbody" {
+		t.Fatal(*results[0])
+	}
+	fields = querybuilder.NewFields()
+	fields.Set("id", "testid2").Set("body", "testbody2updated")
+	updatequery := table1.NewUpdate()
+	updatequery.Update.AddFields(fields)
+	updatequery.Where.Condition = table1.QueryBuilder().Equal("id", "testid2")
+	_, err = updatequery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result = &Result{}
+	fields.Set("id", &result.ID).Set("body", &result.Body)
+	selectquery = table1.NewSelect()
+	selectquery.Select.AddFields(fields)
+	selectquery.Where.Condition = table1.QueryBuilder().Equal("id", "testid2")
+	row = selectquery.QueryRow(table1)
+	err = selectquery.Result().BindFields(fields).ScanFrom(row)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.ID != "testid2" || result.Body != "testbody2updated" {
+		t.Fatal(result)
+	}
 
+	deletequery := table1.NewDelete()
+	deletequery.Where.Condition = table1.QueryBuilder().Equal("id", "testid2")
+	_, err = deletequery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fields.Set("id", nil).
+		Set("body", nil)
+	selectquery = table1.NewSelect()
+	selectquery.Select.AddFields(fields)
+	rows, err = selectquery.QueryRows(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	results = []*Result{}
+	for rows.Next() {
+		var result = &Result{}
+		fields = querybuilder.NewFields()
+		fields.Set("id", &result.ID).
+			Set("body", &result.Body)
+		err = selectquery.Result().BindFields(fields).ScanFrom(rows)
+		if err != nil {
+			t.Fatal(err)
+		}
+		results = append(results, result)
+	}
+	if len(results) != 1 {
+		t.Fatal(result)
+	}
+	if results[0].ID != "testid" || results[0].Body != "testbody" {
+		t.Fatal(*results[0])
+	}
 }
 func init() {
 
