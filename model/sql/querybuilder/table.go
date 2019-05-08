@@ -30,7 +30,12 @@ func (t *Table) FieldAlias(field string) string {
 //NewSelect : create  select query for table
 func (t *Table) NewSelect() *Select {
 	Select := t.QueryBuilder().NewSelect()
-	Select.From.Add(t.TableName())
+	alias := t.Alias()
+	if alias != "" {
+		Select.From.AddAlias(alias, t.TableName())
+	} else {
+		Select.From.Add(t.TableName())
+	}
 	return Select
 }
 

@@ -25,7 +25,7 @@ func (d *JoinData) Using(colnums ...string) *JoinData {
 }
 
 func (d *JoinData) QueryCommand() string {
-	var command = d.Type + " Join "
+	var command = d.Type + " JOIN "
 	command += d.Table[indexTableName]
 	if d.Table[indexAlias] != "" {
 		command += " AS " + d.Table[indexAlias]

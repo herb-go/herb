@@ -200,6 +200,11 @@ func TestMysql(t *testing.T) {
 	}
 }
 func TestJoin(t *testing.T) {
+	type Result struct {
+		ID    string
+		Body  string
+		Body2 string
+	}
 	querybuilder.Debug = true
 	var err error
 	var DB = db.New()
@@ -213,18 +218,81 @@ func TestJoin(t *testing.T) {
 		t.Fatal(err)
 	}
 	table1 := querybuilder.NewTable(DB.Table("testtable1"))
+	table1.SetAlias("t1")
 	if table1.Driver() != "mysql" {
 		t.Fatal(table1)
 	}
+	builder := table1.QueryBuilder()
+
 	truncatequery := table1.QueryBuilder().New("truncate table testtable1")
 	truncatequery.MustExec(table1)
+	table2 := querybuilder.NewTable(DB.Table("testtable2"))
 
 	_, err = DB.Exec("truncate table testtable2")
 	if err != nil {
 		t.Fatal(err)
 	}
+	insertquery := table1.NewInsert()
+	fields := querybuilder.NewFields()
+	fields.Set("id", "testid").Set("body", "testbody")
+	insertquery.Insert.AddFields(fields)
+	_, err = insertquery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	insertquery = table2.NewInsert()
+	fields = querybuilder.NewFields()
 
-	// builder := table1.QueryBuilder()
+	fields.Set("id", "testid").Set("body2", "testbody2")
+	insertquery.Insert.AddFields(fields)
+	_, err = insertquery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := &Result{}
+	fields = querybuilder.NewFields()
+	fields.Set("t1.id", &result.ID).Set("t1.body", &result.Body).Set("t2.body2", &result.Body2)
+	selectquery := table1.NewSelect()
+	selectquery.Select.AddFields(fields)
+	selectquery.Join.LeftJoin().Alias("t2", table2.TableName()).On(builder.New("t1.id = t2.id"))
+	row := selectquery.QueryRow(table1)
+	err = selectquery.Result().BindFields(fields).ScanFrom(row)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.ID != "testid" || result.Body != "testbody" || result.Body2 != "testbody2" {
+		t.Fatal(*result)
+	}
+
+	result = &Result{}
+	fields = querybuilder.NewFields()
+	fields.Set("t1.id", &result.ID).Set("t1.body", &result.Body).Set("t2.body2", &result.Body2)
+	selectquery = table1.NewSelect()
+	selectquery.Select.AddFields(fields)
+	selectquery.Join.InnerJoin().Alias("t2", table2.TableName()).Using("id")
+	row = selectquery.QueryRow(table1)
+	err = selectquery.Result().BindFields(fields).ScanFrom(row)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.ID != "testid" || result.Body != "testbody" || result.Body2 != "testbody2" {
+		t.Fatal(*result)
+	}
+
+	result = &Result{}
+	fields = querybuilder.NewFields()
+	fields.Set("t1.id", &result.ID).Set("t1.body", &result.Body).Set("t2.body2", &result.Body2)
+	selectquery = table1.NewSelect()
+	selectquery.Select.AddFields(fields)
+	selectquery.Join.RightJoin().Alias("t2", table2.TableName()).Using("id")
+	row = selectquery.QueryRow(table1)
+	err = selectquery.Result().BindFields(fields).ScanFrom(row)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.ID != "testid" || result.Body != "testbody" || result.Body2 != "testbody2" {
+		t.Fatal(*result)
+	}
 }
 func init() {
 
