@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+//Debug querybuild debug mode.
+//If enabled,all sql commands and args will bt sent to logger
 var Debug = false
 
 type timeDuation struct {
@@ -37,7 +39,11 @@ var timeDurationList = []timeDuation{
 		Duration: time.Nanosecond,
 	},
 }
+
+//Logger query logger
 var Logger func(timestamp int64, cmd string, args []interface{})
+
+//DefaultLogger default logger which print qurey  command.args and spent time to std.output
 var DefaultLogger = func(timestamp int64, cmd string, args []interface{}) {
 	spent := time.Duration((time.Now().UnixNano() - timestamp)) * time.Nanosecond
 	fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " SQL query debug:")

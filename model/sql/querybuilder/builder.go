@@ -5,18 +5,25 @@ import (
 	"sync"
 )
 
+//Builder query builder struct
 type Builder struct {
 	Driver string
 	driver BuilderDriver
 	lock   sync.Mutex
 }
 
+//CountField return select count  field
 func (b *Builder) CountField() string {
 	return b.LoadDriver().CountField()
 }
+
+//NewBuilder create new query builder
 func NewBuilder() *Builder {
 	return &Builder{}
 }
+
+//LoadDriver load builder driver by Driver field
+//Only load one time.
 func (b *Builder) LoadDriver() BuilderDriver {
 	d := b.driver
 	if d != nil {
@@ -29,21 +36,28 @@ func (b *Builder) LoadDriver() BuilderDriver {
 	return b.driver
 }
 
-var DefaultBuilder = &EmptyBuilderDriver{}
+//DefaultDriver default driver
+var DefaultDriver = &EmptyBuilderDriver{}
 
+//BuilderDriver query builder driver interface
 type BuilderDriver interface {
-	LimitQueryBuilder(q *LimitQuery) string
+	LimitCommandBuilder(q *LimitQuery) string
 	LimitArgBuilder(q *LimitQuery) []interface{}
 	CountField() string
 }
 
+// EmptyBuilderDriver empty query builder.
+// Using mysql statements
 type EmptyBuilderDriver struct {
 }
 
+//CountField return count field
 func (d *EmptyBuilderDriver) CountField() string {
 	return "count(*)"
 }
-func (d *EmptyBuilderDriver) LimitQueryBuilder(q *LimitQuery) string {
+
+//LimitCommandBuilder build limit command with given limit query.
+func (d *EmptyBuilderDriver) LimitCommandBuilder(q *LimitQuery) string {
 	var command = ""
 	if q.limit != nil {
 		command = "LIMIT ? "
@@ -54,6 +68,7 @@ func (d *EmptyBuilderDriver) LimitQueryBuilder(q *LimitQuery) string {
 	return command
 }
 
+//LimitArgBuilder build limit args with given limit query.
 func (d *EmptyBuilderDriver) LimitArgBuilder(q *LimitQuery) []interface{} {
 	var args = []interface{}{}
 	if q.limit != nil {
@@ -67,7 +82,8 @@ func (d *EmptyBuilderDriver) LimitArgBuilder(q *LimitQuery) []interface{} {
 
 var drivers = map[string]BuilderDriver{}
 
-func RegisterBuilder(name string, driver BuilderDriver) {
+//RegisterDriver register querybuilder driver with given  name.
+func RegisterDriver(name string, driver BuilderDriver) {
 	drivers[name] = driver
 	if Debug && driver != nil {
 		fmt.Println("querybuilder: build driver '" + name + "' registered.")
@@ -77,11 +93,11 @@ func RegisterBuilder(name string, driver BuilderDriver) {
 func loadBuilderDriver(name string) BuilderDriver {
 	d := drivers[name]
 	if d == nil {
-		return DefaultBuilder
+		return DefaultDriver
 	}
 	return d
 }
 
 func init() {
-	RegisterBuilder("mysql", DefaultBuilder)
+	RegisterDriver("mysql", DefaultDriver)
 }

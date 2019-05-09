@@ -22,7 +22,7 @@ func (q *LimitQuery) QueryCommand() string {
 	if q.limit == nil && q.offset == nil {
 		return ""
 	}
-	return q.buidler.LoadDriver().LimitQueryBuilder(q)
+	return q.buidler.LoadDriver().LimitCommandBuilder(q)
 }
 func (q *LimitQuery) QueryArgs() []interface{} {
 	if q.limit == nil && q.offset == nil {
