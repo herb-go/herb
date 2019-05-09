@@ -18,7 +18,7 @@ func TestMysql(t *testing.T) {
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(ConfigJSON), config)
+	err = json.Unmarshal([]byte(MysqlConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestMysql(t *testing.T) {
 	truncatequery := table1.QueryBuilder().New("truncate table testtable1")
 	truncatequery.MustExec(table1)
 
-	_, err = DB.Exec("truncate table testtable2")
+	_, err = table1.QueryBuilder().Exec(table1, table1.QueryBuilder().New("truncate table testtable2"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,6 +81,14 @@ func TestMysql(t *testing.T) {
 	_, err = insertquery.Query().Exec(table1)
 	if err != nil {
 		t.Fatal(err)
+	}
+	countquery = table1.BuildCount()
+	c, err := table1.Count(countquery)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c != 2 {
+		t.Fatal(c)
 	}
 	fields.Set("id", nil).
 		Set("body", nil)
@@ -209,7 +217,7 @@ func TestJoin(t *testing.T) {
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(ConfigJSON), config)
+	err = json.Unmarshal([]byte(MysqlConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}

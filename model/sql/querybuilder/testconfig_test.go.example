@@ -1,6 +1,6 @@
 package querybuilder_test
 
-var ConfigJSON = `
+var MysqlConfigJSON = `
 {
 	"Driver": "mysql",
 	"DataSource": "dbuser:dbpass@/db",

@@ -24,7 +24,11 @@ func (t *Table) QueryBuilder() *Builder {
 
 //FieldAlias return field name with table alias.
 func (t *Table) FieldAlias(field string) string {
-	return t.Alias() + "." + field
+	a := t.Alias()
+	if a != "" {
+		field = a + "." + field
+	}
+	return field
 }
 
 //NewSelect : create  select query for table

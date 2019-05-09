@@ -164,8 +164,5 @@ func (t *PlainTable) SetAlias(alias string) {
 
 //Alias return table alias.
 func (t *PlainTable) Alias() string {
-	if t.alias == "" {
-		return t.table
-	}
 	return t.alias
 }

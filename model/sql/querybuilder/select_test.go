@@ -81,3 +81,28 @@ func TestRightJoin(t *testing.T) {
 		t.Fatal(args)
 	}
 }
+
+func TestResult(t *testing.T) {
+	builder := NewBuilder()
+	fields := NewFields()
+	fields.Set("id", nil).Set("body", nil)
+	selectquery := builder.NewSelect()
+	selectquery.Select.AddFields(fields)
+	r := selectquery.Result()
+	if len(r.Fields) != 2 || len(r.args) != 2 {
+		t.Fatal(r)
+	}
+	r.BindFields(fields)
+	if len(r.Fields) != 2 || len(r.args) != 2 {
+		t.Fatal(r)
+	}
+	r.BindFields(fields)
+	if len(r.Fields) != 2 || len(r.args) != 2 {
+		t.Fatal(r)
+	}
+	notusedfields := NewFields().Set("notuserd", 0)
+	r.BindFields(notusedfields)
+	if len(r.Fields) != 2 || len(r.args) != 2 {
+		t.Fatal(r)
+	}
+}
