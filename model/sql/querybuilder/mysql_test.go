@@ -339,11 +339,19 @@ func TestSubquery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	insertquery = table1.NewInsert()
+	fields = querybuilder.NewFields()
+	fields.Set("id", "testid2").Set("body", "testbody2")
+	insertquery.Insert.AddFields(fields)
+	_, err = insertquery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
 	insertquery = table2.NewInsert()
 	insertquery.Insert.Add("id", nil).Add("body2", nil)
 	selectquery := table1.NewSelect()
 	selectquery.Select.AddRaw("raw").Add(table1.FieldAlias("body"))
+	selectquery.Where.Condition = table1.QueryBuilder().Equal(table1.FieldAlias("id"), "testid")
 	insertquery.Insert.SetSelect(selectquery)
 	_, err = insertquery.Query().Exec(table1)
 	if err != nil {
@@ -359,6 +367,48 @@ func TestSubquery(t *testing.T) {
 		t.Fatal(err)
 	}
 	if body != "testbody" {
+		t.Fatal(body)
+	}
+	selectquery = table1.NewSelect()
+	selectquery.Select.Add(table1.FieldAlias("body"))
+	selectquery.Where.Condition = table1.QueryBuilder().Equal(table1.FieldAlias("id"), "testid")
+	insertquery = table2.NewInsert()
+	insertquery.Insert.Add("id", "subquery").AddSelect("body2", selectquery)
+	_, err = insertquery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	selectquery = table2.NewSelect()
+	selectquery.Select.Add(table2.FieldAlias("body2"))
+	selectquery.Where.Condition = table2.QueryBuilder().Equal(table2.FieldAlias("id"), "subquery")
+	row = selectquery.QueryRow(table2)
+	err = row.Scan(&body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if body != "testbody" {
+		t.Fatal(body)
+	}
+	selectquery = table1.NewSelect()
+	selectquery.Select.Add(table1.FieldAlias("body"))
+	selectquery.Where.Condition = table1.QueryBuilder().Equal(table1.FieldAlias("id"), "testid2")
+	updatequery := table2.NewUpdate()
+	updatequery.Update.SetAlias(table2.Alias())
+	updatequery.Where.Condition = table2.QueryBuilder().Equal(table2.FieldAlias("id"), "subquery")
+	updatequery.Update.AddSelect(table2.FieldAlias("body2"), selectquery)
+	_, err = updatequery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	selectquery = table2.NewSelect()
+	selectquery.Select.Add(table2.FieldAlias("body2"))
+	selectquery.Where.Condition = table2.QueryBuilder().Equal(table2.FieldAlias("id"), "subquery")
+	row = selectquery.QueryRow(table2)
+	err = row.Scan(&body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if body != "testbody2" {
 		t.Fatal(body)
 	}
 
