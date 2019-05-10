@@ -7,16 +7,18 @@ import (
 
 func (b *Builder) NewSelectQuery() *SelectQuery {
 	return &SelectQuery{
-		Builder: b,
-		Prefix:  b.New(""),
-		Fields:  []string{},
+		Builder:   b,
+		Prefix:    b.New(""),
+		Fields:    []string{},
+		fieldargs: []interface{}{},
 	}
 }
 
 type SelectQuery struct {
-	Builder *Builder
-	Prefix  *PlainQuery
-	Fields  []string
+	Builder   *Builder
+	Prefix    *PlainQuery
+	Fields    []string
+	fieldargs []interface{}
 }
 
 func (q *SelectQuery) AddFields(m *Fields) *SelectQuery {
@@ -33,6 +35,13 @@ func (q *SelectQuery) Add(fields ...string) *SelectQuery {
 	return q
 }
 
+func (q *SelectQuery) AddRaw(fields ...interface{}) *SelectQuery {
+	for k := range fields {
+		q.Fields = append(q.Fields, "?")
+		q.fieldargs = append(q.fieldargs, fields[k])
+	}
+	return q
+}
 func (q *SelectQuery) QueryCommand() string {
 	var command = "SELECT"
 	p := q.Prefix.QueryCommand()
@@ -50,7 +59,10 @@ func (q *SelectQuery) QueryCommand() string {
 	return command
 }
 func (q *SelectQuery) QueryArgs() []interface{} {
-	return q.Prefix.QueryArgs()
+	args := []interface{}{}
+	args = append(args, q.Prefix.QueryArgs()...)
+	args = append(args, q.fieldargs...)
+	return args
 }
 func (q *SelectQuery) Result() *SelectResult {
 	return NewSelectResult(q.Fields)

@@ -31,7 +31,10 @@ func (q *FromQuery) QueryCommand() string {
 			command += q.Tables[k][0] + " as " + q.Tables[k][1] + " , "
 		}
 	}
-	return command[:len(command)-3]
+	if len(q.Tables) > 0 {
+		command = command[:len(command)-3]
+	}
+	return command
 }
 func (q *FromQuery) QueryArgs() []interface{} {
 	return []interface{}{}

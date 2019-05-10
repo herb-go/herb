@@ -15,8 +15,13 @@ type InsertQuery struct {
 	TableName string
 	alias     string
 	Data      []QueryData
+	Select    *Select
 }
 
+func (q *InsertQuery) SetSelect(s *Select) *InsertQuery {
+	q.Select = s
+	return q
+}
 func (q *InsertQuery) SetAlias(alias string) *InsertQuery {
 	q.alias = alias
 	return q
@@ -39,7 +44,6 @@ func (q *InsertQuery) AddRaw(field string, raw string) *InsertQuery {
 	q.Data = append(q.Data, QueryData{Field: field, Raw: raw})
 	return q
 }
-
 func (q *InsertQuery) AddSelect(field string, Select *Select) *InsertQuery {
 	query := *Select.Query()
 	q.Data = append(q.Data, QueryData{
@@ -49,7 +53,6 @@ func (q *InsertQuery) AddSelect(field string, Select *Select) *InsertQuery {
 	})
 	return q
 }
-
 func (q *InsertQuery) QueryCommand() string {
 	var command = "INSERT"
 	p := q.Prefix.QueryCommand()
@@ -77,22 +80,32 @@ func (q *InsertQuery) QueryCommand() string {
 	command += " ("
 	command += columns
 	command += " )"
-
-	command += " VALUES ( "
-	command += values
-	command += " )"
+	if q.Select == nil {
+		command += " VALUES ( "
+		command += values
+		command += " )"
+	} else {
+		command += "\n"
+		command += q.Select.QueryCommand()
+	}
 	return command
 }
 func (q *InsertQuery) QueryArgs() []interface{} {
-	var args = []interface{}{}
-	for k := range q.Data {
-		if q.Data[k].Data != nil {
-			args = append(args, q.Data[k].Data...)
-		}
-	}
+
 	var result = []interface{}{}
 	result = append(result, q.Prefix.QueryArgs()...)
-	result = append(result, args...)
+	if q.Select == nil {
+		var args = []interface{}{}
+		for k := range q.Data {
+			if q.Data[k].Data != nil {
+				args = append(args, q.Data[k].Data...)
+			}
+		}
+		result = append(result, args...)
+	} else {
+		args := q.Select.QueryArgs()
+		result = append(result, args...)
+	}
 	return result
 }
 

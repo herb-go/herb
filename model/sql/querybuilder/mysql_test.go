@@ -302,6 +302,67 @@ func TestJoin(t *testing.T) {
 		t.Fatal(*result)
 	}
 }
+
+func TestSubquery(t *testing.T) {
+	querybuilder.Debug = true
+	var err error
+	var DB = db.New()
+	var config = db.NewConfig()
+	err = json.Unmarshal([]byte(MysqlConfigJSON), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = DB.Init(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	table1 := querybuilder.NewTable(DB.Table("testtable1"))
+	table1.SetAlias("t1")
+	if table1.Driver() != "mysql" {
+		t.Fatal(table1)
+	}
+	// builder := table1.QueryBuilder()
+	truncatequery := table1.QueryBuilder().New("truncate table testtable1")
+	truncatequery.MustExec(table1)
+	table2 := querybuilder.NewTable(DB.Table("testtable2"))
+	table2.SetAlias("t2")
+
+	_, err = DB.Exec("truncate table testtable2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	insertquery := table1.NewInsert()
+	fields := querybuilder.NewFields()
+	fields.Set("id", "testid").Set("body", "testbody")
+	insertquery.Insert.AddFields(fields)
+	_, err = insertquery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	insertquery = table2.NewInsert()
+	insertquery.Insert.Add("id", nil).Add("body2", nil)
+	selectquery := table1.NewSelect()
+	selectquery.Select.AddRaw("raw").Add(table1.FieldAlias("body"))
+	insertquery.Insert.SetSelect(selectquery)
+	_, err = insertquery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var body string
+	selectquery = table2.NewSelect()
+	selectquery.Select.Add(table2.FieldAlias("body2"))
+	selectquery.Where.Condition = table2.QueryBuilder().Equal(table2.FieldAlias("id"), "raw")
+	row := selectquery.QueryRow(table2)
+	err = row.Scan(&body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if body != "testbody" {
+		t.Fatal(body)
+	}
+
+}
 func init() {
 
 }
