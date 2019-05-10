@@ -42,6 +42,14 @@ func (q *SelectQuery) AddRaw(fields ...interface{}) *SelectQuery {
 	}
 	return q
 }
+func (q *SelectQuery) AddSelect(Select *Select) *SelectQuery {
+	query := *Select.Query()
+	q.Fields = append(q.Fields, "("+query.QueryCommand()+")")
+	q.fieldargs = append(q.fieldargs, query.QueryArgs()...)
+
+	return q
+}
+
 func (q *SelectQuery) QueryCommand() string {
 	var command = "SELECT"
 	p := q.Prefix.QueryCommand()

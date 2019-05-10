@@ -382,6 +382,7 @@ func TestSubquery(t *testing.T) {
 	selectquery.Select.Add(table2.FieldAlias("body2"))
 	selectquery.Where.Condition = table2.QueryBuilder().Equal(table2.FieldAlias("id"), "subquery")
 	row = selectquery.QueryRow(table2)
+	body = ""
 	err = row.Scan(&body)
 	if err != nil {
 		t.Fatal(err)
@@ -404,6 +405,22 @@ func TestSubquery(t *testing.T) {
 	selectquery.Select.Add(table2.FieldAlias("body2"))
 	selectquery.Where.Condition = table2.QueryBuilder().Equal(table2.FieldAlias("id"), "subquery")
 	row = selectquery.QueryRow(table2)
+	body = ""
+	err = row.Scan(&body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if body != "testbody2" {
+		t.Fatal(body)
+	}
+	selectquery = table1.NewSelect()
+	selectquery.Select.Add(table1.FieldAlias("body"))
+	selectquery.Where.Condition = table1.QueryBuilder().New("t1.body=t2.body2")
+	selectwithsubqueryquery := table2.NewSelect()
+	selectwithsubqueryquery.Select.AddSelect(selectquery)
+	selectwithsubqueryquery.Where.Condition = table1.QueryBuilder().Equal(table2.FieldAlias("id"), "subquery")
+	row = selectwithsubqueryquery.QueryRow(table2)
+	body = ""
 	err = row.Scan(&body)
 	if err != nil {
 		t.Fatal(err)
