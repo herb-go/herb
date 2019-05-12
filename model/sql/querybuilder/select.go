@@ -2,7 +2,6 @@ package querybuilder
 
 import (
 	"database/sql"
-	"time"
 )
 
 func (b *Builder) NewSelectQuery() *SelectQuery {
@@ -148,38 +147,18 @@ func (s *Select) Result() *SelectResult {
 func (s *Select) Query() *PlainQuery {
 	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.OrderBy, s.Limit, s.Other)
 }
-func (s *Select) QueryRow(db DB) *sql.Row {
-	q := s.Query()
-	cmd := q.QueryCommand()
-	args := q.QueryArgs()
-	var timestamp int64
-	if Debug {
-		timestamp = time.Now().UnixNano()
-	}
-	row := db.QueryRow(cmd, args...)
-	if Debug {
-		Logger(timestamp, cmd, args)
-	}
-	return row
-}
-func (s *Select) QueryRows(db DB) (*sql.Rows, error) {
-	q := s.Query()
-	cmd := q.QueryCommand()
-	args := q.QueryArgs()
-	var timestamp int64
-	if Debug {
-		timestamp = time.Now().UnixNano()
-	}
-	rows, err := db.Query(cmd, args...)
-	if Debug {
-		Logger(timestamp, cmd, args)
-	}
-	return rows, err
-}
 
 func (s *Select) QueryCommand() string {
 	return s.Query().Command
 }
 func (s *Select) QueryArgs() []interface{} {
 	return s.Query().Args
+}
+
+func (s *Select) QueryRow(db DB) *sql.Row {
+	return s.Builder.QueryRow(db, s)
+
+}
+func (s *Select) QueryRows(db DB) (*sql.Rows, error) {
+	return s.Builder.QueryRows(db, s)
 }

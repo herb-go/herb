@@ -2,7 +2,6 @@ package querybuilder
 
 import (
 	"database/sql"
-	"time"
 )
 
 const indexTableName = 0
@@ -19,9 +18,6 @@ func (b *Builder) New(command string, args ...interface{}) *PlainQuery {
 		Command: command,
 		Args:    args,
 	}
-}
-func (b *Builder) Exec(db DB, q Query) (sql.Result, error) {
-	return b.New(q.QueryCommand(), q.QueryArgs()...).Exec(db)
 }
 
 type PlainQuery struct {
@@ -44,17 +40,7 @@ func (q *PlainQuery) QueryArgs() []interface{} {
 	return q.Args
 }
 func (q *PlainQuery) Exec(db DB) (sql.Result, error) {
-	cmd := q.QueryCommand()
-	args := q.QueryArgs()
-	var timestamp int64
-	if Debug {
-		timestamp = time.Now().UnixNano()
-	}
-	r, err := db.Exec(cmd, args...)
-	if Debug {
-		Logger(timestamp, cmd, args)
-	}
-	return r, err
+	return q.Builder.Exec(db, q)
 }
 func (q *PlainQuery) MustExec(db DB) sql.Result {
 	r, err := db.Exec(q.QueryCommand(), q.QueryArgs()...)
@@ -62,6 +48,14 @@ func (q *PlainQuery) MustExec(db DB) sql.Result {
 		panic(err)
 	}
 	return r
+}
+
+func (q *PlainQuery) QueryRow(db DB) *sql.Row {
+	return q.Builder.QueryRow(db, q)
+
+}
+func (q *PlainQuery) QueryRows(db DB) (*sql.Rows, error) {
+	return q.Builder.QueryRows(db, q)
 }
 func (q *PlainQuery) And(qs ...Query) *PlainQuery {
 	if q != nil && q.Command != "" {

@@ -1,8 +1,10 @@
 package querybuilder
 
 import (
+	"database/sql"
 	"fmt"
 	"sync"
+	"time"
 )
 
 //Builder query builder struct
@@ -10,6 +12,45 @@ type Builder struct {
 	Driver string
 	driver BuilderDriver
 	lock   sync.Mutex
+}
+
+func (b *Builder) Exec(db DB, q Query) (sql.Result, error) {
+	cmd, args := b.LoadDriver().ConvertQuery(q)
+	var timestamp int64
+	if Debug {
+		timestamp = time.Now().UnixNano()
+	}
+	r, err := db.Exec(cmd, args...)
+	if Debug {
+		Logger(timestamp, cmd, args)
+	}
+	return r, err
+}
+
+func (b *Builder) QueryRow(db DB, q Query) *sql.Row {
+	cmd, args := b.LoadDriver().ConvertQuery(q)
+	var timestamp int64
+	if Debug {
+		timestamp = time.Now().UnixNano()
+	}
+	row := db.QueryRow(cmd, args...)
+	if Debug {
+		Logger(timestamp, cmd, args)
+	}
+	return row
+}
+
+func (b *Builder) QueryRows(db DB, q Query) (*sql.Rows, error) {
+	cmd, args := b.LoadDriver().ConvertQuery(q)
+	var timestamp int64
+	if Debug {
+		timestamp = time.Now().UnixNano()
+	}
+	rows, err := db.Query(cmd, args...)
+	if Debug {
+		Logger(timestamp, cmd, args)
+	}
+	return rows, err
 }
 
 //CountField return select count  field
@@ -41,6 +82,7 @@ var DefaultDriver = &EmptyBuilderDriver{}
 
 //BuilderDriver query builder driver interface
 type BuilderDriver interface {
+	ConvertQuery(q Query) (string, []interface{})
 	LimitCommandBuilder(q *LimitQuery) string
 	LimitArgBuilder(q *LimitQuery) []interface{}
 	CountField() string
@@ -49,6 +91,10 @@ type BuilderDriver interface {
 // EmptyBuilderDriver empty query builder.
 // Using mysql statements
 type EmptyBuilderDriver struct {
+}
+
+func (d EmptyBuilderDriver) ConvertQuery(q Query) (string, []interface{}) {
+	return q.QueryCommand(), q.QueryArgs()
 }
 
 //CountField return count field

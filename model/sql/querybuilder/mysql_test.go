@@ -43,7 +43,7 @@ func TestMysql(t *testing.T) {
 	var count int
 	fields.Set(table1.QueryBuilder().CountField(), &count)
 	countquery := table1.BuildCount()
-	r := countquery.QueryRow(table1)
+	r := countquery.Query().QueryRow(table1)
 	err = countquery.Result().BindFields(fields).ScanFrom(r)
 	if err != nil {
 		t.Fatal(err)
@@ -128,7 +128,7 @@ func TestMysql(t *testing.T) {
 	selectquery.OrderBy.Add("id", false)
 	selectquery.Limit.SetLimit(1)
 	selectquery.Limit.SetOffset(1)
-	rows, err = selectquery.QueryRows(table1)
+	rows, err = selectquery.Query().QueryRows(table1)
 	if err != nil {
 		t.Fatal(err)
 	}
