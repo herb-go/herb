@@ -8,26 +8,14 @@ type DeleteQuery struct {
 }
 
 func (q *DeleteQuery) QueryCommand() string {
-	var command = "DELETE"
-	p := q.Prefix.QueryCommand()
-	if p != "" {
-		command += " " + p
-	}
-	if q.alias != "" {
-		command += " " + q.alias
-	}
-	command += " FROM " + q.TableName
-	if q.alias != "" {
-		command += " AS " + q.alias
-	}
-	return command
+	return q.Builder.LoadDriver().DeleteCommandBuilder(q)
 }
 func (q *DeleteQuery) SetAlias(alias string) *DeleteQuery {
 	q.alias = alias
 	return q
 }
 func (q *DeleteQuery) QueryArgs() []interface{} {
-	return q.Prefix.QueryArgs()
+	return q.Builder.LoadDriver().DeleteArgBuilder(q)
 }
 
 func (b *Builder) NewDeleteQuery(tableName string) *DeleteQuery {

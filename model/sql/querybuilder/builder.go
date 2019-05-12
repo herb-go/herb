@@ -85,6 +85,8 @@ type BuilderDriver interface {
 	ConvertQuery(q Query) (string, []interface{})
 	LimitCommandBuilder(q *LimitQuery) string
 	LimitArgBuilder(q *LimitQuery) []interface{}
+	DeleteCommandBuilder(q *DeleteQuery) string
+	DeleteArgBuilder(q *DeleteQuery) []interface{}
 	CountField() string
 }
 
@@ -124,6 +126,25 @@ func (d *EmptyBuilderDriver) LimitArgBuilder(q *LimitQuery) []interface{} {
 		args = append(args, *q.offset)
 	}
 	return args
+}
+
+func (d *EmptyBuilderDriver) DeleteCommandBuilder(q *DeleteQuery) string {
+	var command = "DELETE"
+	p := q.Prefix.QueryCommand()
+	if p != "" {
+		command += " " + p
+	}
+	if q.alias != "" {
+		command += " " + q.alias
+	}
+	command += " FROM " + q.TableName
+	if q.alias != "" {
+		command += " AS " + q.alias
+	}
+	return command
+}
+func (d *EmptyBuilderDriver) DeleteArgBuilder(q *DeleteQuery) []interface{} {
+	return q.Prefix.QueryArgs()
 }
 
 var drivers = map[string]BuilderDriver{}

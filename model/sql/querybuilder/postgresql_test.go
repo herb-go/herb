@@ -171,7 +171,7 @@ func TestPostgresql(t *testing.T) {
 	}
 
 	deletequery := table1.NewDelete()
-	deletequery.Where.Condition = table1.QueryBuilder().Equal("id", "testid2")
+	deletequery.Where.Condition = table1.QueryBuilder().Equal(table1.FieldAlias("id"), "testid2")
 	_, err = deletequery.Query().Exec(table1)
 	if err != nil {
 		t.Fatal(err)
@@ -224,9 +224,6 @@ func TestPostgresqlJoin(t *testing.T) {
 	}
 	table1 := querybuilder.NewTable(DB.Table("testtable1"))
 	table1.SetAlias("t1")
-	if table1.Driver() != "mysql" {
-		t.Fatal(table1)
-	}
 	builder := table1.QueryBuilder()
 
 	truncatequery := table1.QueryBuilder().New("truncate table testtable1")
@@ -315,9 +312,7 @@ func TestPostgresqlSubquery(t *testing.T) {
 	}
 	table1 := querybuilder.NewTable(DB.Table("testtable1"))
 	table1.SetAlias("t1")
-	if table1.Driver() != "mysql" {
-		t.Fatal(table1)
-	}
+
 	// builder := table1.QueryBuilder()
 	truncatequery := table1.QueryBuilder().New("truncate table testtable1")
 	truncatequery.MustExec(table1)
