@@ -18,7 +18,7 @@ type InsertQuery struct {
 	Select    *Select
 }
 
-func (q *InsertQuery) SetSelect(s *Select) *InsertQuery {
+func (q *InsertQuery) WithSelect(s *Select) *InsertQuery {
 	q.Select = s
 	return q
 }

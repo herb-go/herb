@@ -6,10 +6,10 @@ import (
 
 	"github.com/herb-go/herb/model/sql/db"
 	"github.com/herb-go/herb/model/sql/querybuilder"
-	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-func TestPostgresql(t *testing.T) {
+func TestSqlite(t *testing.T) {
 	type Result struct {
 		ID   string
 		Body string
@@ -18,7 +18,7 @@ func TestPostgresql(t *testing.T) {
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(PostgreConfigJSON), config)
+	err = json.Unmarshal([]byte(SqliteConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,10 +28,10 @@ func TestPostgresql(t *testing.T) {
 	}
 	table1 := querybuilder.NewTable(DB.Table("testtable1"))
 
-	truncatequery := table1.QueryBuilder().New("truncate table testtable1")
+	truncatequery := table1.QueryBuilder().New("DELETE FROM testtable1")
 	truncatequery.MustExec(table1)
 
-	_, err = table1.QueryBuilder().Exec(table1, table1.QueryBuilder().New("truncate table testtable2"))
+	_, err = table1.QueryBuilder().Exec(table1, table1.QueryBuilder().New("DELETE FROM testtable2"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +204,7 @@ func TestPostgresql(t *testing.T) {
 		t.Fatal(*results[0])
 	}
 }
-func TestPostgresqlJoin(t *testing.T) {
+func TestSqliteJoin(t *testing.T) {
 	type Result struct {
 		ID    string
 		Body  string
@@ -214,7 +214,7 @@ func TestPostgresqlJoin(t *testing.T) {
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(PostgreConfigJSON), config)
+	err = json.Unmarshal([]byte(SqliteConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,11 +226,11 @@ func TestPostgresqlJoin(t *testing.T) {
 	table1.SetAlias("t1")
 	builder := table1.QueryBuilder()
 
-	truncatequery := table1.QueryBuilder().New("truncate table testtable1")
+	truncatequery := table1.QueryBuilder().New("DELETE FROM testtable1")
 	truncatequery.MustExec(table1)
 	table2 := querybuilder.NewTable(DB.Table("testtable2"))
 
-	_, err = DB.Exec("truncate table testtable2")
+	_, err = DB.Exec("DELETE FROM testtable2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -280,29 +280,29 @@ func TestPostgresqlJoin(t *testing.T) {
 	if result.ID != "testid" || result.Body != "testbody" || result.Body2 != "testbody2" {
 		t.Fatal(*result)
 	}
-
-	result = &Result{}
-	fields = querybuilder.NewFields()
-	fields.Set("t1.id", &result.ID).Set("t1.body", &result.Body).Set("t2.body2", &result.Body2)
-	selectquery = table1.NewSelect()
-	selectquery.Select.AddFields(fields)
-	selectquery.Join.RightJoin().Alias("t2", table2.TableName()).Using("id")
-	row = selectquery.QueryRow(table1)
-	err = selectquery.Result().BindFields(fields).ScanFrom(row)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result.ID != "testid" || result.Body != "testbody" || result.Body2 != "testbody2" {
-		t.Fatal(*result)
-	}
+	//RIGHT and FULL OUTER JOINs are not currently supported
+	// result = &Result{}
+	// fields = querybuilder.NewFields()
+	// fields.Set("t1.id", &result.ID).Set("t1.body", &result.Body).Set("t2.body2", &result.Body2)
+	// selectquery = table1.NewSelect()
+	// selectquery.Select.AddFields(fields)
+	// selectquery.Join.RightJoin().Alias("t2", table2.TableName()).Using("id")
+	// row = selectquery.QueryRow(table1)
+	// err = selectquery.Result().BindFields(fields).ScanFrom(row)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// if result.ID != "testid" || result.Body != "testbody" || result.Body2 != "testbody2" {
+	// 	t.Fatal(*result)
+	// }
 }
 
-func TestPostgresqlSubquery(t *testing.T) {
+func TestSqliteSubquery(t *testing.T) {
 	querybuilder.Debug = true
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(PostgreConfigJSON), config)
+	err = json.Unmarshal([]byte(SqliteConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -314,12 +314,12 @@ func TestPostgresqlSubquery(t *testing.T) {
 	table1.SetAlias("t1")
 
 	// builder := table1.QueryBuilder()
-	truncatequery := table1.QueryBuilder().New("truncate table testtable1")
+	truncatequery := table1.QueryBuilder().New("DELETE FROM testtable1")
 	truncatequery.MustExec(table1)
 	table2 := querybuilder.NewTable(DB.Table("testtable2"))
 	table2.SetAlias("t2")
 
-	_, err = DB.Exec("truncate table testtable2")
+	_, err = DB.Exec("DELETE FROM testtable2")
 	if err != nil {
 		t.Fatal(err)
 	}

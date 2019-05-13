@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"testing"
 
+	_ "github.com/denisenkom/go-mssqldb"
+
 	"github.com/herb-go/herb/model/sql/db"
 	"github.com/herb-go/herb/model/sql/querybuilder"
-	_ "github.com/lib/pq"
 )
 
-func TestPostgresql(t *testing.T) {
+func TestMssql(t *testing.T) {
 	type Result struct {
 		ID   string
 		Body string
@@ -18,7 +19,7 @@ func TestPostgresql(t *testing.T) {
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(PostgreConfigJSON), config)
+	err = json.Unmarshal([]byte(MssqlConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +205,7 @@ func TestPostgresql(t *testing.T) {
 		t.Fatal(*results[0])
 	}
 }
-func TestPostgresqlJoin(t *testing.T) {
+func TestMssqlJoin(t *testing.T) {
 	type Result struct {
 		ID    string
 		Body  string
@@ -214,7 +215,7 @@ func TestPostgresqlJoin(t *testing.T) {
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(PostgreConfigJSON), config)
+	err = json.Unmarshal([]byte(MssqlConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +272,7 @@ func TestPostgresqlJoin(t *testing.T) {
 	fields.Set("t1.id", &result.ID).Set("t1.body", &result.Body).Set("t2.body2", &result.Body2)
 	selectquery = table1.NewSelect()
 	selectquery.Select.AddFields(fields)
-	selectquery.Join.InnerJoin().Alias("t2", table2.TableName()).Using("id")
+	selectquery.Join.InnerJoin().Alias("t2", table2.TableName()).On(builder.New("t1.id = t2.id"))
 	row = selectquery.QueryRow(table1)
 	err = selectquery.Result().BindFields(fields).ScanFrom(row)
 	if err != nil {
@@ -286,7 +287,7 @@ func TestPostgresqlJoin(t *testing.T) {
 	fields.Set("t1.id", &result.ID).Set("t1.body", &result.Body).Set("t2.body2", &result.Body2)
 	selectquery = table1.NewSelect()
 	selectquery.Select.AddFields(fields)
-	selectquery.Join.RightJoin().Alias("t2", table2.TableName()).Using("id")
+	selectquery.Join.RightJoin().Alias("t2", table2.TableName()).On(builder.New("t1.id = t2.id"))
 	row = selectquery.QueryRow(table1)
 	err = selectquery.Result().BindFields(fields).ScanFrom(row)
 	if err != nil {
@@ -297,12 +298,12 @@ func TestPostgresqlJoin(t *testing.T) {
 	}
 }
 
-func TestPostgresqlSubquery(t *testing.T) {
+func TestMssqlSubquery(t *testing.T) {
 	querybuilder.Debug = true
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(PostgreConfigJSON), config)
+	err = json.Unmarshal([]byte(MssqlConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -386,13 +387,14 @@ func TestPostgresqlSubquery(t *testing.T) {
 	selectquery.Select.Add(table1.FieldAlias("body"))
 	selectquery.Where.Condition = table1.QueryBuilder().Equal(table1.FieldAlias("id"), "testid2")
 	updatequery := table2.NewUpdate()
-	updatequery.Update.SetAlias(table2.Alias())
-	updatequery.Where.Condition = table2.QueryBuilder().Equal(table2.FieldAlias("id"), "subquery")
+	// updatequery.Update.SetAlias(table2.Alias())
+	updatequery.Where.Condition = table2.QueryBuilder().Equal("id", "subquery")
 	updatequery.Update.AddSelect("body2", selectquery)
 	_, err = updatequery.Query().Exec(table1)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	selectquery = table2.NewSelect()
 	selectquery.Select.Add(table2.FieldAlias("body2"))
 	selectquery.Where.Condition = table2.QueryBuilder().Equal(table2.FieldAlias("id"), "subquery")
@@ -405,9 +407,18 @@ func TestPostgresqlSubquery(t *testing.T) {
 	if body != "testbody2" {
 		t.Fatal(body)
 	}
+
+	insertquery = table1.NewInsert()
+	fields = querybuilder.NewFields()
+	fields.Set("id", "subquery").Set("body", "testbody")
+	insertquery.Insert.AddFields(fields)
+	_, err = insertquery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
 	selectquery = table1.NewSelect()
 	selectquery.Select.Add(table1.FieldAlias("body"))
-	selectquery.Where.Condition = table1.QueryBuilder().New("t1.body=t2.body2")
+	selectquery.Where.Condition = table1.QueryBuilder().New("t1.id=t2.id")
 	selectwithsubqueryquery := table2.NewSelect()
 	selectwithsubqueryquery.Select.AddSelect(selectquery)
 	selectwithsubqueryquery.Where.Condition = table1.QueryBuilder().Equal(table2.FieldAlias("id"), "subquery")
@@ -417,7 +428,7 @@ func TestPostgresqlSubquery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if body != "testbody2" {
+	if body != "testbody" {
 		t.Fatal(body)
 	}
 

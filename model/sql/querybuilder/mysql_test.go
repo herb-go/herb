@@ -352,7 +352,7 @@ func TestSubquery(t *testing.T) {
 	selectquery := table1.NewSelect()
 	selectquery.Select.AddRaw("raw").Add(table1.FieldAlias("body"))
 	selectquery.Where.Condition = table1.QueryBuilder().Equal(table1.FieldAlias("id"), "testid")
-	insertquery.Insert.SetSelect(selectquery)
+	insertquery.Insert.WithSelect(selectquery)
 	_, err = insertquery.Query().Exec(table1)
 	if err != nil {
 		t.Fatal(err)

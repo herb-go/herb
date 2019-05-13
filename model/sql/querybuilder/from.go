@@ -28,7 +28,7 @@ func (q *FromQuery) QueryCommand() string {
 		if q.Tables[k][1] == "" {
 			command += q.Tables[k][0] + " , "
 		} else {
-			command += q.Tables[k][0] + " as " + q.Tables[k][1] + " , "
+			command += q.Tables[k][0] + " AS " + q.Tables[k][1] + " , "
 		}
 	}
 	if len(q.Tables) > 0 {

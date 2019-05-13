@@ -19,7 +19,7 @@ func TestUpdate(t *testing.T) {
 	query.Where.Condition = builder.New("1=1")
 	query.Other = builder.New("other")
 	cmd := query.QueryCommand()
-	if cmd != "UPDATE prefix table AS testalias SET field1 = ? , field2 = ? , raw = raw , field3 = ( SELECT field1 , field2\nFROM table2 as tb2 )\nWHERE 1=1\nother" {
+	if cmd != "UPDATE prefix table AS testalias SET field1 = ? , field2 = ? , raw = raw , field3 = ( SELECT field1 , field2\nFROM table2 AS tb2 )\nWHERE 1=1\nother" {
 		t.Fatal(cmd)
 	}
 	args := query.QueryArgs()

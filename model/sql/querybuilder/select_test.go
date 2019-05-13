@@ -25,7 +25,7 @@ func TestSelect(t *testing.T) {
 	selectquery.Where.Condition = builder.New("1=1")
 	selectquery.Other = builder.New("other")
 	cmds := selectquery.QueryCommand()
-	if cmds != "SELECT prefix testfield1 , testfield2 , ?\nFROM tablename , table2name as table2alias\nLEFT JOIN table2 AS t2 ON field1=field2\nWHERE 1=1\nORDER BY testfield1 ASC  , testfield2 DESC \nLIMIT ? OFFSET ? \nother" {
+	if cmds != "SELECT prefix testfield1 , testfield2 , ?\nFROM tablename , table2name AS table2alias\nLEFT JOIN table2 AS t2 ON field1=field2\nWHERE 1=1\nORDER BY testfield1 ASC  , testfield2 DESC \nLIMIT ? OFFSET ? \nother" {
 		t.Fatal(cmds)
 	}
 	args := selectquery.QueryArgs()
@@ -49,7 +49,7 @@ func TestUsing(t *testing.T) {
 
 	selectquery.Join.InnerJoin().Using("field1")
 	cmds := selectquery.QueryCommand()
-	if cmds != "SELECT testfield1 , testfield2\nFROM tablename , table2name as table2alias\nINNER JOIN  USING (field1)" {
+	if cmds != "SELECT testfield1 , testfield2\nFROM tablename , table2name AS table2alias\nINNER JOIN  USING (field1)" {
 		t.Fatal(cmds)
 	}
 	args := selectquery.QueryArgs()
@@ -73,7 +73,7 @@ func TestRightJoin(t *testing.T) {
 
 	selectquery.Join.RightJoin().On(builder.New("field1=field2"))
 	cmds := selectquery.QueryCommand()
-	if cmds != "SELECT testfield1 , testfield2\nFROM tablename , table2name as table2alias\nRIGHT JOIN  ON field1=field2" {
+	if cmds != "SELECT testfield1 , testfield2\nFROM tablename , table2name AS table2alias\nRIGHT JOIN  ON field1=field2" {
 		t.Fatal(cmds)
 	}
 	args := selectquery.QueryArgs()

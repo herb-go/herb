@@ -20,3 +20,26 @@ var PostgreConfigJSON = `
 	"MaxOpenConns":10
 }
 `
+
+var MssqlConfigJSON = `
+{
+	"Driver": "mssql",
+	"DataSource": "sqlserver://sa:yourStrong(!)Password@localhost:1433?database=dbtest",
+	"Prefix": "",
+	"MaxIdleConns":10,
+	"ConnMaxLifetimeInSecond":3600,
+	"MaxOpenConns":10
+}
+`
+
+var SqliteConfigJSON = `
+{
+	"Driver": "sqlite3",
+	"DataSource": "_test/sqlite.db",
+	"Prefix": "",
+	"MaxIdleConns":10,
+	"ConnMaxLifetimeInSecond":3600,
+	"MaxOpenConns":10
+}
+`
+
