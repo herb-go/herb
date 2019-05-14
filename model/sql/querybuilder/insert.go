@@ -13,7 +13,6 @@ type InsertQuery struct {
 	Builder   *Builder
 	Prefix    *PlainQuery
 	TableName string
-	alias     string
 	Data      []QueryData
 	Select    *Select
 }
@@ -22,10 +21,7 @@ func (q *InsertQuery) WithSelect(s *Select) *InsertQuery {
 	q.Select = s
 	return q
 }
-func (q *InsertQuery) SetAlias(alias string) *InsertQuery {
-	q.alias = alias
-	return q
-}
+
 func (q *InsertQuery) AddFields(m *Fields) *InsertQuery {
 	for _, v := range *m {
 		q.Add(v.Field, v.Data)
@@ -58,9 +54,6 @@ func (q *InsertQuery) QueryCommand() string {
 	p := q.Prefix.QueryCommand()
 	if p != "" {
 		command += " " + p
-	}
-	if q.alias != "" {
-		command += " AS " + q.alias
 	}
 	command += " INTO " + q.TableName
 	var values = ""

@@ -386,8 +386,7 @@ func TestPostgresqlSubquery(t *testing.T) {
 	selectquery.Select.Add(table1.FieldAlias("body"))
 	selectquery.Where.Condition = table1.QueryBuilder().Equal(table1.FieldAlias("id"), "testid2")
 	updatequery := table2.NewUpdate()
-	updatequery.Update.SetAlias(table2.Alias())
-	updatequery.Where.Condition = table2.QueryBuilder().Equal(table2.FieldAlias("id"), "subquery")
+	updatequery.Where.Condition = table2.QueryBuilder().Equal("id", "subquery")
 	updatequery.Update.AddSelect("body2", selectquery)
 	_, err = updatequery.Query().Exec(table1)
 	if err != nil {

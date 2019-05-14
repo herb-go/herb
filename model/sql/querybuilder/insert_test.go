@@ -11,7 +11,6 @@ func TestInsert(t *testing.T) {
 	selectquery.Select.AddFields(fields)
 	selectquery.From.AddAlias("tb2", "table2")
 	query := builder.NewInsert("testtable")
-	query.Insert.SetAlias("testalias")
 	query.Insert.Prefix = builder.New("prefix")
 	query.Insert.AddFields(fields)
 	query.Insert.AddRaw("rawfield", "raw")
@@ -20,7 +19,7 @@ func TestInsert(t *testing.T) {
 	query.Other = builder.New("other")
 	q := query.Query()
 	cmd := q.Command
-	if cmd != "INSERT prefix AS testalias INTO testtable (field1 , field2 , rawfield , t2.field3 ) VALUES ( ? , ? , raw , ( SELECT field1 , field2\nFROM table2 AS tb2 ) )\nother" {
+	if cmd != "INSERT prefix INTO testtable (field1 , field2 , rawfield , t2.field3 ) VALUES ( ? , ? , raw , ( SELECT field1 , field2\nFROM table2 AS tb2 ) )\nother" {
 		t.Fatal(cmd)
 	}
 	args := q.Args
@@ -38,14 +37,13 @@ func TestInsertSubquery(t *testing.T) {
 	selectquery.Select.AddFields(fields)
 	selectquery.From.AddAlias("table2", "testtable2")
 	query := builder.NewInsert("testtable")
-	query.Insert.SetAlias("testalias")
 	query.Insert.Prefix = builder.New("prefix")
 	query.Insert.AddFields(fields)
 	query.Insert.WithSelect(selectquery)
 	query.Other = builder.New("other")
 	q := query.Query()
 	cmd := q.Command
-	if cmd != "INSERT prefix AS testalias INTO testtable (field1 , field2 )\nSELECT field1 , field2\nFROM testtable2 AS table2\nother" {
+	if cmd != "INSERT prefix INTO testtable (field1 , field2 )\nSELECT field1 , field2\nFROM testtable2 AS table2\nother" {
 		t.Fatal(cmd)
 	}
 	args := q.Args
