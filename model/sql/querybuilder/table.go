@@ -59,7 +59,6 @@ func (t *Table) NewUpdate() *Update {
 //NewDelete : build delete query for table node
 func (t *Table) NewDelete() *Delete {
 	Delete := t.QueryBuilder().NewDelete(t.TableName())
-	Delete.Delete.SetAlias(t.TableName())
 	return Delete
 }
 
