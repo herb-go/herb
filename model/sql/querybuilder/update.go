@@ -1,7 +1,7 @@
 package querybuilder
 
-func (b *Builder) NewUpdateQuery(tableName string) *UpdateQuery {
-	return &UpdateQuery{
+func (b *Builder) NewUpdateClause(tableName string) *UpdateClause {
+	return &UpdateClause{
 		Builder:   b,
 		Prefix:    b.New(""),
 		TableName: tableName,
@@ -9,14 +9,14 @@ func (b *Builder) NewUpdateQuery(tableName string) *UpdateQuery {
 	}
 }
 
-type UpdateQuery struct {
+type UpdateClause struct {
 	Builder   *Builder
 	Prefix    *PlainQuery
 	TableName string
 	Data      []QueryData
 }
 
-func (q *UpdateQuery) AddSelect(field string, Select *Select) *UpdateQuery {
+func (q *UpdateClause) AddSelect(field string, Select *Select) *UpdateClause {
 	query := *Select.Query()
 	q.Data = append(q.Data, QueryData{
 		Field: field,
@@ -26,14 +26,14 @@ func (q *UpdateQuery) AddSelect(field string, Select *Select) *UpdateQuery {
 	return q
 }
 
-func (q *UpdateQuery) AddFields(m *Fields) *UpdateQuery {
+func (q *UpdateClause) AddFields(m *Fields) *UpdateClause {
 	for _, v := range *m {
 		q.Add(v.Field, v.Data)
 	}
 	return q
 }
 
-func (q *UpdateQuery) Add(field string, data interface{}) *UpdateQuery {
+func (q *UpdateClause) Add(field string, data interface{}) *UpdateClause {
 	q.Data = append(q.Data,
 		QueryData{
 			Field: field,
@@ -42,11 +42,11 @@ func (q *UpdateQuery) Add(field string, data interface{}) *UpdateQuery {
 	)
 	return q
 }
-func (q *UpdateQuery) AddRaw(field string, raw string) *UpdateQuery {
+func (q *UpdateClause) AddRaw(field string, raw string) *UpdateClause {
 	q.Data = append(q.Data, QueryData{Field: field, Raw: raw})
 	return q
 }
-func (q *UpdateQuery) QueryCommand() string {
+func (q *UpdateClause) QueryCommand() string {
 	var command = "UPDATE"
 	p := q.Prefix.QueryCommand()
 	if p != "" {
@@ -69,7 +69,7 @@ func (q *UpdateQuery) QueryCommand() string {
 	command += values
 	return command
 }
-func (q *UpdateQuery) QueryArgs() []interface{} {
+func (q *UpdateClause) QueryArgs() []interface{} {
 	var args = []interface{}{}
 	for k := range q.Data {
 		if q.Data[k].Data != nil {
@@ -85,16 +85,16 @@ func (q *UpdateQuery) QueryArgs() []interface{} {
 func (b *Builder) NewUpdate(tableName string) *Update {
 	return &Update{
 		Builder: b,
-		Update:  b.NewUpdateQuery(tableName),
-		Where:   b.NewWhereQuery(),
+		Update:  b.NewUpdateClause(tableName),
+		Where:   b.NewWhereClause(),
 		Other:   b.New(""),
 	}
 }
 
 type Update struct {
 	Builder *Builder
-	Update  *UpdateQuery
-	Where   *WhereQuery
+	Update  *UpdateClause
+	Where   *WhereClause
 	Other   *PlainQuery
 }
 

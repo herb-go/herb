@@ -4,8 +4,8 @@ import (
 	"database/sql"
 )
 
-func (b *Builder) NewSelectQuery() *SelectQuery {
-	return &SelectQuery{
+func (b *Builder) NewSelectClause() *SelectClause {
+	return &SelectClause{
 		Builder:   b,
 		Prefix:    b.New(""),
 		Fields:    []string{},
@@ -13,14 +13,14 @@ func (b *Builder) NewSelectQuery() *SelectQuery {
 	}
 }
 
-type SelectQuery struct {
+type SelectClause struct {
 	Builder   *Builder
 	Prefix    *PlainQuery
 	Fields    []string
 	fieldargs []interface{}
 }
 
-func (q *SelectQuery) AddFields(m *Fields) *SelectQuery {
+func (q *SelectClause) AddFields(m *Fields) *SelectClause {
 	var fields = make([]string, len(*m))
 	var i = 0
 	for k := range *m {
@@ -29,19 +29,19 @@ func (q *SelectQuery) AddFields(m *Fields) *SelectQuery {
 	}
 	return q.Add(fields...)
 }
-func (q *SelectQuery) Add(fields ...string) *SelectQuery {
+func (q *SelectClause) Add(fields ...string) *SelectClause {
 	q.Fields = append(q.Fields, fields...)
 	return q
 }
 
-func (q *SelectQuery) AddRaw(fields ...interface{}) *SelectQuery {
+func (q *SelectClause) AddRaw(fields ...interface{}) *SelectClause {
 	for k := range fields {
 		q.Fields = append(q.Fields, "?")
 		q.fieldargs = append(q.fieldargs, fields[k])
 	}
 	return q
 }
-func (q *SelectQuery) AddSelect(Select *Select) *SelectQuery {
+func (q *SelectClause) AddSelect(Select *Select) *SelectClause {
 	query := *Select.Query()
 	q.Fields = append(q.Fields, "("+query.QueryCommand()+")")
 	q.fieldargs = append(q.fieldargs, query.QueryArgs()...)
@@ -49,7 +49,7 @@ func (q *SelectQuery) AddSelect(Select *Select) *SelectQuery {
 	return q
 }
 
-func (q *SelectQuery) QueryCommand() string {
+func (q *SelectClause) QueryCommand() string {
 	var command = "SELECT"
 	p := q.Prefix.QueryCommand()
 	if p != "" {
@@ -65,13 +65,13 @@ func (q *SelectQuery) QueryCommand() string {
 	command += columns
 	return command
 }
-func (q *SelectQuery) QueryArgs() []interface{} {
+func (q *SelectClause) QueryArgs() []interface{} {
 	args := []interface{}{}
 	args = append(args, q.Prefix.QueryArgs()...)
 	args = append(args, q.fieldargs...)
 	return args
 }
-func (q *SelectQuery) Result() *SelectResult {
+func (q *SelectClause) Result() *SelectResult {
 	return NewSelectResult(q.Fields)
 }
 
@@ -119,24 +119,24 @@ func (r *SelectResult) ScanFrom(s ResultScanner) error {
 func (b *Builder) NewSelect() *Select {
 	return &Select{
 		Builder: b,
-		Select:  b.NewSelectQuery(),
-		From:    b.NewFromQuery(),
-		Join:    b.NewJoinQuery(),
-		Where:   b.NewWhereQuery(),
-		OrderBy: b.NewOrderByQuery(),
-		Limit:   b.NewLimitQuery(),
+		Select:  b.NewSelectClause(),
+		From:    b.NewFromClause(),
+		Join:    b.NewJoinClause(),
+		Where:   b.NewWhereClause(),
+		OrderBy: b.NewOrderByClause(),
+		Limit:   b.NewLimitClause(),
 		Other:   b.New(""),
 	}
 }
 
 type Select struct {
 	Builder *Builder
-	Select  *SelectQuery
-	From    *FromQuery
-	Join    *JoinQuery
-	Where   *WhereQuery
-	OrderBy *OrderByQuery
-	Limit   *LimitQuery
+	Select  *SelectClause
+	From    *FromClause
+	Join    *JoinClause
+	Where   *WhereClause
+	OrderBy *OrderByClause
+	Limit   *LimitClause
 	Other   *PlainQuery
 }
 

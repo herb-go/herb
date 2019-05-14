@@ -44,19 +44,19 @@ func (d *JoinData) QueryArgs() []interface{} {
 	return []interface{}{}
 }
 
-func (b *Builder) NewJoinQuery() *JoinQuery {
-	return &JoinQuery{
+func (b *Builder) NewJoinClause() *JoinClause {
+	return &JoinClause{
 		Builder: b,
 		Data:    []*JoinData{},
 	}
 }
 
-type JoinQuery struct {
+type JoinClause struct {
 	Builder *Builder
 	Data    []*JoinData
 }
 
-func (q *JoinQuery) join(jointype string) *JoinData {
+func (q *JoinClause) join(jointype string) *JoinData {
 	data := &JoinData{
 		Type:         jointype,
 		Table:        [2]string{},
@@ -67,17 +67,17 @@ func (q *JoinQuery) join(jointype string) *JoinData {
 	return data
 }
 
-func (q *JoinQuery) InnerJoin() *JoinData {
+func (q *JoinClause) InnerJoin() *JoinData {
 	return q.join("INNER")
 }
-func (q *JoinQuery) LeftJoin() *JoinData {
+func (q *JoinClause) LeftJoin() *JoinData {
 	return q.join("LEFT")
 }
-func (q *JoinQuery) RightJoin() *JoinData {
+func (q *JoinClause) RightJoin() *JoinData {
 	return q.join("RIGHT")
 }
 
-func (q *JoinQuery) QueryCommand() string {
+func (q *JoinClause) QueryCommand() string {
 	var command = ""
 	for k := range q.Data {
 		c := q.Data[k].QueryCommand()
@@ -90,7 +90,7 @@ func (q *JoinQuery) QueryCommand() string {
 	}
 	return command
 }
-func (q *JoinQuery) QueryArgs() []interface{} {
+func (q *JoinClause) QueryArgs() []interface{} {
 	var args = []interface{}{}
 	for k := range q.Data {
 		a := q.Data[k].QueryArgs()

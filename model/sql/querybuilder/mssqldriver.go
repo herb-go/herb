@@ -5,7 +5,7 @@ type MSSQLBuilderDriver struct {
 }
 
 //LimitCommandBuilder build limit command with given limit query.
-func (d *MSSQLBuilderDriver) LimitCommandBuilder(q *LimitQuery) string {
+func (d *MSSQLBuilderDriver) LimitCommandBuilder(q *LimitClause) string {
 	var command = ""
 	if q.offset != nil {
 		command += " OFFSET ? ROWS "
@@ -18,7 +18,7 @@ func (d *MSSQLBuilderDriver) LimitCommandBuilder(q *LimitQuery) string {
 }
 
 //LimitArgBuilder build limit args with given limit query.
-func (d *MSSQLBuilderDriver) LimitArgBuilder(q *LimitQuery) []interface{} {
+func (d *MSSQLBuilderDriver) LimitArgBuilder(q *LimitClause) []interface{} {
 	var args = []interface{}{}
 	if q.limit != nil {
 		args = append(args, *q.limit)

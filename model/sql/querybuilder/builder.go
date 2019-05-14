@@ -85,10 +85,10 @@ var DefaultDriver = &EmptyBuilderDriver{}
 //BuilderDriver query builder driver interface
 type BuilderDriver interface {
 	ConvertQuery(q Query) (string, []interface{})
-	LimitCommandBuilder(q *LimitQuery) string
-	LimitArgBuilder(q *LimitQuery) []interface{}
-	DeleteCommandBuilder(q *DeleteQuery) string
-	DeleteArgBuilder(q *DeleteQuery) []interface{}
+	LimitCommandBuilder(q *LimitClause) string
+	LimitArgBuilder(q *LimitClause) []interface{}
+	DeleteCommandBuilder(q *DeleteClause) string
+	DeleteArgBuilder(q *DeleteClause) []interface{}
 	CountField() string
 }
 
@@ -108,7 +108,7 @@ func (d *EmptyBuilderDriver) CountField() string {
 }
 
 //LimitCommandBuilder build limit command with given limit query.
-func (d *EmptyBuilderDriver) LimitCommandBuilder(q *LimitQuery) string {
+func (d *EmptyBuilderDriver) LimitCommandBuilder(q *LimitClause) string {
 	var command = ""
 	if q.limit != nil {
 		command = "LIMIT ? "
@@ -119,8 +119,8 @@ func (d *EmptyBuilderDriver) LimitCommandBuilder(q *LimitQuery) string {
 	return command
 }
 
-//LimitArgBuilder build limit args with given limit query.
-func (d *EmptyBuilderDriver) LimitArgBuilder(q *LimitQuery) []interface{} {
+//LimitArgBuilder build limit args with given limit clause.
+func (d *EmptyBuilderDriver) LimitArgBuilder(q *LimitClause) []interface{} {
 	var args = []interface{}{}
 	if q.limit != nil {
 		args = append(args, *q.limit)
@@ -131,25 +131,19 @@ func (d *EmptyBuilderDriver) LimitArgBuilder(q *LimitQuery) []interface{} {
 	return args
 }
 
-// DeleteCommandBuilder build delete command  with given delete query.
-func (d *EmptyBuilderDriver) DeleteCommandBuilder(q *DeleteQuery) string {
+// DeleteCommandBuilder build delete command  with given delete clause.
+func (d *EmptyBuilderDriver) DeleteCommandBuilder(q *DeleteClause) string {
 	var command = "DELETE"
 	p := q.Prefix.QueryCommand()
 	if p != "" {
 		command += " " + p
 	}
-	if q.alias != "" {
-		command += " " + q.alias
-	}
 	command += " FROM " + q.TableName
-	if q.alias != "" {
-		command += " AS " + q.alias
-	}
 	return command
 }
 
-// DeleteArgBuilder build delete args  with given delete query.
-func (d *EmptyBuilderDriver) DeleteArgBuilder(q *DeleteQuery) []interface{} {
+// DeleteArgBuilder build delete args  with given delete clause.
+func (d *EmptyBuilderDriver) DeleteArgBuilder(q *DeleteClause) []interface{} {
 	return q.Prefix.QueryArgs()
 }
 

@@ -40,19 +40,6 @@ func (d PostgreSQLBuilderDriver) ConvertQuery(q Query) (string, []interface{}) {
 	return converted, arg
 }
 
-func (d *PostgreSQLBuilderDriver) DeleteCommandBuilder(q *DeleteQuery) string {
-	var command = "DELETE"
-	p := q.Prefix.QueryCommand()
-	if p != "" {
-		command += " " + p
-	}
-	command += " FROM " + q.TableName
-	if q.alias != "" {
-		command += " AS " + q.alias
-	}
-	return command
-}
-
 var PostgreSQLDriver = &PostgreSQLBuilderDriver{}
 
 func init() {

@@ -1,22 +1,22 @@
 package querybuilder
 
-func (b *Builder) NewWhereQuery() *WhereQuery {
-	return &WhereQuery{
+func (b *Builder) NewWhereClause() *WhereClause {
+	return &WhereClause{
 		Condition: b.New(""),
 	}
 }
 
-type WhereQuery struct {
+type WhereClause struct {
 	Condition *PlainQuery
 }
 
-func (q *WhereQuery) QueryCommand() string {
+func (q *WhereClause) QueryCommand() string {
 	var command = q.Condition.QueryCommand()
 	if command != "" {
 		command = "WHERE " + command
 	}
 	return command
 }
-func (q *WhereQuery) QueryArgs() []interface{} {
+func (q *WhereClause) QueryArgs() []interface{} {
 	return q.Condition.QueryArgs()
 }

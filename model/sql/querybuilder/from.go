@@ -1,27 +1,27 @@
 package querybuilder
 
-func (b *Builder) NewFromQuery() *FromQuery {
-	return &FromQuery{
+func (b *Builder) NewFromClause() *FromClause {
+	return &FromClause{
 		Tables: [][2]string{},
 	}
 
 }
 
-type FromQuery struct {
+type FromClause struct {
 	Tables [][2]string
 }
 
-func (q *FromQuery) AddAlias(alias string, tableName string) *FromQuery {
+func (q *FromClause) AddAlias(alias string, tableName string) *FromClause {
 	q.Tables = append(q.Tables, [2]string{tableName, alias})
 	return q
 }
 
-func (q *FromQuery) Add(tableName string) *FromQuery {
+func (q *FromClause) Add(tableName string) *FromClause {
 	q.Tables = append(q.Tables, [2]string{tableName, ""})
 	return q
 }
 
-func (q *FromQuery) QueryCommand() string {
+func (q *FromClause) QueryCommand() string {
 	var command = ""
 	command = "FROM "
 	for k := range q.Tables {
@@ -36,6 +36,6 @@ func (q *FromQuery) QueryCommand() string {
 	}
 	return command
 }
-func (q *FromQuery) QueryArgs() []interface{} {
+func (q *FromClause) QueryArgs() []interface{} {
 	return []interface{}{}
 }

@@ -1,38 +1,38 @@
 package querybuilder
 
-type LimitQuery struct {
+type LimitClause struct {
 	buidler *Builder
 	limit   *int
 	offset  *int
 }
 
-func (q *LimitQuery) SetOffset(o int) *LimitQuery {
+func (q *LimitClause) SetOffset(o int) *LimitClause {
 	offset := o
 	q.offset = &offset
 	return q
 }
-func (q *LimitQuery) SetLimit(l int) *LimitQuery {
+func (q *LimitClause) SetLimit(l int) *LimitClause {
 	limit := l
 	q.limit = &limit
 	return q
 }
 
-func (q *LimitQuery) QueryCommand() string {
+func (q *LimitClause) QueryCommand() string {
 
 	if q.limit == nil && q.offset == nil {
 		return ""
 	}
 	return q.buidler.LoadDriver().LimitCommandBuilder(q)
 }
-func (q *LimitQuery) QueryArgs() []interface{} {
+func (q *LimitClause) QueryArgs() []interface{} {
 	if q.limit == nil && q.offset == nil {
 		return nil
 	}
 	return q.buidler.LoadDriver().LimitArgBuilder(q)
 }
 
-func (b *Builder) NewLimitQuery() *LimitQuery {
-	return &LimitQuery{
+func (b *Builder) NewLimitClause() *LimitClause {
+	return &LimitClause{
 		buidler: b,
 	}
 }

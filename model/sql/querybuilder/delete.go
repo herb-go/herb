@@ -1,19 +1,18 @@
 package querybuilder
 
-//DeleteQuery delete query  struct
-type DeleteQuery struct {
+//DeleteClause delete clause  struct
+type DeleteClause struct {
 	// Builder query builder which create this query.
 	Builder *Builder
 	//TableName database table name
 	TableName string
 	// Prefix  query which insert between"DELETE" command and  table name.
 	Prefix *PlainQuery
-	alias  string
 }
 
 // NewDeleteQuery create new delete statement with given table name.
-func (b *Builder) NewDeleteQuery(tableName string) *DeleteQuery {
-	return &DeleteQuery{
+func (b *Builder) NewDeleteClause(tableName string) *DeleteClause {
+	return &DeleteClause{
 		Builder:   b,
 		Prefix:    b.New(""),
 		TableName: tableName,
@@ -21,12 +20,12 @@ func (b *Builder) NewDeleteQuery(tableName string) *DeleteQuery {
 }
 
 //QueryCommand return query command
-func (q *DeleteQuery) QueryCommand() string {
+func (q *DeleteClause) QueryCommand() string {
 	return q.Builder.LoadDriver().DeleteCommandBuilder(q)
 }
 
 // QueryArgs return query adts
-func (q *DeleteQuery) QueryArgs() []interface{} {
+func (q *DeleteClause) QueryArgs() []interface{} {
 	return q.Builder.LoadDriver().DeleteArgBuilder(q)
 }
 
@@ -34,8 +33,8 @@ func (q *DeleteQuery) QueryArgs() []interface{} {
 func (b *Builder) NewDelete(TableName string) *Delete {
 	return &Delete{
 		Builder: b,
-		Delete:  b.NewDeleteQuery(TableName),
-		Where:   b.NewWhereQuery(),
+		Delete:  b.NewDeleteClause(TableName),
+		Where:   b.NewWhereClause(),
 		Other:   b.New(""),
 	}
 }
@@ -45,9 +44,9 @@ type Delete struct {
 	// Builder query builder which create this query.
 	Builder *Builder
 	// Delete delete query
-	Delete *DeleteQuery
+	Delete *DeleteClause
 	// Where where query
-	Where *WhereQuery
+	Where *WhereClause
 	// Other  query after where
 	Other *PlainQuery
 }

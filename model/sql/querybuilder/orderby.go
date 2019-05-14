@@ -8,19 +8,19 @@ type order struct {
 	Field string
 	Asc   bool
 }
-type OrderByQuery struct {
+type OrderByClause struct {
 	buidler *Builder
 	orders  []order
 }
 
-func (q *OrderByQuery) Add(field string, asc bool) *OrderByQuery {
+func (q *OrderByClause) Add(field string, asc bool) *OrderByClause {
 	q.orders = append(q.orders, order{
 		Field: field,
 		Asc:   asc,
 	})
 	return q
 }
-func (q *OrderByQuery) QueryCommand() string {
+func (q *OrderByClause) QueryCommand() string {
 	if len(q.orders) == 0 {
 		return ""
 	}
@@ -35,12 +35,12 @@ func (q *OrderByQuery) QueryCommand() string {
 	}
 	return "ORDER BY " + strings.Join(commands, " , ")
 }
-func (q *OrderByQuery) QueryArgs() []interface{} {
+func (q *OrderByClause) QueryArgs() []interface{} {
 	return []interface{}{}
 }
 
-func (b *Builder) NewOrderByQuery() *OrderByQuery {
-	return &OrderByQuery{
+func (b *Builder) NewOrderByClause() *OrderByClause {
+	return &OrderByClause{
 		buidler: b,
 		orders:  []order{},
 	}
