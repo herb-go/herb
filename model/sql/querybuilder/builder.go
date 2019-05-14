@@ -40,6 +40,8 @@ func (b *Builder) QueryRow(db DB, q Query) *sql.Row {
 	return row
 }
 
+//QueryRows query rows from db with given query.
+//Query will be convert by builder driver.
 func (b *Builder) QueryRows(db DB, q Query) (*sql.Rows, error) {
 	cmd, args := b.LoadDriver().ConvertQuery(q)
 	var timestamp int64
@@ -95,6 +97,7 @@ type BuilderDriver interface {
 type EmptyBuilderDriver struct {
 }
 
+//ConvertQuery  convert query to command and args
 func (d EmptyBuilderDriver) ConvertQuery(q Query) (string, []interface{}) {
 	return q.QueryCommand(), q.QueryArgs()
 }
@@ -128,6 +131,7 @@ func (d *EmptyBuilderDriver) LimitArgBuilder(q *LimitQuery) []interface{} {
 	return args
 }
 
+// DeleteCommandBuilder build delete command  with given delete query.
 func (d *EmptyBuilderDriver) DeleteCommandBuilder(q *DeleteQuery) string {
 	var command = "DELETE"
 	p := q.Prefix.QueryCommand()
@@ -143,6 +147,8 @@ func (d *EmptyBuilderDriver) DeleteCommandBuilder(q *DeleteQuery) string {
 	}
 	return command
 }
+
+// DeleteArgBuilder build delete args  with given delete query.
 func (d *EmptyBuilderDriver) DeleteArgBuilder(q *DeleteQuery) []interface{} {
 	return q.Prefix.QueryArgs()
 }
