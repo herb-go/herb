@@ -125,6 +125,7 @@ func (b *Builder) NewSelect() *Select {
 		Where:   b.NewWhereClause(),
 		OrderBy: b.NewOrderByClause(),
 		Limit:   b.NewLimitClause(),
+		GroupBy: b.NewGroupByClause(),
 		Other:   b.New(""),
 	}
 }
@@ -137,6 +138,7 @@ type Select struct {
 	Where   *WhereClause
 	OrderBy *OrderByClause
 	Limit   *LimitClause
+	GroupBy *GroupByClause
 	Other   *PlainQuery
 }
 
@@ -145,7 +147,7 @@ func (s *Select) Result() *SelectResult {
 }
 
 func (s *Select) Query() *PlainQuery {
-	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.OrderBy, s.Limit, s.Other)
+	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.OrderBy, s.Limit, s.GroupBy, s.Other)
 }
 
 func (s *Select) QueryCommand() string {
