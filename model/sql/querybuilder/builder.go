@@ -14,6 +14,9 @@ type Builder struct {
 	lock   sync.Mutex
 }
 
+// Exec exec query in given db.
+//return sql result and error
+//query will be convert by builder driver.
 func (b *Builder) Exec(db DB, q Query) (sql.Result, error) {
 	cmd, args := b.LoadDriver().ConvertQuery(q)
 	var timestamp int64
@@ -27,6 +30,8 @@ func (b *Builder) Exec(db DB, q Query) (sql.Result, error) {
 	return r, err
 }
 
+//QueryRow query rowsfrom db with given query.
+//query will be convert by builder driver.
 func (b *Builder) QueryRow(db DB, q Query) *sql.Row {
 	cmd, args := b.LoadDriver().ConvertQuery(q)
 	var timestamp int64
@@ -41,7 +46,7 @@ func (b *Builder) QueryRow(db DB, q Query) *sql.Row {
 }
 
 //QueryRows query rows from db with given query.
-//Query will be convert by builder driver.
+//query will be convert by builder driver.
 func (b *Builder) QueryRows(db DB, q Query) (*sql.Rows, error) {
 	cmd, args := b.LoadDriver().ConvertQuery(q)
 	var timestamp int64

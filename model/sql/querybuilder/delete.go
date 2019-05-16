@@ -10,7 +10,7 @@ type DeleteClause struct {
 	Prefix *PlainQuery
 }
 
-// NewDeleteQuery create new delete statement with given table name.
+//NewDeleteClause create new delete clause with given table name.
 func (b *Builder) NewDeleteClause(tableName string) *DeleteClause {
 	return &DeleteClause{
 		Builder:   b,
