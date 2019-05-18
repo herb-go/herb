@@ -15,7 +15,7 @@ func (q *GroupByClause) QueryCommand() string {
 	if len(q.Fields) == 0 {
 		return ""
 	}
-	return " " + strings.Join(q.Fields, " , ") + " "
+	return "GROUP BY " + strings.Join(q.Fields, " , ") + " "
 }
 func (q *GroupByClause) QueryArgs() []interface{} {
 	return []interface{}{}

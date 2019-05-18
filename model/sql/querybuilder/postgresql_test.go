@@ -109,7 +109,7 @@ func TestPostgresql(t *testing.T) {
 		results = append(results, result)
 	}
 	if len(results) != 2 {
-		t.Fatal(result)
+		t.Fatal(results)
 	}
 	if results[0].ID != "testid2" || results[0].Body != "testbody2" {
 		t.Fatal(*results[0], *results[1])
@@ -142,7 +142,7 @@ func TestPostgresql(t *testing.T) {
 		results = append(results, result)
 	}
 	if len(results) != 1 {
-		t.Fatal(result)
+		t.Fatal(results)
 	}
 	if results[0].ID != "testid" || results[0].Body != "testbody" {
 		t.Fatal(*results[0])
@@ -203,6 +203,56 @@ func TestPostgresql(t *testing.T) {
 	if results[0].ID != "testid" || results[0].Body != "testbody" {
 		t.Fatal(*results[0])
 	}
+
+	//Groupby test
+	insertquery = table1.NewInsert()
+	fields = querybuilder.NewFields()
+	fields.Set("id", "testid2").Set("body", "testbody2")
+	insertquery.Insert.AddFields(fields)
+	_, err = insertquery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	insertquery = table1.NewInsert()
+	fields = querybuilder.NewFields()
+	fields.Set("id", "testidcopy").Set("body", "testbody")
+	insertquery.Insert.AddFields(fields)
+	_, err = insertquery.Query().Exec(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fields = querybuilder.NewFields()
+	fields.Set("body", nil)
+	selectquery = table1.NewSelect()
+	selectquery.Select.AddFields(fields)
+	selectquery.OrderBy.Add("body", false)
+	selectquery.GroupBy.Add("body")
+	rows, err = selectquery.QueryRows(table1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	results = []*Result{}
+	for rows.Next() {
+		var result = &Result{}
+		fields = querybuilder.NewFields()
+		fields.
+			Set("body", &result.Body)
+		err = selectquery.Result().BindFields(fields).ScanFrom(rows)
+		if err != nil {
+			t.Fatal(err)
+		}
+		results = append(results, result)
+	}
+	if len(results) != 2 {
+		t.Fatal(results)
+	}
+	if results[0].Body != "testbody2" {
+		t.Fatal(*results[0], *results[1])
+	}
+	if results[1].Body != "testbody" {
+		t.Fatal(*results[0], *results[1])
+	}
+
 }
 func TestPostgresqlJoin(t *testing.T) {
 	type Result struct {
