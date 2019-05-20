@@ -1,5 +1,6 @@
 package querybuilder
 
+// NewInsertClause create new insert clause with given table name
 func (b *Builder) NewInsertClause(tableName string) *InsertClause {
 	return &InsertClause{
 		Builder:   b,
@@ -9,6 +10,7 @@ func (b *Builder) NewInsertClause(tableName string) *InsertClause {
 	}
 }
 
+//InsertClause insert clause
 type InsertClause struct {
 	Builder   *Builder
 	Prefix    *PlainQuery
@@ -17,17 +19,22 @@ type InsertClause struct {
 	Select    *Select
 }
 
+// WithSelect conect insert clause with select.
+// Insert calause  fields will be ignored after select setted.
 func (q *InsertClause) WithSelect(s *Select) *InsertClause {
 	q.Select = s
 	return q
 }
 
+//AddFields add fields to insert clause
 func (q *InsertClause) AddFields(m *Fields) *InsertClause {
 	for _, v := range *m {
 		q.Add(v.Field, v.Data)
 	}
 	return q
 }
+
+// Add add field to insert clause with given field name and data
 func (q *InsertClause) Add(field string, data interface{}) *InsertClause {
 	q.Data = append(q.Data,
 		QueryData{
@@ -36,10 +43,14 @@ func (q *InsertClause) Add(field string, data interface{}) *InsertClause {
 		})
 	return q
 }
+
+// AddRaw add raw data to insert clause with given field and raw string.
 func (q *InsertClause) AddRaw(field string, raw string) *InsertClause {
 	q.Data = append(q.Data, QueryData{Field: field, Raw: raw})
 	return q
 }
+
+// AddSelect add select to field
 func (q *InsertClause) AddSelect(field string, Select *Select) *InsertClause {
 	query := *Select.Query()
 	q.Data = append(q.Data, QueryData{
@@ -49,6 +60,8 @@ func (q *InsertClause) AddSelect(field string, Select *Select) *InsertClause {
 	})
 	return q
 }
+
+// QueryCommand return query command
 func (q *InsertClause) QueryCommand() string {
 	var command = "INSERT"
 	p := q.Prefix.QueryCommand()
@@ -83,6 +96,8 @@ func (q *InsertClause) QueryCommand() string {
 	}
 	return command
 }
+
+// QueryArgs return query args
 func (q *InsertClause) QueryArgs() []interface{} {
 
 	var result = []interface{}{}
@@ -102,6 +117,7 @@ func (q *InsertClause) QueryArgs() []interface{} {
 	return result
 }
 
+// NewInsert create new insert query.
 func (b *Builder) NewInsert(tableName string) *Insert {
 	return &Insert{
 		Builder: b,
@@ -110,12 +126,14 @@ func (b *Builder) NewInsert(tableName string) *Insert {
 	}
 }
 
+// Insert create new insert query.
 type Insert struct {
 	Builder *Builder
 	Insert  *InsertClause
 	Other   *PlainQuery
 }
 
+// Query convert query to plain query.
 func (i *Insert) Query() *PlainQuery {
 	return i.Builder.Lines(i.Insert, i.Other)
 }
