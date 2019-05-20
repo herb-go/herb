@@ -9,27 +9,27 @@ func (e CommonQueryEvents) BeforeInsert() error {
 	return nil
 }
 
-//BeforeInsert event raised after insert
+//AfterInsert event raised after insert
 func (e CommonQueryEvents) AfterInsert() error {
 	return nil
 }
 
-//BeforeInsert event raised before update
+//BeforeUpdate event raised before update
 func (e CommonQueryEvents) BeforeUpdate() error {
 	return nil
 }
 
-//BeforeInsert event raised after update
+//AfterUpdate event raised after update
 func (e CommonQueryEvents) AfterUpdate() error {
 	return nil
 }
 
-//BeforeInsert event raised before find
+//AfterFind event raised before find
 func (e CommonQueryEvents) AfterFind() error {
 	return nil
 }
 
-//BeforeInsert event raised after find
+//AfterDelete event raised after find
 func (e CommonQueryEvents) AfterDelete() error {
 	return nil
 }

@@ -1,5 +1,6 @@
 package querybuilder
 
+// NewFromClause create new form clause
 func (b *Builder) NewFromClause() *FromClause {
 	return &FromClause{
 		Tables: [][2]string{},
@@ -7,20 +8,24 @@ func (b *Builder) NewFromClause() *FromClause {
 
 }
 
+//FromClause from caluse struuct
 type FromClause struct {
 	Tables [][2]string
 }
 
+// AddAlias add table to from clause with given table name and alias
 func (q *FromClause) AddAlias(alias string, tableName string) *FromClause {
 	q.Tables = append(q.Tables, [2]string{tableName, alias})
 	return q
 }
 
+// Add add table to form clause
 func (q *FromClause) Add(tableName string) *FromClause {
 	q.Tables = append(q.Tables, [2]string{tableName, ""})
 	return q
 }
 
+// QueryCommand return query command.
 func (q *FromClause) QueryCommand() string {
 	var command = ""
 	command = "FROM "
@@ -36,6 +41,8 @@ func (q *FromClause) QueryCommand() string {
 	}
 	return command
 }
+
+// QueryArgs return query args.
 func (q *FromClause) QueryArgs() []interface{} {
 	return []interface{}{}
 }
