@@ -5,10 +5,12 @@ import (
 	"strings"
 )
 
+// PostgreSQLBuilderDriver posgresql builder driver struct
 type PostgreSQLBuilderDriver struct {
 	EmptyBuilderDriver
 }
 
+//ConvertQuery  convert query to command and args
 func (d PostgreSQLBuilderDriver) ConvertQuery(q Query) (string, []interface{}) {
 	cmd := q.QueryCommand()
 	arg := q.QueryArgs()
@@ -40,6 +42,7 @@ func (d PostgreSQLBuilderDriver) ConvertQuery(q Query) (string, []interface{}) {
 	return converted, arg
 }
 
+// PostgreSQLDriver postgre sql driver
 var PostgreSQLDriver = &PostgreSQLBuilderDriver{}
 
 func init() {

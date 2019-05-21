@@ -2,6 +2,7 @@ package querybuilder
 
 import "database/sql"
 
+// DBTable database table interface
 type DBTable interface {
 	DB
 	DB() *sql.DB
@@ -11,6 +12,7 @@ type DBTable interface {
 	Driver() string
 }
 
+// Table query table
 type Table struct {
 	DBTable
 }
@@ -80,6 +82,7 @@ func (t *Table) Count(Select *Select) (int, error) {
 	return result, nil
 }
 
+// NewTable create new query table with given database table
 func NewTable(dbtable DBTable) *Table {
 	return &Table{
 		DBTable: dbtable,

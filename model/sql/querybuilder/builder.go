@@ -115,10 +115,10 @@ func (d *EmptyBuilderDriver) CountField() string {
 //LimitCommandBuilder build limit command with given limit query.
 func (d *EmptyBuilderDriver) LimitCommandBuilder(q *LimitClause) string {
 	var command = ""
-	if q.limit != nil {
+	if q.Limit != nil {
 		command = "LIMIT ? "
 	}
-	if q.offset != nil {
+	if q.Offset != nil {
 		command += "OFFSET ? "
 	}
 	return command
@@ -127,11 +127,11 @@ func (d *EmptyBuilderDriver) LimitCommandBuilder(q *LimitClause) string {
 //LimitArgBuilder build limit args with given limit clause.
 func (d *EmptyBuilderDriver) LimitArgBuilder(q *LimitClause) []interface{} {
 	var args = []interface{}{}
-	if q.limit != nil {
-		args = append(args, *q.limit)
+	if q.Limit != nil {
+		args = append(args, *q.Limit)
 	}
-	if q.offset != nil {
-		args = append(args, *q.offset)
+	if q.Offset != nil {
+		args = append(args, *q.Offset)
 	}
 	return args
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// NewValueList create new value list with given data.
 func (b *Builder) NewValueList(data ...interface{}) *PlainQuery {
 	if len(data) == 0 {
 		return b.New("")
@@ -13,6 +14,7 @@ func (b *Builder) NewValueList(data ...interface{}) *PlainQuery {
 	return b.New(command[:len(command)-3], data...)
 }
 
+//In return field in args query
 func (b *Builder) In(field string, args interface{}) *PlainQuery {
 	var argsvalue = reflect.ValueOf(args)
 	var data = make([]interface{}, argsvalue.Len())
@@ -24,9 +26,13 @@ func (b *Builder) In(field string, args interface{}) *PlainQuery {
 	return query
 }
 
+// Equal return field equal to value query
 func (b *Builder) Equal(field string, arg interface{}) *PlainQuery {
 	return b.New(field+" = ?", arg)
 }
+
+//Search return search field query.
+//  arg will be ecapced with EscapeSearch
 func (b *Builder) Search(field string, arg string) *PlainQuery {
 	if arg == "" || field == "" {
 		return b.New("")
@@ -34,9 +40,10 @@ func (b *Builder) Search(field string, arg string) *PlainQuery {
 	return b.New(field+" LIKE ?", "%"+b.EscapeSearch(arg)+"%")
 }
 
-func (b *Builder) EscapeSearch(command string) string {
-	command = strings.Replace(command, "\\", "\\\\", -1)
-	command = strings.Replace(command, "_", "\\_", -1)
-	command = strings.Replace(command, "%", "\\%", -1)
-	return command
+// EscapeSearch escape search arg
+func (b *Builder) EscapeSearch(arg string) string {
+	arg = strings.Replace(arg, "\\", "\\\\", -1)
+	arg = strings.Replace(arg, "_", "\\_", -1)
+	arg = strings.Replace(arg, "%", "\\%", -1)
+	return arg
 }

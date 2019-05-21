@@ -277,7 +277,7 @@ func TestJoin(t *testing.T) {
 	fields.Set("t1.id", &result.ID).Set("t1.body", &result.Body).Set("t2.body2", &result.Body2)
 	selectquery = table1.NewSelect()
 	selectquery.Select.AddFields(fields)
-	selectquery.Join.InnerJoin().Alias("t2", table2.TableName()).Using("id")
+	selectquery.Join.InnerJoin().Alias("t2", table2.TableName()).On(builder.New("t1.id = t2.id"))
 	row = selectquery.QueryRow(table1)
 	err = selectquery.Result().BindFields(fields).ScanFrom(row)
 	if err != nil {
@@ -292,7 +292,7 @@ func TestJoin(t *testing.T) {
 	fields.Set("t1.id", &result.ID).Set("t1.body", &result.Body).Set("t2.body2", &result.Body2)
 	selectquery = table1.NewSelect()
 	selectquery.Select.AddFields(fields)
-	selectquery.Join.RightJoin().Alias("t2", table2.TableName()).Using("id")
+	selectquery.Join.RightJoin().Alias("t2", table2.TableName()).On(builder.New("t1.id = t2.id"))
 	row = selectquery.QueryRow(table1)
 	err = selectquery.Result().BindFields(fields).ScanFrom(row)
 	if err != nil {

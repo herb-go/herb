@@ -1,49 +1,50 @@
 package querybuilder
 
-import "strings"
-
+//JoinData join clause struct
 type JoinData struct {
-	Type         string
-	Table        [2]string
-	Condition    *PlainQuery
-	UsingColnums []string
+	// Type join type
+	Type string
+	// TableJoin table struct.
+	// Table[0]:table name
+	//Table[1]:table alias
+	Table [2]string
+	// Condition join condition
+	Condition *PlainQuery
 }
 
+// Alias add joined table with given alias.
 func (d *JoinData) Alias(alias string, tableName string) *JoinData {
 	d.Table[0] = tableName
 	d.Table[1] = alias
 	return d
 }
 
+// On add On condition
 func (d *JoinData) On(condition *PlainQuery) *JoinData {
 	d.Condition = condition
 	return d
 }
-func (d *JoinData) Using(colnums ...string) *JoinData {
-	d.UsingColnums = colnums
-	return d
-}
 
+// QueryCommand return query command
 func (d *JoinData) QueryCommand() string {
 	var command = d.Type + " JOIN "
 	command += d.Table[indexTableName]
 	if d.Table[indexAlias] != "" {
 		command += " AS " + d.Table[indexAlias]
 	}
-	if len(d.UsingColnums) == 0 {
-		command += " ON " + d.Condition.QueryCommand()
-	} else {
-		command += " USING (" + strings.Join(d.UsingColnums, " , ") + ")"
-	}
+	command += " ON " + d.Condition.QueryCommand()
 	return command
 }
+
+// QueryArgs return query args
 func (d *JoinData) QueryArgs() []interface{} {
-	if d.Condition != nil && len(d.UsingColnums) == 0 {
+	if d.Condition != nil {
 		return d.Condition.QueryArgs()
 	}
 	return []interface{}{}
 }
 
+// NewJoinClause create new join clause
 func (b *Builder) NewJoinClause() *JoinClause {
 	return &JoinClause{
 		Builder: b,
@@ -51,32 +52,39 @@ func (b *Builder) NewJoinClause() *JoinClause {
 	}
 }
 
+// JoinClause query struct
 type JoinClause struct {
 	Builder *Builder
-	Data    []*JoinData
+	// Data join data list
+	Data []*JoinData
 }
 
 func (q *JoinClause) join(jointype string) *JoinData {
 	data := &JoinData{
-		Type:         jointype,
-		Table:        [2]string{},
-		Condition:    nil,
-		UsingColnums: []string{},
+		Type:      jointype,
+		Table:     [2]string{},
+		Condition: nil,
 	}
 	q.Data = append(q.Data, data)
 	return data
 }
 
+// InnerJoin set type of join clause  to INNER
 func (q *JoinClause) InnerJoin() *JoinData {
 	return q.join("INNER")
 }
+
+// LeftJoin set type of join clause  to LEFT
 func (q *JoinClause) LeftJoin() *JoinData {
 	return q.join("LEFT")
 }
+
+// RightJoin set type of join clause  to RIGHT
 func (q *JoinClause) RightJoin() *JoinData {
 	return q.join("RIGHT")
 }
 
+// QueryCommand return query command
 func (q *JoinClause) QueryCommand() string {
 	var command = ""
 	for k := range q.Data {
@@ -90,6 +98,8 @@ func (q *JoinClause) QueryCommand() string {
 	}
 	return command
 }
+
+// QueryArgs return query args
 func (q *JoinClause) QueryArgs() []interface{} {
 	var args = []interface{}{}
 	for k := range q.Data {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 )
 
+// NewSelectClause create new select clause
 func (b *Builder) NewSelectClause() *SelectClause {
 	return &SelectClause{
 		Builder:   b,
@@ -13,6 +14,7 @@ func (b *Builder) NewSelectClause() *SelectClause {
 	}
 }
 
+// SelectClause select clause struct
 type SelectClause struct {
 	Builder   *Builder
 	Prefix    *PlainQuery
@@ -20,6 +22,7 @@ type SelectClause struct {
 	fieldargs []interface{}
 }
 
+// AddFields add fields to select clause
 func (q *SelectClause) AddFields(m *Fields) *SelectClause {
 	var fields = make([]string, len(*m))
 	var i = 0
@@ -29,11 +32,14 @@ func (q *SelectClause) AddFields(m *Fields) *SelectClause {
 	}
 	return q.Add(fields...)
 }
+
+// Add add field to select clause
 func (q *SelectClause) Add(fields ...string) *SelectClause {
 	q.Fields = append(q.Fields, fields...)
 	return q
 }
 
+// AddRaw add raw fields to select clause
 func (q *SelectClause) AddRaw(fields ...interface{}) *SelectClause {
 	for k := range fields {
 		q.Fields = append(q.Fields, "?")
@@ -41,6 +47,8 @@ func (q *SelectClause) AddRaw(fields ...interface{}) *SelectClause {
 	}
 	return q
 }
+
+// AddSelect add select subquery to select clause
 func (q *SelectClause) AddSelect(Select *Select) *SelectClause {
 	query := *Select.Query()
 	q.Fields = append(q.Fields, "("+query.QueryCommand()+")")
@@ -49,6 +57,7 @@ func (q *SelectClause) AddSelect(Select *Select) *SelectClause {
 	return q
 }
 
+// QueryCommand return query command
 func (q *SelectClause) QueryCommand() string {
 	var command = "SELECT"
 	p := q.Prefix.QueryCommand()
@@ -65,16 +74,21 @@ func (q *SelectClause) QueryCommand() string {
 	command += columns
 	return command
 }
+
+// QueryArgs return query args
 func (q *SelectClause) QueryArgs() []interface{} {
 	args := []interface{}{}
 	args = append(args, q.Prefix.QueryArgs()...)
 	args = append(args, q.fieldargs...)
 	return args
 }
+
+// Result return select result with select clause
 func (q *SelectClause) Result() *SelectResult {
 	return NewSelectResult(q.Fields)
 }
 
+// NewSelectResult create select result with given fields
 func NewSelectResult(fields []string) *SelectResult {
 	return &SelectResult{
 		Fields: fields,
@@ -83,24 +97,29 @@ func NewSelectResult(fields []string) *SelectResult {
 
 }
 
+// ResultScanner select result scanner interface
 type ResultScanner interface {
 	Scan(dest ...interface{}) error
 }
+
+// SelectResult select result struct
 type SelectResult struct {
 	Fields []string
 	args   []interface{}
 }
 
-func (r *SelectResult) Bind(field string, arg interface{}) *SelectResult {
+// Bind bind field and value pointer to select result.
+func (r *SelectResult) Bind(field string, pointer interface{}) *SelectResult {
 	for k := range r.Fields {
 		if r.Fields[k] == field {
-			r.args[k] = arg
+			r.args[k] = pointer
 			return r
 		}
 	}
 	return r
 }
 
+// BindFields bind fields to select result
 func (r *SelectResult) BindFields(m *Fields) *SelectResult {
 	for _, v := range *m {
 		r.Bind(v.Field, v.Data)
@@ -108,14 +127,17 @@ func (r *SelectResult) BindFields(m *Fields) *SelectResult {
 	return r
 }
 
-func (r *SelectResult) Args() []interface{} {
+// Pointers return field pointers
+func (r *SelectResult) Pointers() []interface{} {
 	return r.args
 }
 
+//ScanFrom scan data with result scanner
 func (r *SelectResult) ScanFrom(s ResultScanner) error {
-	return s.Scan(r.Args()...)
+	return s.Scan(r.Pointers()...)
 }
 
+// NewSelect create new select
 func (b *Builder) NewSelect() *Select {
 	return &Select{
 		Builder: b,
@@ -130,6 +152,7 @@ func (b *Builder) NewSelect() *Select {
 	}
 }
 
+// Select select query struct.
 type Select struct {
 	Builder *Builder
 	Select  *SelectClause
@@ -142,25 +165,35 @@ type Select struct {
 	Other   *PlainQuery
 }
 
+// Result return select result
 func (s *Select) Result() *SelectResult {
 	return s.Select.Result()
 }
 
+// Query convert select query to plain query.
 func (s *Select) Query() *PlainQuery {
 	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.GroupBy, s.OrderBy, s.Limit, s.Other)
 }
 
+// QueryCommand return query command
 func (s *Select) QueryCommand() string {
 	return s.Query().Command
 }
+
+// QueryArgs return query args
 func (s *Select) QueryArgs() []interface{} {
 	return s.Query().Args
 }
 
+//QueryRow query rowsfrom db with given query.
+//query will be convert by builder driver.
 func (s *Select) QueryRow(db DB) *sql.Row {
 	return s.Builder.QueryRow(db, s)
 
 }
+
+//QueryRows query rows from db with given query.
+//query will be convert by builder driver.
 func (s *Select) QueryRows(db DB) (*sql.Rows, error) {
 	return s.Builder.QueryRows(db, s)
 }

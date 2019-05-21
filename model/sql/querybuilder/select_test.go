@@ -35,30 +35,6 @@ func TestSelect(t *testing.T) {
 	}
 }
 
-func TestUsing(t *testing.T) {
-	testfield1 := ""
-	testfield2 := ""
-	fields := NewFields()
-	fields.Set("testfield1", &testfield1)
-	fields.Set("testfield2", &testfield2)
-	builder := NewBuilder()
-	selectquery := builder.NewSelect()
-	selectquery.Select.AddFields(fields)
-	selectquery.From.Add("tablename")
-	selectquery.From.AddAlias("table2alias", "table2name")
-
-	selectquery.Join.InnerJoin().Using("field1")
-	cmds := selectquery.QueryCommand()
-	if cmds != "SELECT testfield1 , testfield2\nFROM tablename , table2name AS table2alias\nINNER JOIN  USING (field1)" {
-		t.Fatal(cmds)
-	}
-	args := selectquery.QueryArgs()
-
-	if len(args) != 0 {
-		t.Fatal(args)
-	}
-}
-
 func TestRightJoin(t *testing.T) {
 	testfield1 := ""
 	testfield2 := ""

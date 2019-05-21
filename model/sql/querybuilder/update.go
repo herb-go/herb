@@ -1,5 +1,6 @@
 package querybuilder
 
+// NewUpdateClause create new update clause with given table name.
 func (b *Builder) NewUpdateClause(tableName string) *UpdateClause {
 	return &UpdateClause{
 		Builder:   b,
@@ -9,13 +10,18 @@ func (b *Builder) NewUpdateClause(tableName string) *UpdateClause {
 	}
 }
 
+// UpdateClause update clause struct
 type UpdateClause struct {
-	Builder   *Builder
-	Prefix    *PlainQuery
+	Builder *Builder
+	// Prefix prefix query
+	Prefix *PlainQuery
+	// TableName table name
 	TableName string
-	Data      []QueryData
+	// Data update query data list
+	Data []QueryData
 }
 
+// AddSelect add subquery selecto with given field name to update clause
 func (q *UpdateClause) AddSelect(field string, Select *Select) *UpdateClause {
 	query := *Select.Query()
 	q.Data = append(q.Data, QueryData{
@@ -26,6 +32,7 @@ func (q *UpdateClause) AddSelect(field string, Select *Select) *UpdateClause {
 	return q
 }
 
+// AddFields add fields to update clause
 func (q *UpdateClause) AddFields(m *Fields) *UpdateClause {
 	for _, v := range *m {
 		q.Add(v.Field, v.Data)
@@ -33,6 +40,7 @@ func (q *UpdateClause) AddFields(m *Fields) *UpdateClause {
 	return q
 }
 
+// Add add data with given field name to update clause
 func (q *UpdateClause) Add(field string, data interface{}) *UpdateClause {
 	q.Data = append(q.Data,
 		QueryData{
@@ -42,10 +50,16 @@ func (q *UpdateClause) Add(field string, data interface{}) *UpdateClause {
 	)
 	return q
 }
+
+// AddRaw add raw data to given field
+// Raw data will not be esaped.
+// Dont add unsafe data by this method.
 func (q *UpdateClause) AddRaw(field string, raw string) *UpdateClause {
 	q.Data = append(q.Data, QueryData{Field: field, Raw: raw})
 	return q
 }
+
+// QueryCommand return query command
 func (q *UpdateClause) QueryCommand() string {
 	var command = "UPDATE"
 	p := q.Prefix.QueryCommand()
@@ -69,6 +83,8 @@ func (q *UpdateClause) QueryCommand() string {
 	command += values
 	return command
 }
+
+// QueryArgs return query args
 func (q *UpdateClause) QueryArgs() []interface{} {
 	var args = []interface{}{}
 	for k := range q.Data {
@@ -82,6 +98,7 @@ func (q *UpdateClause) QueryArgs() []interface{} {
 	return result
 }
 
+// NewUpdate create new update query with given table name.
 func (b *Builder) NewUpdate(tableName string) *Update {
 	return &Update{
 		Builder: b,
@@ -91,6 +108,7 @@ func (b *Builder) NewUpdate(tableName string) *Update {
 	}
 }
 
+// Update update query struct
 type Update struct {
 	Builder *Builder
 	Update  *UpdateClause
@@ -98,14 +116,17 @@ type Update struct {
 	Other   *PlainQuery
 }
 
+// Query convert update query to plain query.
 func (u *Update) Query() *PlainQuery {
 	return u.Builder.Lines(u.Update, u.Where, u.Other)
 }
 
+// QueryCommand return query command
 func (u *Update) QueryCommand() string {
 	return u.Query().Command
 }
 
+// QueryArgs return query args
 func (u *Update) QueryArgs() []interface{} {
 	return u.Query().Args
 }
