@@ -6,6 +6,34 @@
 
 ### SELECT
 
+用户查询语句。使用方式:
+
+```
+selectquery:=builder.NewSelect()
+selectquery.Select.AddFields(fields)
+selectquery.OrderBy.Add("id", false)
+selectquery.Limit.SetLimit(1)
+selectquery.Limit.SetOffset(1)
+selectquery.Join.LeftJoin().On(builder.New("field1=field2")).Alias("t2", "table2")
+row := selectquery.QueryRow(table1)
+err := selectquery.Result().BindFields(fields).ScanFrom(row)
+
+```
+#### SELECT子语句
+
+#### FROM子语句
+
+#### JOIN子语句
+
+#### WHERE 子语句
+
+#### GROUPBY子语句
+
+#### ORDERBY子语句
+
+#### OTHER 部分
+
+
 ### INSERT
 
 ### UPDATE
