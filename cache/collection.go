@@ -60,17 +60,6 @@ func (c *Collection) persist() bool {
 	return c.TTL < 0 || (c.TTL == 0 && c.Cache.DefualtTTL() < 0)
 }
 
-//MustGetCacheKey return raw cache key by given key.
-//Return key.
-//Panic if any error raised.
-// func (c *Collection) MustGetCacheKey(key string) string {
-// 	k, err := c.GetCacheKey(key)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return k
-// }
-
 //Set Set data model to cache by given key.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.

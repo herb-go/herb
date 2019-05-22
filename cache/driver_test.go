@@ -92,6 +92,7 @@ func TestNewSubCache(t *testing.T) {
 	c.Set(prefix+"Driver", "syncmapcache")
 	c.Set(prefix+"TTL", -1)
 	c.Set(prefix+"Config.Size", 100000)
+	c.Set(prefix+"Marshaler", "json")
 	ca, err := cache.NewSubCache(c, prefix)
 	if err != nil {
 		panic(err)

@@ -105,6 +105,22 @@ func NewSubCache(conf Config, prefix string) (*Cache, error) {
 	if err != nil {
 		return nil, err
 	}
+	var mname = ""
+	if mname == "" {
+		mname = DefaultMarshaler
+	}
+	err = conf.Get(prefix+"Marshaler", &mname)
+	if err != nil {
+		return nil, err
+	}
+	marshaler, err := NewMarshaler(mname)
+	if err != nil {
+		return nil, err
+	}
+	u := NewUtil()
+	u.Marshaler = marshaler
+	d.SetUtil(u)
+
 	c.Driver = d
 	return c, nil
 }
