@@ -22,20 +22,12 @@ func (s *DataSource) Load(m Store, c cache.Cacheable, keys ...string) error {
 
 // NewMapStoreLoader create map store loader with given cache
 func (s *DataSource) NewMapStoreLoader(c cache.Cacheable) *Loader {
-	return &Loader{
-		Store:  NewMapStore(),
-		Cache:  c,
-		Loader: s,
-	}
+	return NewMapLoader(c, s)
 }
 
 // NewSyncMapStoreLoader create sync map store loader with given cache
 func (s *DataSource) NewSyncMapStoreLoader(c cache.Cacheable) *Loader {
-	return &Loader{
-		Store:  NewSyncMapStore(),
-		Cache:  c,
-		Loader: s,
-	}
+	return NewSyncMapLoader(c, s)
 }
 
 // NewDataElement create empty data element.

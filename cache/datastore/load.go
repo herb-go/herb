@@ -21,7 +21,7 @@ func unmarshalMapElement(s Store, creator func() interface{}, key string, data [
 }
 
 //Load load data by given key list into data store.
-//Param s target data map pointer.
+//Param s target data store.
 //Param c map cache
 //Param loader func by which data load.
 //Param creator map element creator.

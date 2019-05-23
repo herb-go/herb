@@ -16,7 +16,7 @@
 
 
 ## 设置
-### 任意状态于任意错误状态
+### 任意状态于与任意错误状态
 blocker.StatusAny (0) 代表任何状态码
 
 blocker.StatusAnyError(-1) 代表任何大于等于400的状态码
@@ -33,7 +33,7 @@ blocker.StatusAnyError(-1) 代表任何大于等于400的状态码
 ### 自定义请求的标识函数
 
 设置拦截器的 Identifier方法可以设置用什么函数去标识请求.
-默认值为,通过http请求的remoteAddr中的ip地址来进行标识
+默认值为通过http请求的remoteAddr中的ip地址来进行标识
 
     b:=blocker.New(cache)
     b.Identifier=func(r *http.Request) (string, error) {

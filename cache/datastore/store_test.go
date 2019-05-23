@@ -341,7 +341,7 @@ func TestLoader(t *testing.T) {
 	if val != nil {
 		t.Fatal(val)
 	}
-	err = Loader.Del(valueKeyAadditional)
+	err = Loader.Delete(valueKeyAadditional)
 	val = Loader.Store.LoadInterface(valueKeyAadditional)
 	if val != nil {
 		t.Fatal(val)
@@ -432,7 +432,7 @@ func TestSyncLoader(t *testing.T) {
 	if val != nil {
 		t.Fatal(val)
 	}
-	err = Loader.Del(valueKeyAadditional)
+	err = Loader.Delete(valueKeyAadditional)
 	val = Loader.Store.LoadInterface(valueKeyAadditional)
 	if val != nil {
 		t.Fatal(val)
