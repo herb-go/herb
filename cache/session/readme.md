@@ -17,7 +17,7 @@
     DriverName=""
 	Marshaler="msgpack"
 
-    //Token色纸
+    #Token设置
 	TokenLifetimeInHour=24
 	TokenLifetimeInDay =7
 	TokenMaxLifetimeInDay=24
