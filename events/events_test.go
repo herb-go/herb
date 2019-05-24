@@ -38,7 +38,7 @@ func TestDefaultEvents(t *testing.T) {
 	var result2 bool
 
 	//test register event handler again.
-	EmittEvenentType := WrapEmit(eventtype)
+	EmittEventType := WrapEmit(eventtype)
 	OnEventType := WrapOn(eventtype)
 	OnEventType(func(e *Event) {
 		result1 = true
@@ -46,7 +46,7 @@ func TestDefaultEvents(t *testing.T) {
 	OnEventType(func(e *Event) {
 		result2 = true
 	})
-	EmittEvenentType(e)
+	EmittEventType(e)
 	time.Sleep(1 * time.Millisecond)
 	if result1 != true || result2 != true {
 		t.Error(e)
@@ -54,4 +54,15 @@ func TestDefaultEvents(t *testing.T) {
 	if DefaultEventService.Emit(e2) != false {
 		t.Error(e2)
 	}
+	result1 = false
+	result2 = false
+	EmittEventType(nil)
+	time.Sleep(1 * time.Millisecond)
+	if result1 != true || result2 != true {
+		t.Error(e)
+	}
+	if DefaultEventService.Emit(e2) != false {
+		t.Error(e2)
+	}
+
 }

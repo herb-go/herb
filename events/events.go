@@ -94,6 +94,9 @@ func New() *EventService {
 //WrapEmit return a default service event emitter with given type
 func WrapEmit(t Type) func(*Event) bool {
 	return func(e *Event) bool {
+		if e == nil {
+			e = NewEvent()
+		}
 		e.Type = t
 		return Emit(e)
 	}
