@@ -31,8 +31,13 @@
 	#当UpdateActiveIntervalInSecond值大于0时，令牌在访问后会更新有效时间
 	#这个值决定了有效事件的最大值
 	TokenMaxLifetimeInDay=24
+	#访问时更新token的间隔。默认值为60
 	UpdateActiveIntervalInSecond=60
+	#会话令牌在HTTP请求上下文中的名字。当同时使用多套上下文时需要指定不同的名字。默认值为"token"
 	TokenContextName="token"
+	#会话令牌前缀模式。可用值为
+	#"empty":空
+	#
 	TokenPrefixMode=""
 	TokenLength=64
 
@@ -42,7 +47,9 @@
 	CookieSecure=false
 	AutoGenerate=false
 
-	DefaultSessionFlag=0
+	#其他设置
+	#默认会话的标志位信息.默认值为1
+	DefaultSessionFlag=1
 
 
     #客户端会话设置
