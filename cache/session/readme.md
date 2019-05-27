@@ -1,4 +1,4 @@
-# session 会话组件
+# Session 会话组件
 
 用于网页会话数据储存的组件
 
@@ -20,7 +20,10 @@
     DriverName="cache"
 	#缓存内部使用的序列化器。默认值为msgpack,需要先行引入
 	Marshaler="msgpack"
-
+	#当使用自动模式安装中间件时使用的模式
+	#"header"使用header模式
+	#"cookie"或其他值使用cookie模式
+	Mode="cookie"
     #Token设置
 	#基于小时的会话令牌有效时间
 	TokenLifetimeInHour=0
@@ -73,3 +76,68 @@
     "Cache.TTL"=1800
 	#具体缓存配置
     "Cache.Config.Size"=5000000
+
+## 使用方法
+
+### 创建会话，进行配置
+
+    store:=session.New()
+	config:=&session.StoreConfig{}
+	err=toml.Unmarshal(data,&config)
+	err=config.ApplyTo(store)
+
+### 安装会话中间件
+
+安装会话中间件的方式包括cookie模式,header模式，自动模式
+
+1.cookie模式安装，自动通过配置中CookieName的cookie值作为session的token
+
+    app.Use(store.CookieMiddleware)
+
+2.header模式安装，通过指定的请求头的值做为session token。
+
+客户端需要自行维护token
+
+    app.Use(store.HeaderMiddleware("headername"))
+
+3.自动模式安装。
+
+通过配置文件中的Mode值决定使用cookie模式还是session模式安装
+
+如果Mode值为header,使用配置中的CookieName为请求头作为session token值，由客户端自行维护token
+
+其他情况下同cookie模式安装
+
+    app.Use(store.InstallMiddleware())
+
+### 在动作中设置与获取Session值
+
+使用Store.Get，Store.Set和Store.Del维护session
+
+注意，正常情况下session值会在程序正常运行，返回至会话中间件时才进行更新和cookie变更。之间如果程序panic的话，之前的设置会失效
+
+    func(w http.ResponseWriter, r *http.Request) {
+		err=store.Set(r,"sessionfieldname","new value")
+		var v string
+		//Get时需要传入指针
+		err=store.Get(r,"sessionfieldanem",&v)
+		err=store.Del(r,"sessionfieldanem")
+	}
+
+### Session对象
+
+Session是一个存放了所有会话数据的可序列化的结构。
+
+#### 获取和维护Session
+
+获取和维护Session主要有两个方向
+
+1.通过Session Store从http请求中获取
+
+    //获取session
+	session,err:=store.GetRequestSession(r)
+
+	//将请求中的Session进行保存
+	err=session.SaveRequestSession(r)
+
+2.通过Session Store直接创建/维护Session

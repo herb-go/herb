@@ -19,6 +19,7 @@ const DriverNameClientStore = "cookie"
 type StoreConfig struct {
 	DriverName                   string
 	Marshaler                    string
+	Mode                         string
 	TokenLifetimeInHour          int64  //Token initial expired time in second.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.
 	TokenLifetimeInDay           int64  //Token initial expired time in day.Token life time can be update when accessed if UpdateActiveInterval is greater than 0.Skipped if  TokenLifetimeInHour is set.
 	TokenMaxLifetimeInDay        int64  //Token max life time.Token can't live more than TokenMaxLifetime if TokenMaxLifetime if greater than 0.
@@ -62,6 +63,7 @@ func (s *StoreConfig) ApplyTo(store *Store) error {
 	if s.UpdateActiveIntervalInSecond != 0 {
 		store.UpdateActiveInterval = time.Duration(s.UpdateActiveIntervalInSecond) * time.Second
 	}
+	store.Mode = s.Mode
 	store.DefaultSessionFlag = s.DefaultSessionFlag
 	var marshaler string
 	marshaler = s.Marshaler
