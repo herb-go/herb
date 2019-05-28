@@ -154,7 +154,7 @@ Session是一个存放了所有会话数据的可序列化的结构。
 
 注意，session值的修改需要保存后才能存入store
 
-### 维护Session对象
+#### 维护Session对象
  
      //重置session除token外的所有数据
 	 s.Regenerate()
@@ -165,7 +165,7 @@ Session是一个存放了所有会话数据的可序列化的结构。
 	 //删除SEssion
 	 err=s.DeleteAndSave()
 
-### Sesssion的Token操作
+#### Sesssion的token操作
 
     //获取token
 	token,err:=s.Token()
@@ -174,3 +174,25 @@ Session是一个存放了所有会话数据的可序列化的结构。
 	s.SetToken(token)
 	//重新生成token,需要设置Prefix，比如用户Id
 	err=s.RegenerateToken("prefix)
+
+###Field对象
+
+Field对象是指指定字段名的session字段。
+
+他的用途主要有两个，一个是为使用session的程序提供一个储存特定数据的接口，另一个是可以直接用来的进行用户的登录和登出
+
+    //创建field
+	field:=store.Field("fieldname)
+	//使用field数据
+	err=field.Set("value")
+	var v string
+	err=field.Get(&v)
+	//删除数据
+	err=field.Flush()
+
+	//实现用户接口
+	uid,err:=field.IdentifyRequest(r)
+	//实现用户登录接口
+	err=field.Login(w,r,"userid)
+	//实现用户登出接口
+	err=field.Logout(w,r)
