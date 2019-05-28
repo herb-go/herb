@@ -150,8 +150,27 @@ Session是一个存放了所有会话数据的可序列化的结构。
 	var v string
     err=s.Get("sessionfieldname",&v)
 	err=s.Del("sessionfieldname")
+	//获取session的token值
 
 注意，session值的修改需要保存后才能存入store
 
 ### 维护Session对象
  
+     //重置session除token外的所有数据
+	 s.Regenerate()
+	 //从Store中通过token加载Session
+	 err=s.Load()
+	 //保存Session
+	 err=s.Save()
+	 //删除SEssion
+	 err=s.DeleteAndSave()
+
+### Sesssion的Token操作
+
+    //获取token
+	token,err:=s.Token()
+	token=s.MustToken()
+	//设置token
+	s.SetToken(token)
+	//重新生成token,需要设置Prefix，比如用户Id
+	err=s.RegenerateToken("prefix)
