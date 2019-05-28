@@ -120,24 +120,37 @@
 		err=store.Set(r,"sessionfieldname","new value")
 		var v string
 		//Get时需要传入指针
-		err=store.Get(r,"sessionfieldanem",&v)
-		err=store.Del(r,"sessionfieldanem")
+		err=store.Get(r,"sessionfieldname",&v)
+		err=store.Del(r,"sessionfieldname")
 	}
 
 ### Session对象
 
 Session是一个存放了所有会话数据的可序列化的结构。
 
-#### 获取和维护Session
+#### 获取Session
 
 获取和维护Session主要有两个方向
 
 1.通过Session Store从http请求中获取
 
     //获取session
-	session,err:=store.GetRequestSession(r)
+	s,err:=store.GetRequestSession(r)
 
 	//将请求中的Session进行保存
-	err=session.SaveRequestSession(r)
+	err=s.SaveRequestSession(r)
 
 2.通过Session Store直接创建/维护Session
+
+    s:=session.NewSession(store,"token")
+
+#### 使用Session对象
+
+	err=s.Set("sessionfieldname","value)
+	var v string
+    err=s.Get("sessionfieldname",&v)
+	err=s.Del("sessionfieldname")
+
+注意，session值的修改需要保存后才能存入store
+
+### 维护Session对象
