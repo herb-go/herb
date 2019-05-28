@@ -175,7 +175,7 @@ Session是一个存放了所有会话数据的可序列化的结构。
 	//重新生成token,需要设置Prefix，比如用户Id
 	err=s.RegenerateToken("prefix)
 
-###Field对象
+### Field对象
 
 Field对象是指指定字段名的session字段。
 
