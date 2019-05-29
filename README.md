@@ -10,6 +10,12 @@
 
 ## 缺点
 * 不将性能优化作为第一重点
+
+## 约定
+* 中间件:采用 func(w http.Writer,r *http.Request,Next http.Hanlderfunc) 作为中间件的形式
+* 通用可序列化结构：以Golang默认的可序列化结构(首字母大写,仅支持string主键的Map，不带注解)作为通用的数据传输形式，通过JSON/TOML/MSGPACK协议进行压缩、配置、缓存
+
+
 ## 功能
 
 ###  缓存组件
@@ -44,10 +50,18 @@
 ### 渲染接口
 ### 用户权限接口
 
+## 依赖第三方库列表
 
+### 重度第三方依赖库
 
+* msgpack
+* httprouter
 
-## 约定
-* 中间件:采用 func(w http.Writer,r *http.Request,Next http.Hanlderfunc) 作为中间件的形式
-* 通用可序列化结构：以Golang默认的可序列化结构(首字母大写,仅支持string主键的Map，不带注解)作为通用的数据传输形式，通过JSON/TOML/MSGPACK协议进行压缩、配置、缓存
-  
+###可选第三方驱动
+* freecache
+* gocache
+* redis
+* mysql
+* sqlite
+* posgtres
+* mssql
