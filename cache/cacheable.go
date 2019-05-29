@@ -30,6 +30,8 @@ type Cacheable interface {
 	//Del Delete data in cache by given name.
 	//Return any error raised.
 	Del(key string) error
+	//Expire set cache value expire duration by given key and ttl
+	Expire(key string, ttl time.Duration) error
 	//IncrCounter Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
 	//If ttl is DefualtTTL(0),use default ttl in config instead.
 	//Return int data value and any error raised.
@@ -44,8 +46,6 @@ type Cacheable interface {
 	//DelCounter Delete int val in cache by given name.Count cache and data cache are in two independent namespace.
 	//Return any error raised.
 	DelCounter(key string) error
-	//Expire set cache value expire duration by given key and ttl
-	Expire(key string, ttl time.Duration) error
 	//ExpireCounter set cache counter  expire duration by given key and ttl
 	ExpireCounter(key string, ttl time.Duration) error
 	//Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
@@ -64,8 +64,7 @@ type Cacheable interface {
 	Flush() error
 	//DefualtTTL return cache default ttl
 	DefualtTTL() time.Duration
-	// Lock lock cache value by given key.
-	//Return  unlock function and any error if rasied
+	// Locker return locker by given key
 	Locker(key string) (*Locker, bool)
 	//Marshal Marshal data model to  bytes.
 	//Return marshaled bytes and any error rasied.

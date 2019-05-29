@@ -110,6 +110,12 @@
 
     app.Use(store.InstallMiddleware())
 
+4.使用注销中间件
+
+将对应请的session清除，一般用于注销
+
+    app.Use(store.DestoryMiddleware()).HandleFunc(logoutaction)
+
 ### 在动作中设置与获取Session值
 
 使用Store.Get，Store.Set和Store.Del维护session
