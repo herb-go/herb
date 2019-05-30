@@ -32,7 +32,9 @@
     //将http.HanlderFunc转换为中间件
     //将先执行http.HanlderFunc，再调用下一个中间件
     
-
+    //将app转化为中间件
+    miedlewareApp:=AppToMiddlewares(app,app2,app3)
+    
 ## 子组件列表
 
 * 用于快速管理中间件的 Middleware与App对象
