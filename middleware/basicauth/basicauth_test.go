@@ -10,6 +10,52 @@ import (
 	"github.com/herb-go/herb/middleware"
 )
 
+func TestUsers(t *testing.T) {
+	emptyUsers := &Users{
+		Realm: "emptyuserrealm",
+	}
+	result, err := emptyUsers.Authorize("user", "pass")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result {
+		t.Fatal(result)
+	}
+	users := &Users{
+		Realm: "usersrealm",
+		Users: map[string]string{
+			"user": "pass",
+		},
+	}
+	realm, err := users.GetRealm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if realm != "usersrealm" {
+		t.Fatal(realm)
+	}
+	result, err = users.Authorize("user", "pass")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result {
+		t.Fatal(result)
+	}
+	result, err = users.Authorize("user1", "pass")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result {
+		t.Fatal(result)
+	}
+	result, err = users.Authorize("user", "pass!")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result {
+		t.Fatal(result)
+	}
+}
 func TestSingleUser(t *testing.T) {
 	var content []byte
 	var usernameAction = func(w http.ResponseWriter, r *http.Request) {

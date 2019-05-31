@@ -1,6 +1,42 @@
 # Middleware 中间件组件
 提供一系列中间件操作工具和常用中间件，包括:
 
+### 洋葱模型
+
+中间件实现了洋葱模型。
+
+所有的请求会一次执行next前的部分，然后执行后响应代码会反向执行next之后的部分。
+
+    app.
+        Use(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
+            //执行顺序1
+            DoSomethingBeforeHanlderA()
+
+            //代码执行挂起，运行下一个中间件
+             next(w,r)
+
+            //执行顺序5
+            DoSomethingAfterHandlerE()
+        }).
+        Use(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
+            //执行顺序2
+            DoSomethingBeforeHanlderB()
+
+            //代码执行挂起，运行下一个中间件
+             next(w,r)
+
+            //执行顺序4
+            DoSomethingAfterHandlerD()
+
+        }).HanldeFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
+            //执行代码处理部分
+            //执行顺序3
+            DoSomethingC()
+
+            //执行完毕，开始反向执行中间件next之后部分
+        })
+如果代码中有Panic,会直接跳过所有之后的请求部分和响应部分的代码
+
 ## 使用方法
 
 ### 使用app对象

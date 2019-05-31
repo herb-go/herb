@@ -28,6 +28,27 @@ type Authorizer interface {
 	Authorize(Username string, Password string) (bool, error)
 }
 
+//Users  user map authorizer.
+type Users struct {
+	Realm string
+	Users map[string]string
+}
+
+//GetRealm return basic auth realm.
+//return realm and any error if raised.
+func (u *Users) GetRealm() (string, error) {
+	return u.Realm, nil
+}
+
+//Authorize authorize user with username and password.
+//return authorize result and any error if raised.
+func (u *Users) Authorize(Username string, Password string) (bool, error) {
+	if u.Users == nil || u.Users[Username] == "" || u.Users[Username] != Password {
+		return false, nil
+	}
+	return true, nil
+}
+
 //SingleUser single user authorizer.
 type SingleUser struct {
 	//Realm basic auth realm.
@@ -40,14 +61,14 @@ type SingleUser struct {
 
 //GetRealm return basic auth realm.
 //return realm and any error if raised.
-func (c *SingleUser) GetRealm() (string, error) {
-	return c.Realm, nil
+func (u *SingleUser) GetRealm() (string, error) {
+	return u.Realm, nil
 }
 
 //Authorize authorize user with username and password.
 //return authorize result and any error if raised.
-func (c *SingleUser) Authorize(Username string, Password string) (bool, error) {
-	if c.Username != Username || c.Password != Password {
+func (u *SingleUser) Authorize(Username string, Password string) (bool, error) {
+	if u.Username != Username || u.Password != Password {
 		return false, nil
 	}
 	return true, nil
