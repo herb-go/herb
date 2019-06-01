@@ -173,15 +173,14 @@ type Csrf struct {
 
 //Config csrf config struct
 type Config struct {
-	CookieName        string //Name of cookie which the token stored in.Default value is "herb-csrf-token".
-	CookiePath        string //Path of cookie the token stored in.Default value is "/".
-	HeaderName        string //Name of Header which the token stroed in.Default value is "X-CSRF-TOKEN".
-	FormField         string //Field name of post form which the token stroed in.Default value is "X-CSRF-TOKEN".
-	FailStatus        int    //Http status code returned when csrf verify failed.Default value is  http.StatusBadRequest (int 400).
-	RequestContextKey string //Context key of requst which token stored in.Default value is "herb-csrf-token")
-	Enabled           bool   //Enabled if this middleware if enabled.
-	FailHeader        string //FailedHeader resoponse header field send when failed
-	FailValue         string //FailedValue resoponse header value send when failed
+	CookieName string //Name of cookie which the token stored in.Default value is "herb-csrf-token".
+	CookiePath string //Path of cookie the token stored in.Default value is "/".
+	HeaderName string //Name of Header which the token stroed in.Default value is "X-CSRF-TOKEN".
+	FormField  string //Field name of post form which the token stroed in.Default value is "X-CSRF-TOKEN".
+	FailStatus int    //Http status code returned when csrf verify failed.Default value is  http.StatusBadRequest (int 400).
+	Enabled    bool   //Enabled if this middleware if enabled.
+	FailHeader string //FailedHeader resoponse header field send when failed
+	FailValue  string //FailedValue resoponse header value send when failed
 }
 
 //ApplyTo apply csrf config to csrf instance.
@@ -202,9 +201,7 @@ func (c *Config) ApplyTo(csrf *Csrf) error {
 	if c.FailStatus != 0 {
 		csrf.FailStatus = c.FailStatus
 	}
-	if c.RequestContextKey != "" {
-		csrf.RequestContextKey = ContextKey(c.RequestContextKey)
-	}
+
 	if c.FailHeader != "" {
 		csrf.FailHeader = c.FailHeader
 	} else {

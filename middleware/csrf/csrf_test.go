@@ -26,15 +26,14 @@ func newDefaultCsrf() *Csrf {
 func newTestCsrf() *Csrf {
 	c := New()
 	config := Config{
-		CookieName:        "herb-test-csrf-token",
-		CookiePath:        "/",
-		HeaderName:        "X-Csrf-Token",
-		FormField:         "X-Csrf-Token",
-		FailStatus:        400,
-		RequestContextKey: "herb-csrf-token",
-		Enabled:           true,
-		FailHeader:        defaultFailHeader,
-		FailValue:         defaultFailValue,
+		CookieName: "herb-test-csrf-token",
+		CookiePath: "/",
+		HeaderName: "X-Csrf-Token",
+		FormField:  "X-Csrf-Token",
+		FailStatus: 400,
+		Enabled:    true,
+		FailHeader: defaultFailHeader,
+		FailValue:  defaultFailValue,
 	}
 	err := config.ApplyTo(c)
 	if err != nil {
