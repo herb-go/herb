@@ -20,4 +20,15 @@
     #验证失败时添加的响应头
 	FailHeader="csrffail"
     #验证失败时添加的响应头的值
-	FailValue="true"
+	FailValue="failed"
+
+## 使用说明
+
+    c:=csrf.New()
+    config:=&csrf.Config{}
+    err=toml.Unmarshal(data,config)
+    config.ApplyTo(csrfmiddleware)
+
+    app.Use(c.ServeVerifyHeaderMiddleware)
+
+    app.Use(c.ServeVerifyFormMiddleware)
