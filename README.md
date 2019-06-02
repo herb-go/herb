@@ -54,14 +54,14 @@
 
 ### 重度第三方依赖库
 
-* msgpack
-* httprouter
+* [msgpack](github.com/vmihailenco/msgpack)
+* [httprouter](github.com/julienschmidt/httprouter)
 
 ###可选第三方驱动
-* freecache
-* gocache
-* redis
-* mysql
-* sqlite
-* posgtres
-* mssql
+* [freecache](github.com/coocood/freecache)
+* [gocache](github.com/patrickmn/go-cache)
+* [redis](github.com/garyburd/redigo/redis)
+* [mysql](github.com/go-sql-driver/mysql)
+* [sqlite](github.com/mattn/go-sqlite3)
+* [posgtres](github.com/lib/pq)
+* [mssql](github.com/denisenkom/go-mssqldb)
