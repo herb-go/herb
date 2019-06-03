@@ -32,3 +32,17 @@
 
     //不区分大小写的帐号创建器，返回的帐号为"aabbcc"
     account=CaseInsensitiveAcountProvider.NewAccount("keyword","AaBbCc")    
+
+### 授权管理
+
+  授权管理定义了授权管理器接口Authorizer，以及对应使用的中间件
+
+  [role](role)实现了一个根据用户角色进行权限检测的Authorizer
+
+      //对用户进行授权的检测.第二个参数为授权失败后的动作，如传入nil则失败返回403状态
+     app.Use(user.AuthorizeMiddleware(Authorizer,nil))
+
+    //授权检测，失败则返回403状态
+     app.Use(user.AuthorizeOrForbiddenMiddleware(Authorizer))
+
+### 用户识别
