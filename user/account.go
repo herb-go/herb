@@ -23,6 +23,11 @@ func (a *Account) Equal(account *Account) bool {
 //Accounts type account list
 type Accounts []*Account
 
+//NewAccounts creatre new accounts
+func NewAccounts() *Accounts {
+	return &Accounts{}
+}
+
 //Exists check if an account is in account list.
 func (a *Accounts) Exists(account *Account) bool {
 	for k := range *a {
@@ -73,13 +78,13 @@ type PlainAccountProvider struct {
 
 //NewAccount create new account
 //is CaseInsensitive is true,account name will be convert to lower
-func (s *PlainAccountProvider) NewAccount(keyword string, account string) (*Account, error) {
-	if s.CaseInsensitive {
+func (p *PlainAccountProvider) NewAccount(keyword string, account string) (*Account, error) {
+	if p.CaseInsensitive {
 		account = strings.ToLower(account)
 	}
 	a := NewAccount()
 	a.Keyword = keyword
-	a.Account = account
+	a.Account = p.Prefix + account
 	return a, nil
 }
 

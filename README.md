@@ -54,14 +54,14 @@
 
 ### 重度第三方依赖库
 
-* [msgpack](github.com/vmihailenco/msgpack)
-* [httprouter](github.com/julienschmidt/httprouter)
+* [msgpack](github.com/vmihailenco/msgpack) Msgpack序列化库
+* [httprouter](github.com/julienschmidt/httprouter) Httprouter 高性能路由
 
-###可选第三方驱动
-* [freecache](github.com/coocood/freecache)
-* [gocache](github.com/patrickmn/go-cache)
-* [redis](github.com/garyburd/redigo/redis)
-* [mysql](github.com/go-sql-driver/mysql)
-* [sqlite](github.com/mattn/go-sqlite3)
-* [posgtres](github.com/lib/pq)
-* [mssql](github.com/denisenkom/go-mssqldb)
+### 可选第三方驱动
+* [freecache](github.com/coocood/freecache) Freecache缓存
+* [gocache](github.com/patrickmn/go-cache) Gocache 缓存
+* [redis](github.com/garyburd/redigo/redis) Redis驱动
+* [mysql](github.com/go-sql-driver/mysql) Mysql数据库驱动
+* [sqlite](github.com/mattn/go-sqlite3) sqlite数据库驱动
+* [posgtres](github.com/lib/pq) Posgresql数据库驱动
+* [mssql](github.com/denisenkom/go-mssqldb) mssql数据库驱动

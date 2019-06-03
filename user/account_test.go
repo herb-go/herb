@@ -23,7 +23,8 @@ func TestUserAccount(t *testing.T) {
 	if account1.Equal(account2) {
 		t.Error(account1)
 	}
-	accounts := Accounts{account1}
+	accounts := NewAccounts()
+	accounts.Bind(account1)
 	if !accounts.Exists(account1equal) {
 		t.Error(account1equal)
 	}

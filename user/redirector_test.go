@@ -77,4 +77,15 @@ func TestRedirector(t *testing.T) {
 		t.Fatal(err)
 	}
 	resp.Body.Close()
+	req, err = http.NewRequest("GET", server.URL+"/test", nil)
+	req.Header.Set("condition", "pass")
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+
 }
