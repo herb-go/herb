@@ -16,7 +16,7 @@ type testEngine struct {
 func (e *testEngine) SetViewRoot(path string) {
 	e.Root = path
 }
-func (e *testEngine) Compile(config ViewConfig) (CompiledView, error) {
+func (e *testEngine) Compile(config *ViewConfig) (CompiledView, error) {
 	return &testView{
 		Files: config.Files,
 	}, nil
@@ -66,9 +66,9 @@ func TestEngine(t *testing.T) {
 	}
 	render.MustInitViews(option)
 	ViewTest := render.GetView("test")
-	ViewTestNew := render.NewView("testnew", ViewConfig{
-		Files: []string{"testnew.view"},
-	})
+	ViewTestNew := render.NewView("testnew", NewViewConfig(
+		"testnew.view",
+	))
 	ViewNotExist := render.GetView("testnotexist")
 
 	mux := http.NewServeMux()

@@ -33,7 +33,7 @@ type ViewsOption interface {
 //ViewsOptionCommon views option with new view configs.
 type ViewsOptionCommon struct {
 	DevelopmentMode bool
-	Views           map[string]ViewConfig
+	Views           map[string]*ViewConfig
 }
 
 //ApplyTo init renderer with given json conf.

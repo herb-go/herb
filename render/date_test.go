@@ -3,7 +3,7 @@ package render
 import "testing"
 
 func TestData(t *testing.T) {
-	data1 := Data{}
+	data1 := NewData()
 	data1.Set("test", "testvalue")
 	if data1.Get("test").(string) != "testvalue" {
 		t.Error(data1.Get("test"))

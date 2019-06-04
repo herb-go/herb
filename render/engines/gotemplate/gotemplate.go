@@ -51,7 +51,7 @@ func (e *RenderEngine) SetViewRoot(path string) {
 }
 
 //Compile complie view files to complied view.
-func (e *RenderEngine) Compile(config render.ViewConfig) (render.CompiledView, error) {
+func (e *RenderEngine) Compile(config *render.ViewConfig) (render.CompiledView, error) {
 	var absFiles = make([]string, len(config.Files))
 
 	for k, v := range config.Files {

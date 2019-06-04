@@ -40,7 +40,7 @@ func (e *RenderEngine) AddGlobal(Name string, fn interface{}) {
 }
 
 //Compile complie view files to complied view.
-func (e *RenderEngine) Compile(config render.ViewConfig) (render.CompiledView, error) {
+func (e *RenderEngine) Compile(config *render.ViewConfig) (render.CompiledView, error) {
 	if len(config.Files) > 1 {
 		return nil, render.ErrTooManyViewFiles
 	}

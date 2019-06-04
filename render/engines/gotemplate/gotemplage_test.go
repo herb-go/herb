@@ -16,7 +16,7 @@ func TestTemplate(t *testing.T) {
 	engine.SetViewRoot("./testdata")
 	engine.RegisterFunc("b64", b64)
 
-	view, err := engine.Compile(render.ViewConfig{Files: []string{"test.tmpl"}})
+	view, err := engine.Compile(render.NewViewConfig("test.tmpl"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func TestTemplate(t *testing.T) {
 	if string(output) != result {
 		t.Error(output)
 	}
-	viewraw, err := engine.Compile(render.ViewConfig{Files: []string{"raw.tmpl"}})
+	viewraw, err := engine.Compile(render.NewViewConfig("raw.tmpl"))
 	if err != nil {
 		t.Fatal(err)
 	}

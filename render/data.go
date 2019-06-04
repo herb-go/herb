@@ -3,6 +3,11 @@ package render
 //Data render data struct.
 type Data map[string]interface{}
 
+//NewData create new render data.
+func NewData() *Data {
+	return &Data{}
+}
+
 //Set set data field value by key.
 func (d *Data) Set(key string, data interface{}) {
 	if *d == nil {

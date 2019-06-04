@@ -10,8 +10,15 @@ func New() *Renderer {
 	r := Renderer{}
 	r.engine = nil
 	r.CompiledViews = map[string]CompiledView{}
-	r.Views = map[string]ViewConfig{}
+	r.Views = map[string]*ViewConfig{}
 	return &r
+}
+
+//NewViewConfig create new view config with given view files
+func NewViewConfig(files ...string) *ViewConfig {
+	return &ViewConfig{
+		Files: files,
+	}
 }
 
 //ViewConfig view config struct.
@@ -24,7 +31,7 @@ type ViewConfig struct {
 type Renderer struct {
 	engine Engine
 	//ViewFiles view file info map.
-	Views map[string]ViewConfig
+	Views map[string]*ViewConfig
 	//Views complied views map.
 	CompiledViews map[string]CompiledView
 	//Developing Developing mode.If set to true,All views will not be cached.
@@ -154,7 +161,7 @@ func (r *Renderer) view(name string) (CompiledView, error) {
 func (r *Renderer) setCompiledView(name string, view CompiledView) {
 	r.CompiledViews[name] = view
 }
-func (r *Renderer) setViewConfig(name string, config ViewConfig) {
+func (r *Renderer) setViewConfig(name string, config *ViewConfig) {
 	r.Views[name] = config
 	r.CompiledViews[name] = nil
 }
@@ -198,7 +205,7 @@ func (r *Renderer) Execute(viewname string, data interface{}) ([]byte, error) {
 }
 
 //NewView create new view by name with given view files.
-func (r *Renderer) NewView(ViewName string, config ViewConfig) *NamedView {
+func (r *Renderer) NewView(ViewName string, config *ViewConfig) *NamedView {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	delete(r.Views, ViewName)
@@ -222,7 +229,7 @@ type Engine interface {
 	//SetViewRoot set view root path
 	SetViewRoot(string)
 	//Compile complie view files to complied view.
-	Compile(config ViewConfig) (CompiledView, error)
+	Compile(config *ViewConfig) (CompiledView, error)
 	//RegisterFunc register func to engine
 	//Return any error if raised.
 	RegisterFunc(name string, fn interface{}) error
