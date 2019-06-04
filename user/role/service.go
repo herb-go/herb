@@ -26,16 +26,21 @@ type Authorizer struct {
 	RuleProvider RuleProvider
 }
 
-//Authorize authorized with requestWW
-func (a *Authorizer) Authorize(r *http.Request) (bool, error) {
+//RolesFromRequest get roles from request
+func (a *Authorizer) RolesFromRequest(r *http.Request) (*Roles, error) {
 	uid, err := a.Service.Identifier.IdentifyRequest(r)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	if uid == "" {
-		return false, nil
+		return nil, nil
 	}
-	roles, err := a.Service.RoleProvider.Roles(uid)
+	return a.Service.RoleProvider.Roles(uid)
+}
+
+//Authorize authorized with requestWW
+func (a *Authorizer) Authorize(r *http.Request) (bool, error) {
+	roles, err := a.RolesFromRequest(r)
 	if err != nil {
 		return false, err
 	}

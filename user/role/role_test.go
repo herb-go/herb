@@ -22,15 +22,15 @@ func TestRole(t *testing.T) {
 	if result != false {
 		t.Error(result)
 	}
-	result, _ = rule.Execute(*role)
+	result, _ = rule.Execute(role)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = rule.Execute(*role, *role2)
+	result, _ = rule.Execute(role, role2)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = ruleNotOwned1.Execute(*role, *role2)
+	result, _ = ruleNotOwned1.Execute(role, role2)
 	if result != false {
 		t.Error(result)
 	}
@@ -38,45 +38,45 @@ func TestRole(t *testing.T) {
 	roleCN.AddData(fieldname1, roleDataCN)
 	var ruleCN = New(rolename)
 	ruleCN.AddData(fieldname1, roleDataCN)
-	result, _ = ruleCN.Execute(*roleCN)
+	result, _ = ruleCN.Execute(roleCN)
 	if result != true {
 		t.Error(result)
 	}
 	var ruleUS = New(rolename)
 	ruleUS.AddData(fieldname1, roleDataUS)
-	result, _ = ruleUS.Execute(*roleCN)
+	result, _ = ruleUS.Execute(roleCN)
 	if result != false {
 		t.Error(result)
 	}
-	result, _ = ruleUS.Execute(*role)
+	result, _ = ruleUS.Execute(role)
 	if result != false {
 		t.Error(result)
 	}
 	var ruleCNUS = New(rolename)
 	ruleCNUS.AddData(fieldname1, roleDataUS, roleDataCN)
-	result, _ = ruleCNUS.Execute(*roleCN)
+	result, _ = ruleCNUS.Execute(roleCN)
 	if result != false {
 		t.Error(result)
 	}
 	var roleUSCN = New(rolename)
 	roleUSCN.AddData(fieldname1, roleDataCN, roleDataUS)
-	result, _ = ruleCNUS.Execute(*roleUSCN)
+	result, _ = ruleCNUS.Execute(roleUSCN)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = ruleCN.Execute(*roleUSCN)
+	result, _ = ruleCN.Execute(roleUSCN)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = ruleUS.Execute(*roleUSCN)
+	result, _ = ruleUS.Execute(roleUSCN)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = ruleUS.Execute(*roleWithData2)
+	result, _ = ruleUS.Execute(roleWithData2)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = roleWithData2.Execute(*ruleCN)
+	result, _ = roleWithData2.Execute(ruleCN)
 	if result != false {
 		t.Error(result)
 	}
@@ -106,12 +106,12 @@ func TestRules(t *testing.T) {
 	roleUSCN.AddData(fieldname1, roleDataCN, roleDataUS)
 	var ruleCNUS = New(rolename)
 	ruleCNUS.AddData(fieldname1, roleDataUS, roleDataCN)
-	var rulesCN = Roles{*ruleCN}
-	var rulesCNUS = Roles{*ruleCN, *ruleUS}
+	var rulesCN = NewRoles().Add(ruleCN)
+	var rulesCNUS = NewRoles().Add(ruleCN).Add(ruleUS)
 	var roleWithData2 = New(rolename)
 	roleWithData2.AddData(fieldname1, roleDataUS, roleDataCN)
 	roleWithData2.AddData(fieldname2, roleData2)
-	var ruleWithData2 = Roles{*roleWithData2}
+	var ruleWithData2 = Roles{roleWithData2}
 	result, _ = NewRoles().Execute()
 	if result != true {
 		t.Error(result)
@@ -120,52 +120,52 @@ func TestRules(t *testing.T) {
 	if result != false {
 		t.Error(result)
 	}
-	var rules = Roles{*role}
-	result, _ = rules.Execute(*role)
+	var rules = Roles{role}
+	result, _ = rules.Execute(role)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = rules.Execute(*role2)
+	result, _ = rules.Execute(role2)
 	if result != false {
 		t.Error(result)
 	}
-	result, _ = rulesCN.Execute(*roleCN)
+	result, _ = rulesCN.Execute(roleCN)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = rulesCN.Execute(*roleUS, *roleCN)
+	result, _ = rulesCN.Execute(roleUS, roleCN)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = rulesCN.Execute(*roleUS)
+	result, _ = rulesCN.Execute(roleUS)
 	if result != false {
 		t.Error(result)
 	}
-	result, _ = rulesCN.Execute(*roleWithData2)
+	result, _ = rulesCN.Execute(roleWithData2)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = rulesCNUS.Execute(*roleCN)
+	result, _ = rulesCNUS.Execute(roleCN)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = rulesCNUS.Execute(*roleUS, *roleCN)
+	result, _ = rulesCNUS.Execute(roleUS, roleCN)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = rulesCNUS.Execute(*roleUS)
+	result, _ = rulesCNUS.Execute(roleUS)
 	if result != true {
 		t.Error(result)
 	}
-	result, _ = ruleWithData2.Execute(*roleUSCN)
+	result, _ = ruleWithData2.Execute(roleUSCN)
 	if result != false {
 		t.Error(result)
 	}
-	result, _ = ruleWithData2.Execute(*roleUS, *roleCN)
+	result, _ = ruleWithData2.Execute(roleUS, roleCN)
 	if result != false {
 		t.Error(result)
 	}
-	result, _ = ruleWithData2.Execute(*roleWithData2)
+	result, _ = ruleWithData2.Execute(roleWithData2)
 	if result != true {
 		t.Error(result)
 	}

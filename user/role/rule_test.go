@@ -6,7 +6,7 @@ type fixedRule struct {
 	result bool
 }
 
-func (r *fixedRule) Execute(roles ...Role) (bool, error) {
+func (r *fixedRule) Execute(roles ...*Role) (bool, error) {
 	return r.result, nil
 }
 

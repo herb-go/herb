@@ -30,7 +30,7 @@ func New(name string) *Role {
 //Execute execute role as rule provider.
 //If rule data if empty,any role with same name will success.
 //Otherwise,only roles with data which covers all rule data will success.
-func (r *Role) Execute(roles ...Role) (bool, error) {
+func (r *Role) Execute(roles ...*Role) (bool, error) {
 	if len(roles) == 0 {
 		return false, nil
 	}

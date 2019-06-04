@@ -2,7 +2,7 @@ package role
 
 //Rule user authorize rule interface
 type Rule interface {
-	Execute(roles ...Role) (bool, error)
+	Execute(roles ...*Role) (bool, error)
 }
 
 //RuleOr rules commbined in or operation.
@@ -12,7 +12,7 @@ type RuleOr struct {
 
 //Execute execute as rule provider.
 //Execute will success if any rule success
-func (c *RuleOr) Execute(roles ...Role) (bool, error) {
+func (c *RuleOr) Execute(roles ...*Role) (bool, error) {
 	for _, v := range c.Rules {
 		result, err := v.Execute(roles...)
 		if err != nil {
@@ -31,7 +31,7 @@ type RuleAnd struct {
 }
 
 //Execute will success if all rule success
-func (c *RuleAnd) Execute(roles ...Role) (bool, error) {
+func (c *RuleAnd) Execute(roles ...*Role) (bool, error) {
 	for _, v := range c.Rules {
 		result, err := v.Execute(roles...)
 		if err != nil {
@@ -50,7 +50,7 @@ type RuleNot struct {
 }
 
 //Execute will success if rule fail
-func (c *RuleNot) Execute(roles ...Role) (bool, error) {
+func (c *RuleNot) Execute(roles ...*Role) (bool, error) {
 	result, err := c.Rule.Execute(roles...)
 	if err != nil {
 		return false, err
@@ -116,6 +116,6 @@ func (ruleset *RuleSet) Or(c ...Rule) *RuleSet {
 }
 
 //Execute exccute ruleset
-func (ruleset *RuleSet) Execute(roles ...Role) (bool, error) {
+func (ruleset *RuleSet) Execute(roles ...*Role) (bool, error) {
 	return ruleset.Rule.Execute(roles...)
 }
