@@ -110,3 +110,8 @@
 
     //合并数据
     data.Merge(data1)
+
+### 可用渲染引擎
+
+* [gotemplate](engines/gotemplate) 基于golang http template的渲染引擎
+* [jet]((engines/jet) 基于 github.com/CloudyKit/jet 的渲染引擎
