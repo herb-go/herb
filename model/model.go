@@ -58,7 +58,7 @@ func (model *Model) SetModelID(id string) {
 
 //SetMessages set translate messages to model.
 //Messages will be used to translate msg field in AddPlainError,AddError,AddErrorf ,AddErrorf and ValidateFieldf method.
-func (model *Model) SetMessages(m Messages) {
+func (model *Model) SetMessages(m *Messages) {
 	model.messages = m
 }
 func (model *Model) getMessageText(msg string) string {

@@ -28,7 +28,7 @@ func (m *testModel) Validate() error {
 	return nil
 }
 
-var testMessage = Messages{
+var testMessage = &Messages{
 	"Field1 required.": "%[1]s required.",
 }
 
@@ -36,13 +36,13 @@ var testLabels = Messages{
 	"Field1": "test field1",
 }
 
-var defaultMessage = Messages{
+var defaultMessage = &Messages{
 	"Field2":          "default field2",
 	"Field3 required": "test field3",
 }
 
 func TestModel(t *testing.T) {
-	DefaultMessages = nil
+	DefaultMessages = NewMessageChain()
 	DefaultMessages.Use(defaultMessage)
 	m := newTestModel()
 	m.SetModelID("test")
@@ -99,7 +99,7 @@ func TestModel(t *testing.T) {
 }
 
 func TestNilMessage(t *testing.T) {
-	DefaultMessages = nil
+	DefaultMessages = NewMessageChain()
 	DefaultMessages.Use(defaultMessage)
 	m := &testModel{}
 	MustValidate(m)

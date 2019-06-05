@@ -12,7 +12,7 @@ func TestMessage(t *testing.T) {
 		"test2": "messagetest2",
 	}
 	var mc = NewMessageChain(message1)
-	m, ok := message1.HasMessage("test1")
+	m, ok := message1.LoadMessage("test1")
 	if ok == false {
 		t.Error(ok)
 	}
@@ -23,7 +23,7 @@ func TestMessage(t *testing.T) {
 	if m != "messagetest1" {
 		t.Error(m)
 	}
-	m, ok = message1.HasMessage("test2")
+	m, ok = message1.LoadMessage("test2")
 	if ok == true {
 		t.Error(ok)
 	}
@@ -35,7 +35,7 @@ func TestMessage(t *testing.T) {
 		t.Error(m)
 	}
 
-	m, ok = mc.HasMessage("test1")
+	m, ok = mc.LoadMessage("test1")
 	if ok == false {
 		t.Error(ok)
 	}
@@ -46,7 +46,7 @@ func TestMessage(t *testing.T) {
 	if m != "messagetest1" {
 		t.Error(m)
 	}
-	m, ok = mc.HasMessage("test2")
+	m, ok = mc.LoadMessage("test2")
 	if ok == true {
 		t.Error(ok)
 	}
@@ -58,7 +58,7 @@ func TestMessage(t *testing.T) {
 		t.Error(m)
 	}
 	mc.Use(message2)
-	m, ok = mc.HasMessage("test2")
+	m, ok = mc.LoadMessage("test2")
 	if ok == false {
 		t.Error(ok)
 	}

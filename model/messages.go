@@ -3,21 +3,33 @@ package model
 //Messages translate messages map.
 type Messages map[string]string
 
+//NewMessages create new messages
+func NewMessages() *Messages {
+	return &Messages{}
+}
+
 //GetMessage get translated string for key.
 //Return key if translateed string not exist.
-func (m Messages) GetMessage(key string) string {
-	result, ok := m[key]
+func (m *Messages) GetMessage(key string) string {
+	result, ok := (*m)[key]
 	if ok == false {
 		result = key
 	}
 	return result
 }
 
-//HasMessage check if translated string exists for given key.
+//SetMessage set translated string to key.
+//Return messages self.
+func (m *Messages) SetMessage(key string, message string) *Messages {
+	(*m)[key] = message
+	return m
+}
+
+//LoadMessage check if translated string exists for given key.
 //If string exists,return tranlasted string and true.
 //If string does not exist,return key and false.
-func (m Messages) HasMessage(key string) (string, bool) {
-	value, ok := m[key]
+func (m *Messages) LoadMessage(key string) (string, bool) {
+	value, ok := (*m)[key]
 	if ok == false {
 		value = key
 	}
@@ -33,7 +45,7 @@ type MessageChain []MessagesCollection
 func (m *MessageChain) GetMessage(key string) string {
 	if m != nil {
 		for _, v := range *m {
-			value, ok := v.HasMessage(key)
+			value, ok := v.LoadMessage(key)
 			if ok {
 				return value
 			}
@@ -42,14 +54,14 @@ func (m *MessageChain) GetMessage(key string) string {
 	return key
 }
 
-//HasMessage check if translated string exists for given key.
+//LoadMessage check if translated string exists for given key.
 //If string exists,return tranlasted string and true.
 //If string does not exist,return key and false.
 //Check all model messages in order.
-func (m *MessageChain) HasMessage(key string) (string, bool) {
+func (m *MessageChain) LoadMessage(key string) (string, bool) {
 	if m != nil {
 		for _, v := range *m {
-			value, ok := v.HasMessage(key)
+			value, ok := v.LoadMessage(key)
 			if ok {
 				return value, ok
 			}
@@ -73,15 +85,15 @@ func NewMessageChain(Messages ...MessagesCollection) *MessageChain {
 }
 
 //DefaultMessages default messages
-var DefaultMessages MessageChain
+var DefaultMessages = NewMessageChain()
 
 //MessagesCollection model messages collection interface.
 type MessagesCollection interface {
 	//GetMessage get translated string for key.
 	//Return key if translateed string not exist.
 	GetMessage(key string) string
-	//HasMessage check if translated string exists for given key.
+	//LoadMessage check if translated string exists for given key.
 	//If string exists,return tranlasted string and true.
 	//If string does not exist,return key and false.
-	HasMessage(key string) (string, bool)
+	LoadMessage(key string) (string, bool)
 }
