@@ -36,13 +36,13 @@ func (m *Messages) LoadMessage(key string) (string, bool) {
 	return value, ok
 }
 
-//MessageChain use model messages interface list as model messages interface.
-type MessageChain []MessagesCollection
+//MessagesChain use model messages interface list as model messages interface.
+type MessagesChain []MessagesCollection
 
 //GetMessage get translated string for key.
 //Return key if translateed string not exist.
 //Check all model messages in order.
-func (m *MessageChain) GetMessage(key string) string {
+func (m *MessagesChain) GetMessage(key string) string {
 	if m != nil {
 		for _, v := range *m {
 			value, ok := v.LoadMessage(key)
@@ -58,7 +58,7 @@ func (m *MessageChain) GetMessage(key string) string {
 //If string exists,return tranlasted string and true.
 //If string does not exist,return key and false.
 //Check all model messages in order.
-func (m *MessageChain) LoadMessage(key string) (string, bool) {
+func (m *MessagesChain) LoadMessage(key string) (string, bool) {
 	if m != nil {
 		for _, v := range *m {
 			value, ok := v.LoadMessage(key)
@@ -70,22 +70,22 @@ func (m *MessageChain) LoadMessage(key string) (string, bool) {
 	return key, false
 }
 
-//Use append new model messages to MessageChain.
-func (m *MessageChain) Use(Messages ...MessagesCollection) *MessageChain {
+//Use append new model messages to MessagesChain.
+func (m *MessagesChain) Use(Messages ...MessagesCollection) *MessagesChain {
 	*m = append(*m, Messages...)
 	return m
 }
 
-//NewMessageChain create new message chain with given model messages.
-func NewMessageChain(Messages ...MessagesCollection) *MessageChain {
+//NewMessagesChain create new message chain with given model messages.
+func NewMessagesChain(Messages ...MessagesCollection) *MessagesChain {
 	m := make([]MessagesCollection, len(Messages))
 	copy(m, Messages)
-	chain := MessageChain(m)
+	chain := MessagesChain(m)
 	return &chain
 }
 
 //DefaultMessages default messages
-var DefaultMessages = NewMessageChain()
+var DefaultMessages = NewMessagesChain()
 
 //MessagesCollection model messages collection interface.
 type MessagesCollection interface {
@@ -96,4 +96,22 @@ type MessagesCollection interface {
 	//If string exists,return tranlasted string and true.
 	//If string does not exist,return key and false.
 	LoadMessage(key string) (string, bool)
+}
+
+//Use append new model messages to default MessagesChain.
+func Use(Messages ...MessagesCollection) *MessagesChain {
+	return DefaultMessages.Use(Messages...)
+}
+
+//GetMessage get translated string for key from default  MessagesChain.
+//Return key if translateed string not exist.
+func GetMessage(key string) string {
+	return DefaultMessages.GetMessage(key)
+}
+
+//LoadMessage check if translated string exists for given key from default  MessagesChain.
+//If string exists,return tranlasted string and true.
+//If string does not exist,return key and false.
+func LoadMessage(key string) (string, bool) {
+	return DefaultMessages.LoadMessage(key)
 }

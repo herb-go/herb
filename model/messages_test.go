@@ -11,7 +11,7 @@ func TestMessage(t *testing.T) {
 	var message2 = &Messages{
 		"test2": "messagetest2",
 	}
-	var mc = NewMessageChain(message1)
+	var mc = NewMessagesChain(message1)
 	m, ok := message1.LoadMessage("test1")
 	if ok == false {
 		t.Error(ok)

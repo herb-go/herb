@@ -66,7 +66,7 @@ func (model *Model) getMessageText(msg string) string {
 	if model.messages != nil {
 		msgtext = model.messages.GetMessage(msg)
 	} else {
-		msgtext = DefaultMessages.GetMessage(msg)
+		msgtext = GetMessage(msg)
 	}
 	return msgtext
 }
@@ -95,7 +95,7 @@ func (model *Model) SetFieldLabels(labels map[string]string) {
 //Return field name itself if not found in field labels of model.
 func (model *Model) GetFieldLabel(field string) string {
 	if model.fieldLabels == nil {
-		return DefaultMessages.GetMessage(field)
+		return GetMessage(field)
 	}
 	label, ok := model.fieldLabels[field]
 	if ok == false {

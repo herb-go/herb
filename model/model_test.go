@@ -42,8 +42,8 @@ var defaultMessage = &Messages{
 }
 
 func TestModel(t *testing.T) {
-	DefaultMessages = NewMessageChain()
-	DefaultMessages.Use(defaultMessage)
+	DefaultMessages = NewMessagesChain()
+	Use(defaultMessage)
 	m := newTestModel()
 	m.SetModelID("test")
 	if m.ModelID() != "test" {
@@ -99,7 +99,7 @@ func TestModel(t *testing.T) {
 }
 
 func TestNilMessage(t *testing.T) {
-	DefaultMessages = NewMessageChain()
+	DefaultMessages = NewMessagesChain()
 	DefaultMessages.Use(defaultMessage)
 	m := &testModel{}
 	MustValidate(m)
