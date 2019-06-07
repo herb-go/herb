@@ -41,3 +41,13 @@ MessagesChain 是一个把多个 Messages 对象按顺序存储，获取翻译�
     //如果没有对应的翻译，会将传入的字符串原样返回，并返回false
     //将按顺序从已经加入的Messages中查找
     label,TrueOrFalse=m.LoadMessage("value1")
+
+## DefaultMessagesChain 默认信息链
+
+DefaultMessagesChain 是一个空的 MessagesChain。是默认情况下的翻译来源。
+
+    //直接链入Messages
+    model.Use(messages1,message2)
+
+    //直接获取翻译
+    label:=model.GetMessage("label1")

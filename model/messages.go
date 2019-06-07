@@ -84,8 +84,8 @@ func NewMessagesChain(Messages ...MessagesCollection) *MessagesChain {
 	return &chain
 }
 
-//DefaultMessages default messages
-var DefaultMessages = NewMessagesChain()
+//DefaultMessagesChain default messages
+var DefaultMessagesChain = NewMessagesChain()
 
 //MessagesCollection model messages collection interface.
 type MessagesCollection interface {
@@ -100,18 +100,11 @@ type MessagesCollection interface {
 
 //Use append new model messages to default MessagesChain.
 func Use(Messages ...MessagesCollection) *MessagesChain {
-	return DefaultMessages.Use(Messages...)
+	return DefaultMessagesChain.Use(Messages...)
 }
 
 //GetMessage get translated string for key from default  MessagesChain.
 //Return key if translateed string not exist.
 func GetMessage(key string) string {
-	return DefaultMessages.GetMessage(key)
-}
-
-//LoadMessage check if translated string exists for given key from default  MessagesChain.
-//If string exists,return tranlasted string and true.
-//If string does not exist,return key and false.
-func LoadMessage(key string) (string, bool) {
-	return DefaultMessages.LoadMessage(key)
+	return DefaultMessagesChain.GetMessage(key)
 }

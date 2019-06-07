@@ -42,7 +42,7 @@ var defaultMessage = &Messages{
 }
 
 func TestModel(t *testing.T) {
-	DefaultMessages = NewMessagesChain()
+	DefaultMessagesChain = NewMessagesChain()
 	Use(defaultMessage)
 	m := newTestModel()
 	m.SetModelID("test")
@@ -99,12 +99,8 @@ func TestModel(t *testing.T) {
 }
 
 func TestNilMessage(t *testing.T) {
-	DefaultMessages = NewMessagesChain()
-	DefaultMessages.Use(defaultMessage)
-	l, result := LoadMessage("notexist")
-	if l != "notexist" || result != false {
-		t.Fatal()
-	}
+	DefaultMessagesChain = NewMessagesChain()
+	DefaultMessagesChain.Use(defaultMessage)
 	m := &testModel{}
 	MustValidate(m)
 	if !m.HasError() {
