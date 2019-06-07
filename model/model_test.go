@@ -101,6 +101,10 @@ func TestModel(t *testing.T) {
 func TestNilMessage(t *testing.T) {
 	DefaultMessages = NewMessagesChain()
 	DefaultMessages.Use(defaultMessage)
+	l, result := LoadMessage("notexist")
+	if l != "notexist" || result != false {
+		t.Fatal()
+	}
 	m := &testModel{}
 	MustValidate(m)
 	if !m.HasError() {
