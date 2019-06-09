@@ -63,8 +63,42 @@ DefaultMessagesChain 是一个空的 MessagesChain。是默认情况下的翻译
         model.Model
         httprequest *http.Request
     }
+
     //实现InitWithRequest方法
     func (model *Form) InitWithRequest(r *http.Request) error {
         model.httprequest=r
         return nil
     }
+
+    //设置字段名称，可以为Model设置错误提示时每个字段的名称。需要每次在实例化的时候添加
+    //没有设置过的字段名称会以属性名表示
+    var FormFieldLabels=map[string]strint{
+        "field1":"Field 1",
+        "field2:"Field 2"
+    }
+
+    //表单对应的ID
+    const FormID="formid"
+
+    //创建新Form对象
+    func New() *Form{
+        form:=&Form{}
+        form.SetFieldLabels(FormFieldLabels)
+
+        //设置表单使用的翻译集，不设置或者为空的话使用model.DefaultMessageChain
+        form.SetMessages(nil)
+
+        //设置表单ID,便于在需要的时候快速处理和创建表单
+        form.SetModelID(FormID)
+    }
+
+使用 Model 对象
+
+    form:=NewForm()
+    form.ValidateField()
+    form.ValidateFieldf()
+    form.AddPlainError()
+    form.AddError()
+    form.AddErrorf()
+    form.HasError()
+    form.Errors()
