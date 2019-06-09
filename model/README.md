@@ -51,3 +51,9 @@ DefaultMessagesChain 是一个空的 MessagesChain。是默认情况下的翻译
 
     //直接获取翻译
     label:=model.GetMessage("label1")
+
+## Model 模型对象
+
+模型对象是一个用于集成的用户数据验证基础结构
+
+提供了初始化，绑定 Http request,验证并存储用户输出数据错误的接口
