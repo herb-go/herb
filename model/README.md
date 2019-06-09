@@ -57,3 +57,14 @@ DefaultMessagesChain 是一个空的 MessagesChain。是默认情况下的翻译
 模型对象是一个用于集成的用户数据验证基础结构
 
 提供了初始化，绑定 Http request,验证并存储用户输出数据错误的接口
+
+    //继承对象
+    type Form stuct{
+        model.Model
+        httprequest *http.Request
+    }
+    //实现InitWithRequest方法
+    func (model *Form) InitWithRequest(r *http.Request) error {
+        model.httprequest=r
+        return nil
+    }
