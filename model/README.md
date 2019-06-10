@@ -94,11 +94,16 @@ DefaultMessagesChain 是一个空的 MessagesChain。是默认情况下的翻译
 
 使用 Model 对象
 
+    //创建新表单
     form:=NewForm()
-    form.ValidateField()
-    form.ValidateFieldf()
+    //验证字段。第一个参数为false的话，会为model添加名称为第二参数，值为第三参数的错误
+    form.ValidateField(form.field1==1,"field1","field1 must be 1")
+    //验证字段。第一个参数为false的话，会为model添加名称为第二参数，值为第三参数的错误
+    form.ValidateFieldf(form.field1==1,"field1","field1 must be 1")
     form.AddPlainError()
     form.AddError()
     form.AddErrorf()
+    //判断model对象是否有错误
     form.HasError()
-    form.Errors()
+    //返回model的所有错误
+    errors:=form.Errors()
