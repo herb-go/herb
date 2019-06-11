@@ -5,9 +5,7 @@ import (
 )
 
 func TestMessage(t *testing.T) {
-	var message1 = &Messages{
-		"test1": "messagetest1",
-	}
+	var message1 = NewMessages().SetMessage("test1", "messagetest1")
 	var message2 = &Messages{
 		"test2": "messagetest2",
 	}

@@ -3,7 +3,7 @@ package db
 var ConfigJSON = `
 {
 	"Driver": "mysql",
-	"Conn": "dbuser:dbpass@/db",
+	"DataSource": "dbuser:dbpass@/db",
 	"Prefix": "test",
 	"MaxIdleConns":10,
 	"ConnMaxLifetimeInSecond":3600,
