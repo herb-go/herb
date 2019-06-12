@@ -10,8 +10,8 @@ const DefaultConnMaxLifetimeInSecond = int64(30)
 
 //PlainDBOption plain database init option interface.
 type PlainDBOption interface {
-	//Apply init plain database.
-	Apply(*PlainDB) error
+	//ApplyTo init plain database.
+	ApplyTo(*PlainDB) error
 }
 
 //Config database config
@@ -32,8 +32,8 @@ type Config struct {
 	MaxOpenConns int
 }
 
-//Apply init plain database with config
-func (c *Config) Apply(d *PlainDB) error {
+//ApplyTo init plain database with config
+func (c *Config) ApplyTo(d *PlainDB) error {
 	db, err := sql.Open(c.Driver, c.DataSource)
 	if err != nil {
 		return err

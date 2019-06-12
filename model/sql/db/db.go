@@ -57,7 +57,7 @@ type PlainDB struct {
 
 //Init init plain database with given option.
 func (d *PlainDB) Init(o PlainDBOption) error {
-	return o.Apply(d)
+	return o.ApplyTo(d)
 }
 
 //SetDB set sql db to plain datatbase.
