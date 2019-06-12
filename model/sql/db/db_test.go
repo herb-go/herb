@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"encoding/json"
 	"testing"
 
@@ -99,6 +100,64 @@ func TestQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = rows.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestTxQuery(t *testing.T) {
+	config := &Config{}
+	err := json.Unmarshal([]byte(ConfigJSON), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	db := New()
+	err = db.Init(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.DB().Close()
+	dt, err := NewTxDB(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dm := NewTable(dt, tablename)
+	db.Exec("drop table " + dm.TableName() + ";")
+	_, err = dt.Exec("create table " + dm.TableName() + "( id varchar(255) );")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dt.Commit()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dt, err = NewTxDB(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dm = NewTable(dt, tablename)
+	row := dm.QueryRow("select * from " + dm.TableName())
+	err = row.Scan()
+	if err != sql.ErrNoRows {
+		t.Fatal(err)
+	}
+	rows, err := dm.Query("select * from " + dm.TableName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = rows.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dt.Commit()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dt, err = NewTxDB(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dt.Rollback()
 	if err != nil {
 		t.Fatal(err)
 	}
