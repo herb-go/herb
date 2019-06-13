@@ -106,6 +106,11 @@ type Config struct {
 	IdleTimeoutInSecond int64
 }
 
+//NewConfig create new config
+func NewConfig() *Config {
+	return &Config{}
+}
+
 //ApplyTo apply confit to redis poll
 func (c *Config) ApplyTo(p *Pool) error {
 	p.Network = c.Network
