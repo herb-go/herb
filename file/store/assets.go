@@ -2,6 +2,7 @@ package store
 
 import (
 	"io"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -81,7 +82,8 @@ func (f *Assets) Remove(id string) error {
 //URL convert file id to file url.
 //Return file url and any error if raised.
 func (f *Assets) URL(id string) (string, error) {
-	return path.Join(f.URLPrefix, id), nil
+	encodedurl := url.PathEscape(id)
+	return path.Join(f.URLPrefix, encodedurl), nil
 }
 
 //AssetsStoreConfig local file store config

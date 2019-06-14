@@ -139,3 +139,30 @@ func TestAbsolute(t *testing.T) {
 		t.Fatal(ad.Location)
 	}
 }
+func TestUrlEncode(t *testing.T) {
+	config := NewOptionConfigJSON()
+	config.Driver = "assets"
+	config.Config.Set("URLHost", "http://www.test.com")
+	config.Config.Set("URLPrefix", "test")
+	config.Config.Set("Absolute", true)
+	store := New()
+	err := store.Init(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	url, err := store.URL("%")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if url != "http:/www.test.com/test/%25" {
+		t.Fatal(url)
+	}
+
+	url, err = store.URL("abc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if url != "http:/www.test.com/test/abc" {
+		t.Fatal(url)
+	}
+}

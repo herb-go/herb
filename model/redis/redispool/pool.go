@@ -10,8 +10,6 @@ var defaultMaxIdle = 200
 var defaultMaxAlive = 200
 var defaultIdleTimeout = 60 * time.Second
 var defualtConnectTimeout = 10 * time.Second
-var defualtReadTimeout = 2 * time.Second
-var defualtWriteTimeout = 2 * time.Second
 
 //New create a new redis pool
 func New() *Pool {

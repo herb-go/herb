@@ -3,14 +3,16 @@ package querybuilder
 // NewFromClause create new form clause
 func (b *Builder) NewFromClause() *FromClause {
 	return &FromClause{
-		Tables: [][2]string{},
+		Buidler: b,
+		Tables:  [][2]string{},
 	}
 
 }
 
 //FromClause from caluse struuct
 type FromClause struct {
-	Tables [][2]string
+	Buidler *Builder
+	Tables  [][2]string
 }
 
 // AddAlias add table to from clause with given table name and alias

@@ -19,18 +19,20 @@ func TestSelect(t *testing.T) {
 	selectquery.From.AddAlias("table2alias", "table2name")
 	selectquery.Limit.SetOffset(10)
 	selectquery.Limit.SetLimit(5)
+	selectquery.GroupBy.Add("testfield3")
+	selectquery.Having.Condition = builder.Equal("testfield4", "having")
 	selectquery.OrderBy.Add("testfield1", true)
 	selectquery.OrderBy.Add("testfield2", false)
 	selectquery.Join.LeftJoin().On(builder.New("field1=field2")).Alias("t2", "table2")
 	selectquery.Where.Condition = builder.New("1=1")
 	selectquery.Other = builder.New("other")
 	cmds := selectquery.QueryCommand()
-	if cmds != "SELECT prefix testfield1 , testfield2 , ?\nFROM tablename , table2name AS table2alias\nLEFT JOIN table2 AS t2 ON field1=field2\nWHERE 1=1\nORDER BY testfield1 ASC  , testfield2 DESC \nLIMIT ? OFFSET ? \nother" {
+	if cmds != "SELECT prefix testfield1 , testfield2 , ?\nFROM tablename , table2name AS table2alias\nLEFT JOIN table2 AS t2 ON field1=field2\nWHERE 1=1\nGROUP BY testfield3\nHaving testfield4 = ?\nORDER BY testfield1 ASC  , testfield2 DESC \nLIMIT ? OFFSET ? \nother" {
 		t.Fatal(cmds)
 	}
 	args := selectquery.QueryArgs()
 
-	if len(args) != 3 || args[0] != 15 || args[1] != 5 || args[2] != 10 {
+	if len(args) != 4 || args[0] != 15 || args[1] != "having" || args[2] != 5 || args[3] != 10 {
 		t.Fatal(args)
 	}
 }

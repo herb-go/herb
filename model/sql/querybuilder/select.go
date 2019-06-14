@@ -145,6 +145,7 @@ func (b *Builder) NewSelect() *Select {
 		From:    b.NewFromClause(),
 		Join:    b.NewJoinClause(),
 		Where:   b.NewWhereClause(),
+		Having:  b.NewHavingClause(),
 		GroupBy: b.NewGroupByClause(),
 		OrderBy: b.NewOrderByClause(),
 		Limit:   b.NewLimitClause(),
@@ -160,6 +161,7 @@ type Select struct {
 	Join    *JoinClause
 	Where   *WhereClause
 	GroupBy *GroupByClause
+	Having  *HavingClause
 	OrderBy *OrderByClause
 	Limit   *LimitClause
 	Other   *PlainQuery
@@ -172,7 +174,7 @@ func (s *Select) Result() *SelectResult {
 
 // Query convert select query to plain query.
 func (s *Select) Query() *PlainQuery {
-	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.GroupBy, s.OrderBy, s.Limit, s.Other)
+	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.GroupBy, s.Having, s.OrderBy, s.Limit, s.Other)
 }
 
 // QueryCommand return query command

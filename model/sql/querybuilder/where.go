@@ -3,12 +3,14 @@ package querybuilder
 // NewWhereClause create new where clause
 func (b *Builder) NewWhereClause() *WhereClause {
 	return &WhereClause{
+		Builder:   b,
 		Condition: b.New(""),
 	}
 }
 
 // WhereClause where clause struct
 type WhereClause struct {
+	Builder *Builder
 	// Condition where condition
 	Condition *PlainQuery
 }

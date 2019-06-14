@@ -31,6 +31,11 @@ func (b *Builder) Equal(field string, arg interface{}) *PlainQuery {
 	return b.New(field+" = ?", arg)
 }
 
+//Between return field between start and end query
+func (b *Builder) Between(field string, start interface{}, end interface{}) *PlainQuery {
+	return b.New(field+" BETWEEN ? AND ?", start, end)
+}
+
 //Search return search field query.
 //  arg will be ecapced with EscapeSearch
 func (b *Builder) Search(field string, arg string) *PlainQuery {

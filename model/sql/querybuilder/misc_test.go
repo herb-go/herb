@@ -36,10 +36,22 @@ func TestMisc(t *testing.T) {
 	if cmd != "testfield = ?" {
 		t.Fatal(cmd)
 	}
+
 	args = q.QueryArgs()
 	if len(args) != 1 || args[0] != "t1" {
 		t.Fatal(args)
 	}
+
+	q = builder.Between("testfield", 1, 2)
+	cmd = q.QueryCommand()
+	if cmd != "testfield BETWEEN ? AND ?" {
+		t.Fatal(cmd)
+	}
+	args = q.QueryArgs()
+	if len(args) != 2 || args[0] != 1 || args[1] != 2 {
+		t.Fatal(args)
+	}
+
 	q = builder.Search("", "")
 	cmd = q.QueryCommand()
 	if cmd != "" {

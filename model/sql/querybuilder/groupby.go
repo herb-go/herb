@@ -4,7 +4,7 @@ import "strings"
 
 // GroupByClause group by clause struct
 type GroupByClause struct {
-	buidler *Builder
+	Buidler *Builder
 	Fields  []string
 }
 
@@ -19,7 +19,7 @@ func (q *GroupByClause) QueryCommand() string {
 	if len(q.Fields) == 0 {
 		return ""
 	}
-	return "GROUP BY " + strings.Join(q.Fields, " , ") + " "
+	return "GROUP BY " + strings.Join(q.Fields, " , ")
 }
 
 // QueryArgs return query args.
@@ -30,7 +30,7 @@ func (q *GroupByClause) QueryArgs() []interface{} {
 //NewGroupByClause create  new group by clause.
 func (b *Builder) NewGroupByClause() *GroupByClause {
 	return &GroupByClause{
-		buidler: b,
+		Buidler: b,
 		Fields:  []string{},
 	}
 }
