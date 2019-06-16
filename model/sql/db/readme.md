@@ -22,13 +22,32 @@
 	
 ## 使用方式
 
+	//创建数据库对象
 	db:=New()
     config:=NewConfig()
 	err:=toml.Unmarshal(data,config)
 	err=db.Init(config)
 
+	//创建数据库表对象
 	table:=db.Table("tablename")
 
+	//创建数据库事务对象。使用后请自行提交或者回退。
 	txdb:=NewTxDb(db)
 	defer txdb.RollBack()
+	err=txdb.Commit()
+
+	//通过数据库对象操作数据库
+	sqlresult,err=db.Exec(query, arg1,arg2) 
+	sqlrows,err=db.Query(query, arg1,arg2) 
+	sqlrow,err=db.QueryRow(query, arg1,arg2)
+
+	//通过数据库表对象操作数据库
+	sqlresult,err=table.Exec(query, arg1,arg2) 
+	sqlrows,err=table.Query(query, arg1,arg2) 
+	sqlrow,err=table.QueryRow(query, arg1,arg2)
+
+	//通过事务对象操作数据库
+	sqlresult,err=table.Exec(query, arg1,arg2) 
+	sqlrows,err=table.Query(query, arg1,arg2) 
+	sqlrow,err=table.QueryRow(query, arg1,arg2)
 	err=txdb.Commit()
