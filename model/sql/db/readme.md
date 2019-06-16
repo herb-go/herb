@@ -20,3 +20,15 @@
     #按秒计算的连接最长生命周期。默认值为30秒
 	ConnMaxLifetimeInSecond=60
 	
+## 使用方式
+
+	db:=New()
+    config:=NewConfig()
+	err:=toml.Unmarshal(data,config)
+	err=db.Init(config)
+
+	table:=db.Table("tablename")
+
+	txdb:=NewTxDb(db)
+	defer txdb.RollBack()
+	err=txdb.Commit()
