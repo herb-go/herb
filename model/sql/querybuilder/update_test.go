@@ -6,7 +6,7 @@ func TestUpdate(t *testing.T) {
 	fields := NewFields()
 	fields.Set("field1", "t1")
 	fields.Set("field2", "t2")
-	builder := NewBuilder()
+	builder := New()
 	selectquery := builder.NewSelect()
 	selectquery.Select.AddFields(fields)
 	selectquery.From.AddAlias("tb2", "table2")

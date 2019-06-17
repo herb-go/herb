@@ -10,7 +10,7 @@ func TestSelect(t *testing.T) {
 	fields := NewFields()
 	fields.Set("testfield1", &testfield1)
 	fields.Set("testfield2", &testfield2)
-	builder := NewBuilder()
+	builder := New()
 	selectquery := builder.NewSelect()
 	selectquery.Select.Prefix = builder.New("prefix")
 	selectquery.Select.AddFields(fields)
@@ -43,7 +43,7 @@ func TestRightJoin(t *testing.T) {
 	fields := NewFields()
 	fields.Set("testfield1", &testfield1)
 	fields.Set("testfield2", &testfield2)
-	builder := NewBuilder()
+	builder := New()
 	selectquery := builder.NewSelect()
 	selectquery.Select.AddFields(fields)
 	selectquery.From.Add("tablename")
@@ -62,7 +62,7 @@ func TestRightJoin(t *testing.T) {
 }
 
 func TestResult(t *testing.T) {
-	builder := NewBuilder()
+	builder := New()
 	fields := NewFields()
 	fields.Set("id", nil).Set("body", nil)
 	selectquery := builder.NewSelect()

@@ -65,8 +65,8 @@ func (b *Builder) CountField() string {
 	return b.LoadDriver().CountField()
 }
 
-//NewBuilder create new query builder
-func NewBuilder() *Builder {
+//New create new query builder
+func New() *Builder {
 	return &Builder{}
 }
 

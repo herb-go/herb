@@ -19,7 +19,7 @@ type Table struct {
 
 //QueryBuilder return querybuilder of  table
 func (t *Table) QueryBuilder() *Builder {
-	b := NewBuilder()
+	b := New()
 	b.Driver = t.DBTable.Driver()
 	return b
 }

@@ -8,8 +8,13 @@ type Field struct {
 	Data interface{}
 }
 
+//NewField Create new field
+func NewField() *Field {
+	return &Field{}
+}
+
 // Fields field list
-type Fields []Field
+type Fields []*Field
 
 // NewFields create new fields
 func NewFields() *Fields {
@@ -25,6 +30,9 @@ func (f *Fields) Set(field string, data interface{}) *Fields {
 			return f
 		}
 	}
-	*f = append(*f, Field{Field: field, Data: data})
+	datafield := NewField()
+	datafield.Field = field
+	datafield.Data = data
+	*f = append(*f, datafield)
 	return f
 }

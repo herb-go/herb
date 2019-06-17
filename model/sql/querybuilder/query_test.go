@@ -10,7 +10,7 @@ func TestQuery(t *testing.T) {
 	if len(q.QueryArgs()) != 0 {
 		t.Fatal(q)
 	}
-	b := NewBuilder()
+	b := New()
 	q = b.New("test")
 	q.And(b.New("test2"))
 	if q.QueryCommand() != "( test AND test2 )" {

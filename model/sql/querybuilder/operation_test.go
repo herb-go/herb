@@ -3,7 +3,7 @@ package querybuilder
 import "testing"
 
 func TestOperation(t *testing.T) {
-	builder := NewBuilder()
+	builder := New()
 	q1 := builder.Equal("field1", "t1")
 	q2 := builder.Equal("field2", "t2")
 	q := builder.Concat(q1, q2)

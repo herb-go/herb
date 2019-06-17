@@ -3,7 +3,7 @@ package querybuilder
 import "testing"
 
 func TestDelete(t *testing.T) {
-	builder := NewBuilder()
+	builder := New()
 	query := builder.NewDelete("testtable")
 	query.Other = builder.New("other")
 	query.Delete.Prefix = builder.New("prefix")

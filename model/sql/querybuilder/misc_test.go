@@ -3,7 +3,7 @@ package querybuilder
 import "testing"
 
 func TestMisc(t *testing.T) {
-	builder := NewBuilder()
+	builder := New()
 	q := builder.NewValueList("t1", "t2")
 	cmd := q.QueryCommand()
 	if cmd != "? , ?" {
