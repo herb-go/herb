@@ -115,15 +115,15 @@
 
 ### 重度第三方依赖库
 
-- [msgpack](github.com/vmihailenco/msgpack) Msgpack 序列化库
-- [httprouter](github.com/julienschmidt/httprouter) Httprouter 高性能路由
+- [msgpack](https://github.com/vmihailenco/msgpack) Msgpack 序列化库
+- [httprouter](https://github.com/julienschmidt/httprouter) Httprouter 高性能路由
 
 ### 可选第三方驱动
 
-- [freecache](github.com/coocood/freecache) Freecache 缓存
-- [gocache](github.com/patrickmn/go-cache) Gocache 缓存
-- [redis](github.com/garyburd/redigo/redis) Redis 驱动
-- [mysql](github.com/go-sql-driver/mysql) Mysql 数据库驱动
-- [sqlite](github.com/mattn/go-sqlite3) sqlite 数据库驱动
-- [posgtres](github.com/lib/pq) Posgresql 数据库驱动
-- [mssql](github.com/denisenkom/go-mssqldb) mssql 数据库驱动
+- [freecache](https://github.com/coocood/freecache) Freecache 缓存
+- [gocache](https://github.com/patrickmn/go-cache) Gocache 缓存
+- [redis](https://github.com/garyburd/redigo/redis) Redis 驱动
+- [mysql](https://github.com/go-sql-driver/mysql) Mysql 数据库驱动
+- [sqlite](https://github.com/mattn/go-sqlite3) sqlite 数据库驱动
+- [posgtres](https://github.com/lib/pq) Posgresql 数据库驱动
+- [mssql](https://github.com/denisenkom/go-mssqldb) mssql 数据库驱动
