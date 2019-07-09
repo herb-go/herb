@@ -14,8 +14,6 @@ type Column struct {
 	NotNull    bool
 }
 
-type Columns []Column
-
 type ColumnsLoader interface {
 	Columns() ([]Column, error)
 	Load(conn db.Database, table string) error
