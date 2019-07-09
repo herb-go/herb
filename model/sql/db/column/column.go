@@ -20,3 +20,7 @@ type ColumnsLoader interface {
 	Columns() ([]Column, error)
 	Load(conn db.Database, table string) error
 }
+
+func Register(name string, loader func() ColumnsLoader) {
+	Drivers[name] = loader
+}
