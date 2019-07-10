@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" //sqlite driver
 
 	"github.com/herb-go/herb/model/sql/db"
 	"github.com/herb-go/herb/model/sql/db/columns"

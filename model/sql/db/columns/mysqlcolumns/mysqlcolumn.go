@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql" //mysql driver
 
 	"github.com/herb-go/herb/model/sql/db"
 	"github.com/herb-go/herb/model/sql/db/columns"
