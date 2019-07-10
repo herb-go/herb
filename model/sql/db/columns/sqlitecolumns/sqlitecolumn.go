@@ -10,6 +10,7 @@ import (
 	"github.com/herb-go/herb/model/sql/db/columns"
 )
 
+//Column sqlite column struct
 type Column struct {
 	CID     int64
 	Name    string
@@ -20,6 +21,7 @@ type Column struct {
 	Key     string
 }
 
+// ConvertType convert culumn type to golang type.
 func ConvertType(t string) (string, error) {
 	ft := strings.Split(t, "(")[0]
 	switch strings.ToUpper(ft) {
@@ -44,6 +46,7 @@ func ConvertType(t string) (string, error) {
 
 }
 
+// Convert convert MysqlColumn to commn column
 func (c *Column) Convert() (*columns.Column, error) {
 	output := &columns.Column{}
 	output.Field = c.Field
@@ -68,8 +71,10 @@ func (c *Column) Convert() (*columns.Column, error) {
 	return output, nil
 }
 
+// Columns sqlite columns type
 type Columns []Column
 
+// Columns return loaded columns
 func (c *Columns) Columns() ([]*columns.Column, error) {
 	output := []*columns.Column{}
 	for _, v := range *c {
@@ -82,6 +87,8 @@ func (c *Columns) Columns() ([]*columns.Column, error) {
 
 	return output, nil
 }
+
+// Load load columns with given database and table name
 func (c *Columns) Load(conn db.Database, table string) error {
 	db := conn.DB()
 	rows, err := db.Query("PRAGMA table_info(" + table + ")")
@@ -101,7 +108,7 @@ func (c *Columns) Load(conn db.Database, table string) error {
 }
 
 func init() {
-	columns.Register("sqlite3", func() columns.ColumnsLoader {
+	columns.Register("sqlite3", func() columns.Loader {
 		return &Columns{}
 	})
 }
