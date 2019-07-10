@@ -26,4 +26,4 @@ Column是数据库的每一列的信息
 ## 可用驱动
 
 * [Mysql](mysqlcolumns/readme.md)
-* [Sqlite](qlitecolumns/readme.md)
+* [Sqlite](sqlitecolumns/readme.md)
