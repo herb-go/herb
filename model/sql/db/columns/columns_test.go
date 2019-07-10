@@ -20,7 +20,7 @@ func (l *testLoader) Load(conn db.Database, table string) error {
 
 func TestColumns(t *testing.T) {
 	driver := &testLoader{}
-	Register("test", func() ColumnsLoader {
+	Register("test", func() Loader {
 		return driver
 	})
 	notexist, err := Driver("notexist")

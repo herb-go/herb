@@ -10,15 +10,23 @@ import (
 	"github.com/herb-go/herb/model/sql/db/columns"
 )
 
+//Column mysql column struct
 type Column struct {
-	Field   string
-	Type    string
-	IsNull  string
-	Key     string
+	// Field  column name
+	Field string
+	// Type column type
+	Type string
+	// IsNull if column can be null
+	IsNull string
+	// Key  if column is primary key
+	Key string
+	// Default default value
 	Default interface{}
-	Extra   string
+	// Extra extra data
+	Extra string
 }
 
+// ConvertType convert culumn type to golang type.
 func ConvertType(t string) (string, error) {
 	ft := strings.Split(t, "(")[0]
 	switch strings.ToUpper(ft) {
@@ -43,6 +51,7 @@ func ConvertType(t string) (string, error) {
 
 }
 
+// Convert convert MysqlColumn to commn column
 func (c *Column) Convert() (*columns.Column, error) {
 	output := &columns.Column{}
 	output.Field = c.Field
@@ -67,8 +76,10 @@ func (c *Column) Convert() (*columns.Column, error) {
 	return output, nil
 }
 
+// Columns mysql columns type
 type Columns []Column
 
+// Columns return loaded columns
 func (c *Columns) Columns() ([]*columns.Column, error) {
 	output := []*columns.Column{}
 	for _, v := range *c {
@@ -80,6 +91,8 @@ func (c *Columns) Columns() ([]*columns.Column, error) {
 	}
 	return output, nil
 }
+
+// Load load columns with given database and table name
 func (c *Columns) Load(conn db.Database, table string) error {
 	db := conn.DB()
 	rows, err := db.Query("desc " + table)
@@ -99,7 +112,7 @@ func (c *Columns) Load(conn db.Database, table string) error {
 }
 
 func init() {
-	columns.Register("mysql", func() columns.ColumnsLoader {
+	columns.Register("mysql", func() columns.Loader {
 		return &Columns{}
 	})
 }
