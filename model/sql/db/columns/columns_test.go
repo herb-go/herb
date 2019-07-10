@@ -1,6 +1,7 @@
 package columns
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/herb-go/herb/model/sql/db"
@@ -22,12 +23,12 @@ func TestColumns(t *testing.T) {
 	Register("test", func() ColumnsLoader {
 		return driver
 	})
-	notexist := Driver("notexist")
-	if notexist != nil {
+	notexist, err := Driver("notexist")
+	if err == nil || !strings.Contains(err.Error(), "notexist") || notexist != nil {
 		t.Fatal()
 	}
-	d := Driver("test")
-	if d == nil || d() != driver {
-		t.Fatal()
+	d, err := Driver("test")
+	if err != nil || d != driver {
+		t.Fatal(err)
 	}
 }

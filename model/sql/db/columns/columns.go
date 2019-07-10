@@ -1,6 +1,8 @@
 package columns
 
 import (
+	"fmt"
+
 	"github.com/herb-go/herb/model/sql/db"
 )
 
@@ -23,6 +25,10 @@ func Register(name string, loader func() ColumnsLoader) {
 	drivers[name] = loader
 }
 
-func Driver(name string) func() ColumnsLoader {
-	return drivers[name]
+func Driver(name string) (ColumnsLoader, error) {
+	d := drivers[name]
+	if d == nil {
+		return nil, fmt.Errorf("column driver \"%s\" not registered", name)
+	}
+	return d(), nil
 }

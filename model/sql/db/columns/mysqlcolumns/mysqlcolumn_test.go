@@ -51,7 +51,10 @@ func TestColumns(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.DB().Close()
-	c := columns.Driver("mysql")()
+	c, err := columns.Driver("mysql")
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = c.Load(db, "columns")
 	if err != nil {
 		t.Fatal(err)
