@@ -99,7 +99,7 @@ func (c *Columns) Load(conn db.Database, table string) error {
 }
 
 func init() {
-	columns.Drivers["mysql"] = func() columns.ColumnsLoader {
+	columns.Register("mysql", func() columns.ColumnsLoader {
 		return &Columns{}
-	}
+	})
 }

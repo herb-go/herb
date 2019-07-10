@@ -4,7 +4,7 @@ import (
 	"github.com/herb-go/herb/model/sql/db"
 )
 
-var Drivers = map[string]func() ColumnsLoader{}
+var drivers = map[string]func() ColumnsLoader{}
 
 type Column struct {
 	Field      string
@@ -20,5 +20,9 @@ type ColumnsLoader interface {
 }
 
 func Register(name string, loader func() ColumnsLoader) {
-	Drivers[name] = loader
+	drivers[name] = loader
+}
+
+func Driver(name string) func() ColumnsLoader {
+	return drivers[name]
 }

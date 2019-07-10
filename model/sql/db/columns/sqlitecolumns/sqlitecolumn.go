@@ -101,7 +101,7 @@ func (c *Columns) Load(conn db.Database, table string) error {
 }
 
 func init() {
-	columns.Drivers["sqlite3"] = func() columns.ColumnsLoader {
+	columns.Register("sqlite3", func() columns.ColumnsLoader {
 		return &Columns{}
-	}
+	})
 }

@@ -56,7 +56,7 @@ func TestColumns(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.DB().Close()
-	c := columns.Drivers["sqlite3"]()
+	c := columns.Driver("sqlite3")()
 	err = c.Load(db, "columns")
 	if err != nil {
 		t.Fatal(err)
