@@ -1,11 +1,13 @@
-package sqlitecolumn
+package sqlitecolumns
 
 import (
 	"errors"
 	"strings"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/herb-go/herb/model/sql/db"
-	"github.com/herb-go/herbgo/column"
+	"github.com/herb-go/herb/model/sql/db/columns"
 )
 
 type Column struct {
@@ -38,12 +40,12 @@ func ConvertType(t string) (string, error) {
 	case "BLOB":
 		return "[]byte", nil
 	}
-	return "", errors.New("MysqlColumn:Column type " + t + " is not supported.")
+	return "", errors.New("sqlitecolumns:Column type " + t + " is not supported.")
 
 }
 
-func (c *Column) Convert() (*column.Column, error) {
-	output := &column.Column{}
+func (c *Column) Convert() (*columns.Column, error) {
+	output := &columns.Column{}
 	output.Field = c.Field
 	t, err := ConvertType(c.Type)
 	output.ColumnType = t
@@ -68,14 +70,14 @@ func (c *Column) Convert() (*column.Column, error) {
 
 type Columns []Column
 
-func (c *Columns) Columns() ([]column.Column, error) {
-	output := []column.Column{}
+func (c *Columns) Columns() ([]*columns.Column, error) {
+	output := []*columns.Column{}
 	for _, v := range *c {
 		column, err := v.Convert()
 		if err != nil {
 			return nil, err
 		}
-		output = append(output, *column)
+		output = append(output, column)
 	}
 
 	return output, nil
@@ -99,7 +101,7 @@ func (c *Columns) Load(conn db.Database, table string) error {
 }
 
 func init() {
-	column.Drivers["sqlite3"] = func() column.ColumnsLoader {
+	columns.Drivers["sqlite3"] = func() columns.ColumnsLoader {
 		return &Columns{}
 	}
 }

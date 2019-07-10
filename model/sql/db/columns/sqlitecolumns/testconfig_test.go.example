@@ -1,0 +1,13 @@
+package sqlitecolumns
+
+var ConfigJSON = `
+{
+	"Driver": "sqlite3",
+	"DataSource": "_test/sqlite.db",
+	"Prefix": "",
+	"MaxIdleConns":10,
+	"ConnMaxLifetimeInSecond":3600,
+	"MaxOpenConns":10
+}
+
+`

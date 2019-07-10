@@ -1,11 +1,13 @@
-package mysqlcolumn
+package mysqlcolumns
 
 import (
 	"errors"
 	"strings"
 
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/herb-go/herb/model/sql/db"
-	"github.com/herb-go/herbgo/column"
+	"github.com/herb-go/herb/model/sql/db/columns"
 )
 
 type Column struct {
@@ -37,12 +39,12 @@ func ConvertType(t string) (string, error) {
 	case "BINARY", "VARBINARY", "TINYBLOB", "BLOB", "MEDIUMBLOB", "LONGBLOB":
 		return "[]byte", nil
 	}
-	return "", errors.New("MysqlColumn:Column type " + t + " is not supported.")
+	return "", errors.New("mysqlColumn:column type " + t + " is not supported.")
 
 }
 
-func (c *Column) Convert() (*column.Column, error) {
-	output := &column.Column{}
+func (c *Column) Convert() (*columns.Column, error) {
+	output := &columns.Column{}
 	output.Field = c.Field
 	t, err := ConvertType(c.Type)
 	output.ColumnType = t
@@ -67,14 +69,14 @@ func (c *Column) Convert() (*column.Column, error) {
 
 type Columns []Column
 
-func (c *Columns) Columns() ([]column.Column, error) {
-	output := []column.Column{}
+func (c *Columns) Columns() ([]*columns.Column, error) {
+	output := []*columns.Column{}
 	for _, v := range *c {
 		column, err := v.Convert()
 		if err != nil {
 			return nil, err
 		}
-		output = append(output, *column)
+		output = append(output, column)
 	}
 	return output, nil
 }
@@ -97,7 +99,7 @@ func (c *Columns) Load(conn db.Database, table string) error {
 }
 
 func init() {
-	column.Drivers["mysql"] = func() column.ColumnsLoader {
+	columns.Drivers["mysql"] = func() columns.ColumnsLoader {
 		return &Columns{}
 	}
 }

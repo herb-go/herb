@@ -1,4 +1,4 @@
-package column
+package columns
 
 import (
 	"github.com/herb-go/herb/model/sql/db"
@@ -15,7 +15,7 @@ type Column struct {
 }
 
 type ColumnsLoader interface {
-	Columns() ([]Column, error)
+	Columns() ([]*Column, error)
 	Load(conn db.Database, table string) error
 }
 
