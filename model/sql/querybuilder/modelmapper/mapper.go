@@ -1,10 +1,11 @@
-package querybuilder
+package modelmapper
 
 import "database/sql"
+import "github.com/herb-go/herb/model/sql/querybuilder"
 
 // DBTable database table interface
 type DBTable interface {
-	DB
+	querybuilder.DB
 	DB() *sql.DB
 	TableName() string
 	Alias() string
@@ -12,20 +13,20 @@ type DBTable interface {
 	Driver() string
 }
 
-// Table query table
-type Table struct {
+// Mapper database table mapper
+type Mapper struct {
 	DBTable
 }
 
 //QueryBuilder return querybuilder of  table
-func (t *Table) QueryBuilder() *Builder {
-	b := New()
+func (t *Mapper) QueryBuilder() *querybuilder.Builder {
+	b := querybuilder.New()
 	b.Driver = t.DBTable.Driver()
 	return b
 }
 
 //FieldAlias return field name with table alias.
-func (t *Table) FieldAlias(field string) string {
+func (t *Mapper) FieldAlias(field string) string {
 	a := t.Alias()
 	if a != "" {
 		field = a + "." + field
@@ -34,7 +35,7 @@ func (t *Table) FieldAlias(field string) string {
 }
 
 //NewSelect : create  select query for table
-func (t *Table) NewSelect() *Select {
+func (t *Mapper) NewSelect() *querybuilder.Select {
 	Select := t.QueryBuilder().NewSelect()
 	alias := t.Alias()
 	if alias != "" {
@@ -46,33 +47,33 @@ func (t *Table) NewSelect() *Select {
 }
 
 //NewInsert : new insert query for table node
-func (t *Table) NewInsert() *Insert {
+func (t *Mapper) NewInsert() *querybuilder.Insert {
 	Insert := t.QueryBuilder().NewInsert(t.TableName())
 	return Insert
 
 }
 
 //NewUpdate : new update query for table
-func (t *Table) NewUpdate() *Update {
+func (t *Mapper) NewUpdate() *querybuilder.Update {
 	Update := t.QueryBuilder().NewUpdate(t.TableName())
 	return Update
 }
 
 //NewDelete : build delete query for table node
-func (t *Table) NewDelete() *Delete {
+func (t *Mapper) NewDelete() *querybuilder.Delete {
 	Delete := t.QueryBuilder().NewDelete(t.TableName())
 	return Delete
 }
 
 //BuildCount : build count select query for table
-func (t *Table) BuildCount() *Select {
+func (t *Mapper) BuildCount() *querybuilder.Select {
 	Select := t.NewSelect()
 	Select.Select.Add("count(*)")
 	return Select
 }
 
 //Count : count  from table  by given select t.QueryBuilder().
-func (t *Table) Count(Select *Select) (int, error) {
+func (t *Mapper) Count(Select *querybuilder.Select) (int, error) {
 	var result int
 	row := Select.QueryRow(t)
 	err := row.Scan(&result)
@@ -82,9 +83,9 @@ func (t *Table) Count(Select *Select) (int, error) {
 	return result, nil
 }
 
-// NewTable create new query table with given database table
-func NewTable(dbtable DBTable) *Table {
-	return &Table{
+// New create new query table with given database table
+func New(dbtable DBTable) *Mapper {
+	return &Mapper{
 		DBTable: dbtable,
 	}
 }

@@ -1,11 +1,11 @@
-package querybuilder_test
+package modelmapper_test
 
 import (
 	"encoding/json"
 	"testing"
 
 	"github.com/herb-go/herb/model/sql/db"
-	"github.com/herb-go/herb/model/sql/querybuilder"
+	"github.com/herb-go/herb/model/sql/querybuilder/mapper"
 )
 
 func TestAlias(t *testing.T) {
@@ -20,7 +20,7 @@ func TestAlias(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	table1 := querybuilder.NewTable(DB.Table("testtable1"))
+	table1 := mapper.New(DB.Table("testtable1"))
 	table1.SetAlias("")
 	field := table1.FieldAlias("id")
 	if field != "id" {

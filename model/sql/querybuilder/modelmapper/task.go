@@ -1,10 +1,11 @@
-package querybuilder
+package modelmapper
 
 import "database/sql"
+import "github.com/herb-go/herb/model/sql/querybuilder"
 
 type Task interface {
-	SetDB(DB)
-	DB() DB
+	SetDB(querybuilder.DB)
+	DB() querybuilder.DB
 	OnSuccess(func() error)
 	EmitSuccess() error
 	OnPrepare(func() error)
@@ -12,16 +13,16 @@ type Task interface {
 }
 
 type CommonTask struct {
-	db              DB
+	db              querybuilder.DB
 	successHandlers []func() error
 	prepareHandlers []func() error
 }
 
-func (t *CommonTask) SetDB(db DB) {
+func (t *CommonTask) SetDB(db querybuilder.DB) {
 	t.db = db
 }
 
-func (t *CommonTask) DB() DB {
+func (t *CommonTask) DB() querybuilder.DB {
 	return t.db
 }
 
@@ -56,7 +57,7 @@ func (t *CommonTask) EmitPrepare() error {
 }
 
 type InsertTask struct {
-	*Insert
+	*querybuilder.Insert
 	CommonTask
 }
 
@@ -72,7 +73,7 @@ func (t *InsertTask) Exec() (sql.Result, error) {
 	return r, t.EmitSuccess()
 }
 
-func NewInsertTask(q *Insert, db DB) *InsertTask {
+func NewInsertTask(q *querybuilder.Insert, db querybuilder.DB) *InsertTask {
 	t := &InsertTask{
 		Insert: q,
 	}
@@ -81,7 +82,7 @@ func NewInsertTask(q *Insert, db DB) *InsertTask {
 }
 
 type UpdateTask struct {
-	*Update
+	*querybuilder.Update
 	CommonTask
 }
 
@@ -97,7 +98,7 @@ func (t *UpdateTask) Exec() (sql.Result, error) {
 	return r, t.EmitSuccess()
 }
 
-func NewUpdateTask(q *Update, db DB) *UpdateTask {
+func NewUpdateTask(q *querybuilder.Update, db querybuilder.DB) *UpdateTask {
 	t := &UpdateTask{
 		Update: q,
 	}
@@ -106,7 +107,7 @@ func NewUpdateTask(q *Update, db DB) *UpdateTask {
 }
 
 type DeleteTask struct {
-	*Delete
+	*querybuilder.Delete
 	CommonTask
 }
 
@@ -122,7 +123,7 @@ func (t *DeleteTask) Exec() (sql.Result, error) {
 	return r, t.EmitSuccess()
 }
 
-func NewDeleteTask(q *Delete, db DB) *DeleteTask {
+func NewDeleteTask(q *querybuilder.Delete, db querybuilder.DB) *DeleteTask {
 	t := &DeleteTask{
 		Delete: q,
 	}
@@ -131,7 +132,7 @@ func NewDeleteTask(q *Delete, db DB) *DeleteTask {
 }
 
 type SelectTask struct {
-	*Select
+	*querybuilder.Select
 	CommonTask
 }
 
@@ -142,7 +143,7 @@ func (t *SelectTask) QueryRows() (*sql.Rows, error) {
 	return t.Select.Query().QueryRows(t.db)
 }
 
-func NewSelectTask(q *Select, db DB) *SelectTask {
+func NewSelectTask(q *querybuilder.Select, db querybuilder.DB) *SelectTask {
 	t := &SelectTask{
 		Select: q,
 	}

@@ -1,4 +1,4 @@
-package querybuilder
+package modelmapper
 
 //CommonQueryEvents common query events struct
 type CommonQueryEvents struct {
