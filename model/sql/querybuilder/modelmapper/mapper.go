@@ -13,21 +13,21 @@ type DBTable interface {
 	Driver() string
 }
 
-// Mapper database table mapper
-type Mapper struct {
+// ModelMapper database table mapper
+type ModelMapper struct {
 	DBTable
 }
 
 //QueryBuilder return querybuilder of  table
-func (t *Mapper) QueryBuilder() *querybuilder.Builder {
+func (m *ModelMapper) QueryBuilder() *querybuilder.Builder {
 	b := querybuilder.New()
-	b.Driver = t.DBTable.Driver()
+	b.Driver = m.DBTable.Driver()
 	return b
 }
 
 //FieldAlias return field name with table alias.
-func (t *Mapper) FieldAlias(field string) string {
-	a := t.Alias()
+func (m *ModelMapper) FieldAlias(field string) string {
+	a := m.Alias()
 	if a != "" {
 		field = a + "." + field
 	}
@@ -35,47 +35,63 @@ func (t *Mapper) FieldAlias(field string) string {
 }
 
 //NewSelect : create  select query for table
-func (t *Mapper) NewSelect() *querybuilder.Select {
-	Select := t.QueryBuilder().NewSelect()
-	alias := t.Alias()
+func (m *ModelMapper) NewSelect() *querybuilder.Select {
+	Select := m.QueryBuilder().NewSelect()
+	alias := m.Alias()
 	if alias != "" {
-		Select.From.AddAlias(alias, t.TableName())
+		Select.From.AddAlias(alias, m.TableName())
 	} else {
-		Select.From.Add(t.TableName())
+		Select.From.Add(m.TableName())
 	}
 	return Select
 }
 
+func (m *ModelMapper) Select() *SelectTask {
+	return NewSelectTask(m.NewSelect(), m)
+}
+
 //NewInsert : new insert query for table node
-func (t *Mapper) NewInsert() *querybuilder.Insert {
-	Insert := t.QueryBuilder().NewInsert(t.TableName())
+func (m *ModelMapper) NewInsert() *querybuilder.Insert {
+	Insert := m.QueryBuilder().NewInsert(m.TableName())
 	return Insert
 
 }
 
+func (m *ModelMapper) Insert() *InsertTask {
+	return NewInsertTask(m.NewInsert(), m)
+}
+
 //NewUpdate : new update query for table
-func (t *Mapper) NewUpdate() *querybuilder.Update {
-	Update := t.QueryBuilder().NewUpdate(t.TableName())
+func (m *ModelMapper) NewUpdate() *querybuilder.Update {
+	Update := m.QueryBuilder().NewUpdate(m.TableName())
 	return Update
 }
 
+func (m *ModelMapper) Update() *UpdateTask {
+	return NewUpdateTask(m.NewUpdate(), m)
+}
+
 //NewDelete : build delete query for table node
-func (t *Mapper) NewDelete() *querybuilder.Delete {
-	Delete := t.QueryBuilder().NewDelete(t.TableName())
+func (m *ModelMapper) NewDelete() *querybuilder.Delete {
+	Delete := m.QueryBuilder().NewDelete(m.TableName())
 	return Delete
 }
 
+func (m *ModelMapper) Delete() *DeleteTask {
+	return NewDeleteTask(m.NewDelete(), m)
+}
+
 //BuildCount : build count select query for table
-func (t *Mapper) BuildCount() *querybuilder.Select {
-	Select := t.NewSelect()
+func (m *ModelMapper) BuildCount() *querybuilder.Select {
+	Select := m.NewSelect()
 	Select.Select.Add("count(*)")
 	return Select
 }
 
-//Count : count  from table  by given select t.QueryBuilder().
-func (t *Mapper) Count(Select *querybuilder.Select) (int, error) {
+//Count : count  from table  by given select m.QueryBuilder().
+func (m *ModelMapper) Count(Select *querybuilder.Select) (int, error) {
 	var result int
-	row := Select.QueryRow(t)
+	row := Select.QueryRow(m)
 	err := row.Scan(&result)
 	if err != nil {
 		return 0, err
@@ -84,8 +100,8 @@ func (t *Mapper) Count(Select *querybuilder.Select) (int, error) {
 }
 
 // New create new query table with given database table
-func New(dbtable DBTable) *Mapper {
-	return &Mapper{
+func New(dbtable DBTable) *ModelMapper {
+	return &ModelMapper{
 		DBTable: dbtable,
 	}
 }
