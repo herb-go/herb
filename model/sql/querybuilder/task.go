@@ -7,11 +7,14 @@ type Task interface {
 	DB() DB
 	OnSuccess(func() error)
 	EmitSuccess() error
+	OnPrepare(func() error)
+	EmitPrepare() error
 }
 
 type CommonTask struct {
-	db       DB
-	handlers []func() error
+	db              DB
+	successHandlers []func() error
+	prepareHandlers []func() error
 }
 
 func (t *CommonTask) SetDB(db DB) {
@@ -23,13 +26,28 @@ func (t *CommonTask) DB() DB {
 }
 
 func (t *CommonTask) OnSuccess(f func() error) {
-	t.handlers = append(t.handlers, f)
+	t.successHandlers = append(t.successHandlers, f)
 }
 
 func (t *CommonTask) EmitSuccess() error {
 	var err error
-	for k := range t.handlers {
-		err = t.handlers[k]()
+	for k := range t.successHandlers {
+		err = t.successHandlers[k]()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *CommonTask) OnPrepare(f func() error) {
+	t.prepareHandlers = append(t.prepareHandlers, f)
+}
+
+func (t *CommonTask) EmitPrepare() error {
+	var err error
+	for k := range t.prepareHandlers {
+		err = t.prepareHandlers[k]()
 		if err != nil {
 			return err
 		}
@@ -43,6 +61,10 @@ type InsertTask struct {
 }
 
 func (t *InsertTask) Exec() (sql.Result, error) {
+	err := t.EmitPrepare()
+	if err != nil {
+		return nil, err
+	}
 	r, err := t.Insert.Query().Exec(t.db)
 	if err != nil {
 		return r, err
@@ -64,6 +86,10 @@ type UpdateTask struct {
 }
 
 func (t *UpdateTask) Exec() (sql.Result, error) {
+	err := t.EmitPrepare()
+	if err != nil {
+		return nil, err
+	}
 	r, err := t.Update.Query().Exec(t.db)
 	if err != nil {
 		return r, err
@@ -85,6 +111,10 @@ type DeleteTask struct {
 }
 
 func (t *DeleteTask) Exec() (sql.Result, error) {
+	err := t.EmitPrepare()
+	if err != nil {
+		return nil, err
+	}
 	r, err := t.Delete.Query().Exec(t.db)
 	if err != nil {
 		return r, err
