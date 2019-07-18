@@ -171,23 +171,29 @@ func (t *SelectTask) QueryRowToFields(fields *querybuilder.Fields) error {
 
 	return err
 }
-func (t *SelectTask) QueryRowsToResult(rs ...Result) error {
+func (t *SelectTask) FindAllTo(rs ...Result) error {
 	r := Results(rs)
 	rows, err := t.QueryRows()
 	if err != nil {
 		return r.OnFinish(err)
 	}
 	defer rows.Close()
-	err = t.Select.Result().
-		BindFields(r.Fields()).
-		ScanFrom(rows)
-	if err != nil {
-		return r.OnFinish(err)
+	for rows.Next() {
+		err = t.Select.Result().
+			BindFields(r.Fields()).
+			ScanFrom(rows)
+		if err != nil {
+			return r.OnFinish(err)
+		}
+		err = r.OnFinish(err)
+		if err != nil {
+			return err
+		}
 	}
-	return r.OnFinish(nil)
+	return nil
 }
 
-func (t *SelectTask) QueryRowToResult(rs ...Result) error {
+func (t *SelectTask) FindTo(rs ...Result) error {
 	r := Results(rs)
 	row := t.QueryRow()
 	var sr = t.Select.Result()
