@@ -16,12 +16,12 @@ type InsertClause struct {
 	Prefix    *PlainQuery
 	TableName string
 	Data      []QueryData
-	Select    *Select
+	Select    *SelectQuery
 }
 
 // WithSelect conect insert clause with select.
 // Insert calause  fields will be ignored after select setted.
-func (q *InsertClause) WithSelect(s *Select) *InsertClause {
+func (q *InsertClause) WithSelect(s *SelectQuery) *InsertClause {
 	q.Select = s
 	return q
 }
@@ -51,7 +51,7 @@ func (q *InsertClause) AddRaw(field string, raw string) *InsertClause {
 }
 
 // AddSelect add select to field
-func (q *InsertClause) AddSelect(field string, Select *Select) *InsertClause {
+func (q *InsertClause) AddSelect(field string, Select *SelectQuery) *InsertClause {
 	query := *Select.Query()
 	q.Data = append(q.Data, QueryData{
 		Field: field,
@@ -117,23 +117,23 @@ func (q *InsertClause) QueryArgs() []interface{} {
 	return result
 }
 
-// NewInsert create new insert query.
-func (b *Builder) NewInsert(tableName string) *Insert {
-	return &Insert{
+// NewInsertQuery create new insert query.
+func (b *Builder) NewInsertQuery(tableName string) *InsertQuery {
+	return &InsertQuery{
 		Builder: b,
 		Insert:  b.NewInsertClause(tableName),
 		Other:   b.New(""),
 	}
 }
 
-// Insert create new insert query.
-type Insert struct {
+// InsertQuery create new insert query.
+type InsertQuery struct {
 	Builder *Builder
 	Insert  *InsertClause
 	Other   *PlainQuery
 }
 
 // Query convert query to plain query.
-func (i *Insert) Query() *PlainQuery {
+func (i *InsertQuery) Query() *PlainQuery {
 	return i.Builder.Lines(i.Insert, i.Other)
 }

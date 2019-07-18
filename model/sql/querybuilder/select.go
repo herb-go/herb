@@ -49,7 +49,7 @@ func (q *SelectClause) AddRaw(fields ...interface{}) *SelectClause {
 }
 
 // AddSelect add select subquery to select clause
-func (q *SelectClause) AddSelect(Select *Select) *SelectClause {
+func (q *SelectClause) AddSelect(Select *SelectQuery) *SelectClause {
 	query := *Select.Query()
 	q.Fields = append(q.Fields, "("+query.QueryCommand()+")")
 	q.fieldargs = append(q.fieldargs, query.QueryArgs()...)
@@ -137,9 +137,9 @@ func (r *SelectResult) ScanFrom(s ResultScanner) error {
 	return s.Scan(r.Pointers()...)
 }
 
-// NewSelect create new select
-func (b *Builder) NewSelect() *Select {
-	return &Select{
+// NewSelectQuery create new select
+func (b *Builder) NewSelectQuery() *SelectQuery {
+	return &SelectQuery{
 		Builder: b,
 		Select:  b.NewSelectClause(),
 		From:    b.NewFromClause(),
@@ -153,8 +153,8 @@ func (b *Builder) NewSelect() *Select {
 	}
 }
 
-// Select select query struct.
-type Select struct {
+// SelectQuery select query struct.
+type SelectQuery struct {
 	Builder *Builder
 	Select  *SelectClause
 	From    *FromClause
@@ -168,34 +168,34 @@ type Select struct {
 }
 
 // Result return select result
-func (s *Select) Result() *SelectResult {
+func (s *SelectQuery) Result() *SelectResult {
 	return s.Select.Result()
 }
 
 // Query convert select query to plain query.
-func (s *Select) Query() *PlainQuery {
+func (s *SelectQuery) Query() *PlainQuery {
 	return s.Builder.Lines(s.Select, s.From, s.Join, s.Where, s.GroupBy, s.Having, s.OrderBy, s.Limit, s.Other)
 }
 
 // QueryCommand return query command
-func (s *Select) QueryCommand() string {
+func (s *SelectQuery) QueryCommand() string {
 	return s.Query().Command
 }
 
 // QueryArgs return query args
-func (s *Select) QueryArgs() []interface{} {
+func (s *SelectQuery) QueryArgs() []interface{} {
 	return s.Query().Args
 }
 
 //QueryRow query rowsfrom db with given query.
 //query will be convert by builder driver.
-func (s *Select) QueryRow(db DB) *sql.Row {
+func (s *SelectQuery) QueryRow(db DB) *sql.Row {
 	return s.Builder.QueryRow(db, s)
 
 }
 
 //QueryRows query rows from db with given query.
 //query will be convert by builder driver.
-func (s *Select) QueryRows(db DB) (*sql.Rows, error) {
+func (s *SelectQuery) QueryRows(db DB) (*sql.Rows, error) {
 	return s.Builder.QueryRows(db, s)
 }

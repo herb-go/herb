@@ -57,7 +57,7 @@ func (t *CommonTask) EmitPrepare() error {
 }
 
 type InsertTask struct {
-	*querybuilder.Insert
+	*querybuilder.InsertQuery
 	CommonTask
 }
 
@@ -66,23 +66,23 @@ func (t *InsertTask) Exec() (sql.Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	r, err := t.Insert.Query().Exec(t.db)
+	r, err := t.InsertQuery.Query().Exec(t.db)
 	if err != nil {
 		return r, err
 	}
 	return r, t.EmitSuccess()
 }
 
-func NewInsertTask(q *querybuilder.Insert, db querybuilder.DB) *InsertTask {
+func NewInsertTask(q *querybuilder.InsertQuery, db querybuilder.DB) *InsertTask {
 	t := &InsertTask{
-		Insert: q,
+		InsertQuery: q,
 	}
 	t.SetDB(db)
 	return t
 }
 
 type UpdateTask struct {
-	*querybuilder.Update
+	*querybuilder.UpdateQuery
 	CommonTask
 }
 
@@ -91,23 +91,23 @@ func (t *UpdateTask) Exec() (sql.Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	r, err := t.Update.Query().Exec(t.db)
+	r, err := t.UpdateQuery.Query().Exec(t.db)
 	if err != nil {
 		return r, err
 	}
 	return r, t.EmitSuccess()
 }
 
-func NewUpdateTask(q *querybuilder.Update, db querybuilder.DB) *UpdateTask {
+func NewUpdateTask(q *querybuilder.UpdateQuery, db querybuilder.DB) *UpdateTask {
 	t := &UpdateTask{
-		Update: q,
+		UpdateQuery: q,
 	}
 	t.SetDB(db)
 	return t
 }
 
 type DeleteTask struct {
-	*querybuilder.Delete
+	*querybuilder.DeleteQuery
 	CommonTask
 }
 
@@ -116,37 +116,106 @@ func (t *DeleteTask) Exec() (sql.Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	r, err := t.Delete.Query().Exec(t.db)
+	r, err := t.DeleteQuery.Query().Exec(t.db)
 	if err != nil {
 		return r, err
 	}
 	return r, t.EmitSuccess()
 }
 
-func NewDeleteTask(q *querybuilder.Delete, db querybuilder.DB) *DeleteTask {
+func NewDeleteTask(q *querybuilder.DeleteQuery, db querybuilder.DB) *DeleteTask {
 	t := &DeleteTask{
-		Delete: q,
+		DeleteQuery: q,
 	}
 	t.SetDB(db)
 	return t
 }
 
 type SelectTask struct {
-	*querybuilder.Select
+	*querybuilder.SelectQuery
 	CommonTask
 }
 
 func (t *SelectTask) QueryRow() *sql.Row {
-	return t.Select.Query().QueryRow(t.db)
+	return t.SelectQuery.Query().QueryRow(t.db)
 }
 func (t *SelectTask) QueryRows() (*sql.Rows, error) {
-	return t.Select.Query().QueryRows(t.db)
+	return t.SelectQuery.Query().QueryRows(t.db)
 }
 
-func NewSelectTask(q *querybuilder.Select, db querybuilder.DB) *SelectTask {
+func NewSelectTask(q *querybuilder.SelectQuery, db querybuilder.DB) *SelectTask {
 	t := &SelectTask{
-		Select: q,
+		SelectQuery: q,
 	}
 	t.SetDB(db)
 	return t
+}
+
+func (t *SelectTask) ByField(fieldName string, fieldValue interface{}) *SelectTask {
+	t.Where.Condition = t.Builder.Equal(fieldName, fieldValue)
+	return t
+}
+
+func (t *SelectTask) ByFields(fieldsmap map[string]interface{}) *SelectTask {
+	for k, v := range fieldsmap {
+		t.Where.Condition.And(t.Builder.Equal(k, v))
+	}
+	return t
+}
+
+func (t *SelectTask) QueryRowToFields(fields *querybuilder.Fields) error {
+	row := t.QueryRow()
+	err := t.Select.Result().
+		BindFields(fields).
+		ScanFrom(row)
+
+	return err
+}
+func (t *SelectTask) QueryRowsToResult(rs ...Result) error {
+	r := Results(rs)
+	rows, err := t.QueryRows()
+	if err != nil {
+		return r.OnFinish(err)
+	}
+	defer rows.Close()
+	err = t.Select.Result().
+		BindFields(r.Fields()).
+		ScanFrom(rows)
+	if err != nil {
+		return r.OnFinish(err)
+	}
+	return r.OnFinish(nil)
+}
+
+func (t *SelectTask) QueryRowToResult(rs ...Result) error {
+	r := Results(rs)
+	row := t.QueryRow()
+	var sr = t.Select.Result()
+	sr.BindFields(r.Fields())
+	err := sr.ScanFrom(row)
+	return r.OnFinish(err)
+}
+
+type Results []Result
+
+func (rs *Results) Append(r ...Result) {
+	*rs = append(*rs, r...)
+}
+func (rs *Results) Fields() *querybuilder.Fields {
+	fields := querybuilder.NewFields()
+	for _, v := range *rs {
+		*fields = append(*fields, *v.Fields()...)
+	}
+	return fields
+}
+func (rs *Results) OnFinish(err error) error {
+	for _, v := range *rs {
+		err = v.OnFinish(err)
+	}
+	return err
+}
+
+type Result interface {
+	Fields() *querybuilder.Fields
+	OnFinish(error) error
 }

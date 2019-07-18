@@ -22,7 +22,7 @@ type UpdateClause struct {
 }
 
 // AddSelect add subquery selecto with given field name to update clause
-func (q *UpdateClause) AddSelect(field string, Select *Select) *UpdateClause {
+func (q *UpdateClause) AddSelect(field string, Select *SelectQuery) *UpdateClause {
 	query := *Select.Query()
 	q.Data = append(q.Data, QueryData{
 		Field: field,
@@ -98,9 +98,9 @@ func (q *UpdateClause) QueryArgs() []interface{} {
 	return result
 }
 
-// NewUpdate create new update query with given table name.
-func (b *Builder) NewUpdate(tableName string) *Update {
-	return &Update{
+// NewUpdateQuery create new update query with given table name.
+func (b *Builder) NewUpdateQuery(tableName string) *UpdateQuery {
+	return &UpdateQuery{
 		Builder: b,
 		Update:  b.NewUpdateClause(tableName),
 		Where:   b.NewWhereClause(),
@@ -108,8 +108,8 @@ func (b *Builder) NewUpdate(tableName string) *Update {
 	}
 }
 
-// Update update query struct
-type Update struct {
+// UpdateQuery update query struct
+type UpdateQuery struct {
 	Builder *Builder
 	Update  *UpdateClause
 	Where   *WhereClause
@@ -117,16 +117,16 @@ type Update struct {
 }
 
 // Query convert update query to plain query.
-func (u *Update) Query() *PlainQuery {
+func (u *UpdateQuery) Query() *PlainQuery {
 	return u.Builder.Lines(u.Update, u.Where, u.Other)
 }
 
 // QueryCommand return query command
-func (u *Update) QueryCommand() string {
+func (u *UpdateQuery) QueryCommand() string {
 	return u.Query().Command
 }
 
 // QueryArgs return query args
-func (u *Update) QueryArgs() []interface{} {
+func (u *UpdateQuery) QueryArgs() []interface{} {
 	return u.Query().Args
 }

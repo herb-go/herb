@@ -4,7 +4,7 @@ import "testing"
 
 func TestDelete(t *testing.T) {
 	builder := New()
-	query := builder.NewDelete("testtable")
+	query := builder.NewDeleteQuery("testtable")
 	query.Other = builder.New("other")
 	query.Delete.Prefix = builder.New("prefix")
 	query.Where.Condition = builder.Equal("testfield", "t1")

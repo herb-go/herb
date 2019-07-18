@@ -34,9 +34,9 @@ func (m *ModelMapper) FieldAlias(field string) string {
 	return field
 }
 
-//NewSelect : create  select query for table
-func (m *ModelMapper) NewSelect() *querybuilder.Select {
-	Select := m.QueryBuilder().NewSelect()
+//NewSelectQuery : create  select query for table
+func (m *ModelMapper) NewSelectQuery() *querybuilder.SelectQuery {
+	Select := m.QueryBuilder().NewSelectQuery()
 	alias := m.Alias()
 	if alias != "" {
 		Select.From.AddAlias(alias, m.TableName())
@@ -47,49 +47,49 @@ func (m *ModelMapper) NewSelect() *querybuilder.Select {
 }
 
 func (m *ModelMapper) Select() *SelectTask {
-	return NewSelectTask(m.NewSelect(), m)
+	return NewSelectTask(m.NewSelectQuery(), m)
 }
 
-//NewInsert : new insert query for table node
-func (m *ModelMapper) NewInsert() *querybuilder.Insert {
-	Insert := m.QueryBuilder().NewInsert(m.TableName())
+//NewInsertQuery : new insert query for table node
+func (m *ModelMapper) NewInsertQuery() *querybuilder.InsertQuery {
+	Insert := m.QueryBuilder().NewInsertQuery(m.TableName())
 	return Insert
 
 }
 
 func (m *ModelMapper) Insert() *InsertTask {
-	return NewInsertTask(m.NewInsert(), m)
+	return NewInsertTask(m.NewInsertQuery(), m)
 }
 
-//NewUpdate : new update query for table
-func (m *ModelMapper) NewUpdate() *querybuilder.Update {
-	Update := m.QueryBuilder().NewUpdate(m.TableName())
+//NewUpdateQuery : new update query for table
+func (m *ModelMapper) NewUpdateQuery() *querybuilder.UpdateQuery {
+	Update := m.QueryBuilder().NewUpdateQuery(m.TableName())
 	return Update
 }
 
 func (m *ModelMapper) Update() *UpdateTask {
-	return NewUpdateTask(m.NewUpdate(), m)
+	return NewUpdateTask(m.NewUpdateQuery(), m)
 }
 
-//NewDelete : build delete query for table node
-func (m *ModelMapper) NewDelete() *querybuilder.Delete {
-	Delete := m.QueryBuilder().NewDelete(m.TableName())
+//NewDeleteQuery : build delete query for table node
+func (m *ModelMapper) NewDeleteQuery() *querybuilder.DeleteQuery {
+	Delete := m.QueryBuilder().NewDeleteQuery(m.TableName())
 	return Delete
 }
 
 func (m *ModelMapper) Delete() *DeleteTask {
-	return NewDeleteTask(m.NewDelete(), m)
+	return NewDeleteTask(m.NewDeleteQuery(), m)
 }
 
-//BuildCount : build count select query for table
-func (m *ModelMapper) BuildCount() *querybuilder.Select {
-	Select := m.NewSelect()
+//NewCountQuery : build count select query for table
+func (m *ModelMapper) NewCountQuery() *querybuilder.SelectQuery {
+	Select := m.NewSelectQuery()
 	Select.Select.Add("count(*)")
 	return Select
 }
 
 //Count : count  from table  by given select m.QueryBuilder().
-func (m *ModelMapper) Count(Select *querybuilder.Select) (int, error) {
+func (m *ModelMapper) Count(Select *querybuilder.SelectQuery) (int, error) {
 	var result int
 	row := Select.QueryRow(m)
 	err := row.Scan(&result)

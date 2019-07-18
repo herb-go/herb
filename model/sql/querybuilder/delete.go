@@ -29,9 +29,9 @@ func (q *DeleteClause) QueryArgs() []interface{} {
 	return q.Builder.LoadDriver().DeleteArgBuilder(q)
 }
 
-// NewDelete create new delete query with given table name.s
-func (b *Builder) NewDelete(TableName string) *Delete {
-	return &Delete{
+// NewDeleteQuery create new delete query with given table name.s
+func (b *Builder) NewDeleteQuery(TableName string) *DeleteQuery {
+	return &DeleteQuery{
 		Builder: b,
 		Delete:  b.NewDeleteClause(TableName),
 		Where:   b.NewWhereClause(),
@@ -39,8 +39,8 @@ func (b *Builder) NewDelete(TableName string) *Delete {
 	}
 }
 
-// Delete delete query
-type Delete struct {
+// DeleteQuery delete query
+type DeleteQuery struct {
 	// Builder query builder which create this query.
 	Builder *Builder
 	// Delete delete query
@@ -52,6 +52,6 @@ type Delete struct {
 }
 
 // Query return plain query
-func (d *Delete) Query() *PlainQuery {
+func (d *DeleteQuery) Query() *PlainQuery {
 	return d.Builder.Lines(d.Delete, d.Where, d.Other)
 }
