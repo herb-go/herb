@@ -50,6 +50,14 @@ func (m *ModelMapper) Select() *SelectTask {
 	return NewSelectTask(m.NewSelectQuery(), m)
 }
 
+func (m *ModelMapper) SelectCount() *SelectTask {
+	return NewSelectTask(m.NewCountQuery(), m)
+}
+
+func (m *ModelMapper) FindCount(t *SelectTask) (int, error) {
+	return m.Count(t.SelectQuery)
+}
+
 //NewInsertQuery : new insert query for table node
 func (m *ModelMapper) NewInsertQuery() *querybuilder.InsertQuery {
 	Insert := m.QueryBuilder().NewInsertQuery(m.TableName())
