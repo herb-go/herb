@@ -168,7 +168,6 @@ func (t *SelectTask) QueryRowToFields(fields *querybuilder.Fields) error {
 	err := t.Select.Result().
 		BindFields(fields).
 		ScanFrom(row)
-
 	return err
 }
 func (t *SelectTask) FindAllTo(rs ...Result) error {
