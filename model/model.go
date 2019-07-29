@@ -56,22 +56,7 @@ func (model *Model) SetModelID(id string) {
 	model.modelID = id
 }
 
-//SetMessages set translate messages to model.
-//Messages will be used to translate msg field in AddPlainError,AddError,AddErrorf ,AddErrorf and ValidateFieldf method.
-func (model *Model) SetMessages(m *Messages) {
-	model.messages = m
-}
-func (model *Model) getMessageText(msg string) string {
-	var msgtext string
-	if model.messages != nil {
-		msgtext = model.messages.GetMessage(msg)
-	} else {
-		msgtext = GetMessage(msg)
-	}
-	return msgtext
-}
-func (model *Model) getMessageTextf(field, msg string) string {
-	msg = model.getMessageText(msg)
+func (model *Model) getTextf(field, msg string) string {
 	return fmt.Sprintf(msg+"%[3]s", model.GetFieldLabel(field), field, "")
 }
 
@@ -94,9 +79,6 @@ func (model *Model) SetFieldLabels(labels map[string]string) {
 //GetFieldLabel get label by given label name.
 //Return field name itself if not found in field labels of model.
 func (model *Model) GetFieldLabel(field string) string {
-	if model.fieldLabels == nil {
-		return GetMessage(field)
-	}
 	label, ok := model.fieldLabels[field]
 	if ok == false {
 		return field
@@ -107,13 +89,13 @@ func (model *Model) GetFieldLabel(field string) string {
 //AddError add error by given field and plain msg.
 //Msg will be translated.
 func (model *Model) AddError(field string, msg string) {
-	model.AddPlainError(field, model.getMessageText(msg))
+	model.AddPlainError(field, msg)
 }
 
 //AddErrorf add error by given field and formatted msg.
 //Msg will be translated.
 func (model *Model) AddErrorf(field string, msg string) {
-	model.AddPlainError(field, model.getMessageTextf(field, msg))
+	model.AddPlainError(field, model.getTextf(field, msg))
 }
 
 //ValidateField validated field then add error with given field name and plain msg if not validated.
