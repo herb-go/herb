@@ -27,7 +27,7 @@ func (m *testModel) Validate() error {
 	return nil
 }
 
-var testLabels = Messages{
+var testLabels = map[string]string{
 	"Field1": "test field1",
 	"Field2": "default field2",
 }

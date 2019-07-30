@@ -11,6 +11,24 @@ var ErrNoValidateMethod = errors.New("error no validate method for model")
 //ErrModelNotInited error raised when model id is empty.
 var ErrModelNotInited = errors.New("model id is empty.You must use inited model . ")
 
+//LabelsCollection form labels interface
+type LabelsCollection interface {
+	Get(string) string
+}
+
+//MapLabels kabels collection in map form
+type MapLabels map[string]string
+
+//Get get field label by field name
+func (l MapLabels) Get(field string) string {
+	label, ok := l[field]
+	if ok == false {
+		return field
+	}
+	return label
+
+}
+
 //FieldError field error info struct
 type FieldError struct {
 	//Field field name.
@@ -30,10 +48,9 @@ type ValidatedResult struct {
 
 //Model model struct.
 type Model struct {
-	modelID     string
-	errors      []*FieldError
-	messages    MessagesCollection
-	fieldLabels map[string]string
+	modelID string
+	errors  []*FieldError
+	labels  LabelsCollection
 }
 
 //MustValidate return model validate result.
@@ -73,17 +90,18 @@ func (model *Model) AddPlainError(field string, msg string) {
 
 //SetFieldLabels set field labels to model
 func (model *Model) SetFieldLabels(labels map[string]string) {
-	model.fieldLabels = labels
+	model.SetLabelsCollection(MapLabels(labels))
+}
+
+//SetLabelsCollection set field labels collection to model
+func (model *Model) SetLabelsCollection(labels LabelsCollection) {
+	model.labels = labels
 }
 
 //GetFieldLabel get label by given label name.
 //Return field name itself if not found in field labels of model.
 func (model *Model) GetFieldLabel(field string) string {
-	label, ok := model.fieldLabels[field]
-	if ok == false {
-		return field
-	}
-	return label
+	return model.labels.Get(field)
 }
 
 //AddError add error by given field and plain msg.
