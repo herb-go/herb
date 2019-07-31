@@ -95,11 +95,11 @@ func (model *Model) AddPlainError(field string, msg string) {
 
 //SetFieldLabels set field labels to model
 func (model *Model) SetFieldLabels(labels map[string]string) {
-	model.SetLabelsCollection(MapLabels(labels))
+	model.SetFieldLabelsCollection(MapLabels(labels))
 }
 
-//SetLabelsCollection set field labels collection to model
-func (model *Model) SetLabelsCollection(labels LabelsCollection) {
+//SetFieldLabelsCollection set field labels collection to model
+func (model *Model) SetFieldLabelsCollection(labels LabelsCollection) {
 	model.labels = labels
 }
 
