@@ -8,6 +8,7 @@ type testModel struct {
 	Field1 string
 	Field2 string
 	Field3 string
+	Field4 string
 	Model
 }
 type testNoValidateModel struct {
@@ -19,10 +20,17 @@ func newTestModel() *testModel {
 	m.SetFieldLabels(testLabels)
 	return m
 }
+
+type str string
+
+func (s str) String() string {
+	return string(s)
+}
 func (m *testModel) Validate() error {
 	m.ValidateFieldf(m.Field1 != "", "Field1", "%[1]s required.")
 	m.ValidateField(m.Field2 != "", "Field2", "Field2 required.")
 	m.ValidateFieldf(m.Field3 != "", "Field3", "Field3 required")
+	m.ValidateFieldfString(m.Field4 != "", "Field4", str("%[1]s required."))
 
 	return nil
 }
@@ -30,6 +38,7 @@ func (m *testModel) Validate() error {
 var testLabels = map[string]string{
 	"Field1": "test field1",
 	"Field2": "default field2",
+	"Field4": "test field4",
 }
 
 func TestModel(t *testing.T) {
@@ -43,7 +52,7 @@ func TestModel(t *testing.T) {
 		t.Error(m.HasError())
 	}
 	modelerrors := m.Errors()
-	if len(modelerrors) != 3 {
+	if len(modelerrors) != 4 {
 		t.Error(modelerrors)
 	}
 	if modelerrors[0].Field != "Field1" {
@@ -73,10 +82,20 @@ func TestModel(t *testing.T) {
 	if modelerrors[2].Msg != "Field3 required" {
 		t.Error(modelerrors[2].Msg)
 	}
+	if modelerrors[3].Field != "Field4" {
+		t.Error(modelerrors[3].Field)
+	}
+	if modelerrors[3].Label != "test field4" {
+		t.Error(modelerrors[3].Label)
+	}
+	if modelerrors[3].Msg != "test field4 required." {
+		t.Error(modelerrors[3].Msg)
+	}
 	m = newTestModel()
 	m.Field1 = "value1"
 	m.Field2 = "value2"
 	m.Field3 = "value3"
+	m.Field4 = "value4"
 	MustValidate(m)
 	if m.HasError() {
 		t.Error(m.HasError())

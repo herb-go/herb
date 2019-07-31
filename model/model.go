@@ -11,6 +11,11 @@ var ErrNoValidateMethod = errors.New("error no validate method for model")
 //ErrModelNotInited error raised when model id is empty.
 var ErrModelNotInited = errors.New("model id is empty.You must use inited model . ")
 
+//String string interface
+type String interface {
+	String() string
+}
+
 //LabelsCollection form labels interface
 type LabelsCollection interface {
 	Get(string) string
@@ -131,6 +136,17 @@ func (model *Model) ValidateField(validated bool, field string, msg string) *Val
 func (model *Model) ValidateFieldf(validated bool, field string, msg string) *ValidatedResult {
 	if !validated {
 		model.AddErrorf(field, msg)
+	}
+	return &ValidatedResult{
+		Validated: validated,
+		Model:     model,
+	}
+}
+
+//ValidateFieldfString validated field then add error with given field name and  string interfcae msg if not validated.
+func (model *Model) ValidateFieldfString(validated bool, field string, msg String) *ValidatedResult {
+	if !validated {
+		model.AddErrorf(field, msg.String())
 	}
 	return &ValidatedResult{
 		Validated: validated,

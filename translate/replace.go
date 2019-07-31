@@ -5,7 +5,7 @@ import (
 )
 
 //Replace replace string with given replace mapper.
-//Words begin with { and end with } will be replace with mappedvalue
+//Words begin with {{ and end with }} will be replace with mappedvalue
 //Use "\{" , "\}" , "\\" to keep "{" , "}"  "\" char.
 func Replace(str string, m map[string]string) string {
 	values := make([]string, 2*len(m)+6)
@@ -17,7 +17,7 @@ func Replace(str string, m map[string]string) string {
 	values[5] = "}"
 	var i = 6
 	for k := range m {
-		values[i] = "{" + k + "}"
+		values[i] = "{{" + k + "}}"
 		values[i+1] = m[k]
 		i += 2
 	}
