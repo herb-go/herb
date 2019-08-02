@@ -7,7 +7,7 @@ import (
 	"path"
 
 	"github.com/CloudyKit/jet"
-	"github.com/herb-go/herb/render"
+	"github.com/herb-go/herb/ui/render"
 )
 
 //View jet template view

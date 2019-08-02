@@ -1,4 +1,4 @@
-package translate
+package ui
 
 import (
 	"strings"

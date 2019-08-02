@@ -1,4 +1,4 @@
-package translate
+package ui
 
 //Translations messages collection grouped by lang and module.
 type Translations map[string]map[string]*Messages

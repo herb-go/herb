@@ -7,7 +7,7 @@ import (
 
 	"bytes"
 
-	"github.com/herb-go/herb/render"
+	"github.com/herb-go/herb/ui/render"
 )
 
 func unescaped(x string) interface{} { return template.HTML(x) }

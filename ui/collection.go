@@ -1,4 +1,4 @@
-package translate
+package ui
 
 //Collection struct which hold avaliable message map and translated messages.
 type Collection struct {

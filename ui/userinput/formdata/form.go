@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/herb-go/herb/model"
+	"github.com/herb-go/herb/ui/userinput"
 )
 
 //MsgBadRequest field error msg used in unmarshaler request form fail.

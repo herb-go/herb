@@ -1,4 +1,4 @@
-package translate
+package ui
 
 //TranslationLanguage translateable interface
 type TranslationLanguage interface {

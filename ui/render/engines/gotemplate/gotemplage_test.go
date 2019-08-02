@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/herb-go/herb/render"
+	"github.com/herb-go/herb/ui/render"
 )
 
 func TestTemplate(t *testing.T) {

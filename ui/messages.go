@@ -1,4 +1,4 @@
-package translate
+package ui
 
 //Messages translate messages map.
 type Messages map[string]string

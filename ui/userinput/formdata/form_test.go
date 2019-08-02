@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/herb-go/herb/model"
+	model "github.com/herb-go/herb/ui/userinput"
 )
 
 type testForm struct {

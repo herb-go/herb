@@ -1,4 +1,4 @@
-package translate
+package ui
 
 //Translated translated message
 type Translated struct {
