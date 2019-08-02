@@ -2,7 +2,7 @@ package translate
 
 //Translated translated message
 type Translated struct {
-	translateable Translateable
+	translateable Translatable
 	lang          string
 }
 
@@ -12,7 +12,7 @@ func (t *Translated) String() string {
 }
 
 // NewTranslated create new translated message
-func NewTranslated(translateable Translateable, lang string) *Translated {
+func NewTranslated(translateable Translatable, lang string) *Translated {
 	return &Translated{
 		translateable: translateable,
 		lang:          lang,

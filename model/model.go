@@ -193,4 +193,8 @@ type Validator interface {
 	ModelID() string
 	//SetModelID set model id.
 	SetModelID(string)
+	//SetFieldLabelsCollection set field labels collection to model
+	SetFieldLabelsCollection(labels LabelsCollection)
+	//GetFieldLabel get label by given label name.
+	GetFieldLabel(field string) string
 }

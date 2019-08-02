@@ -1,7 +1,7 @@
 package translate
 
-//Translateable interface which can be translated
-type Translateable interface {
+//Translatable interface which can be translated
+type Translatable interface {
 	Translate(lang string) string
 }
 
