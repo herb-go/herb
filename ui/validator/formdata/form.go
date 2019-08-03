@@ -79,7 +79,7 @@ func MustRenderErrorsJSON(w http.ResponseWriter, model RequestValidator) {
 
 //Form form struct
 type Form struct {
-	validator.Model
+	validator.Validator
 	badRequest  bool
 	httprequest *http.Request
 }
@@ -119,7 +119,7 @@ func (model *Form) HasError() bool {
 
 //RequestValidator interface of request form that can be validated.
 type RequestValidator interface {
-	validator.Validator
+	validator.Fields
 	//InitWithRequest init model with given request.
 	//Return any error if rasied.
 	InitWithRequest(*http.Request) error

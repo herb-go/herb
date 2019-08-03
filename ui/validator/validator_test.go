@@ -9,10 +9,10 @@ type testModel struct {
 	Field2 string
 	Field3 string
 	Field4 string
-	Model
+	Validator
 }
 type testNoValidateModel struct {
-	Model
+	Validator
 }
 
 func newTestModel() *testModel {
@@ -43,9 +43,9 @@ var testLabels = map[string]string{
 
 func TestModel(t *testing.T) {
 	m := newTestModel()
-	m.SetModelID("test")
-	if m.ModelID() != "test" {
-		t.Fatal(m.ModelID())
+	m.SetValidatorID("test")
+	if m.ValidatorID() != "test" {
+		t.Fatal(m.ValidatorID())
 	}
 	MustValidate(m)
 	if !m.HasError() {
