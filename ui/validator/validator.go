@@ -1,4 +1,4 @@
-package model
+package validator
 
 import (
 	"errors"
@@ -106,6 +106,9 @@ func (model *Model) SetFieldLabelsCollection(labels LabelsCollection) {
 //GetFieldLabel get label by given label name.
 //Return field name itself if not found in field labels of model.
 func (model *Model) GetFieldLabel(field string) string {
+	if model.labels == nil {
+		return field
+	}
 	return model.labels.Get(field)
 }
 

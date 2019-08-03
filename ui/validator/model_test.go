@@ -1,4 +1,4 @@
-package model
+package validator
 
 import (
 	"testing"

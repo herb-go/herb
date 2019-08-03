@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/herb-go/herb/ui/userinput"
+	"github.com/herb-go/herb/ui/validator"
 )
 
 //MsgBadRequest field error msg used in unmarshaler request form fail.
@@ -33,7 +33,7 @@ func MustValidateRequestBody(r *http.Request, Unmarshaler func([]byte, interface
 	if err != nil {
 		panic(err)
 	}
-	return model.MustValidate(m)
+	return validator.MustValidate(m)
 }
 
 //MustValidateJSONRequest unmarshal form with request body with json.unmarshal, then init form with request and  validate it.
@@ -79,7 +79,7 @@ func MustRenderErrorsJSON(w http.ResponseWriter, model RequestValidator) {
 
 //Form form struct
 type Form struct {
-	model.Model
+	validator.Model
 	badRequest  bool
 	httprequest *http.Request
 }
@@ -119,7 +119,7 @@ func (model *Form) HasError() bool {
 
 //RequestValidator interface of request form that can be validated.
 type RequestValidator interface {
-	model.Validator
+	validator.Validator
 	//InitWithRequest init model with given request.
 	//Return any error if rasied.
 	InitWithRequest(*http.Request) error
