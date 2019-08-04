@@ -88,7 +88,11 @@ func (v *Validator) GetFieldLabel(field string) string {
 	if v.labels == nil {
 		return field
 	}
-	return v.labels.GetLabel(field)
+	l := v.labels.GetLabel(field)
+	if l == "" {
+		return field
+	}
+	return l
 }
 
 //AddError add error by given field and plain msg.

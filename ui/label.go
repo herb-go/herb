@@ -17,8 +17,16 @@ type MapLabels map[string]string
 func (l MapLabels) GetLabel(field string) string {
 	label, ok := l[field]
 	if ok == false {
-		return field
+		return ""
 	}
 	return label
 
+}
+
+// StringLabel string label
+type StringLabel string
+
+//Label label string
+func (l StringLabel) Label() string {
+	return string(l)
 }
