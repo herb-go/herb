@@ -3,6 +3,8 @@ package validator
 import (
 	"errors"
 	"fmt"
+
+	"github.com/herb-go/herb/ui"
 )
 
 //ErrNoValidateMethod error rasied when model validate method not overrided.
@@ -10,29 +12,6 @@ var ErrNoValidateMethod = errors.New("error no validate method for model")
 
 //ErrValidatorNotInited error raised when model id is empty.
 var ErrValidatorNotInited = errors.New("model id is empty.You must use inited model . ")
-
-//String string interface
-type String interface {
-	String() string
-}
-
-//LabelsCollection form labels interface
-type LabelsCollection interface {
-	Get(string) string
-}
-
-//MapLabels kabels collection in map form
-type MapLabels map[string]string
-
-//Get get field label by field name
-func (l MapLabels) Get(field string) string {
-	label, ok := l[field]
-	if ok == false {
-		return field
-	}
-	return label
-
-}
 
 //FieldError field error info struct
 type FieldError struct {
@@ -55,7 +34,7 @@ type ValidatedResult struct {
 type Validator struct {
 	modelID string
 	errors  []*FieldError
-	labels  LabelsCollection
+	labels  ui.Labels
 }
 
 //MustValidate return model validate result.
@@ -95,11 +74,11 @@ func (v *Validator) AddPlainError(field string, msg string) {
 
 //SetFieldLabels set field labels to model
 func (v *Validator) SetFieldLabels(labels map[string]string) {
-	v.SetFieldLabelsCollection(MapLabels(labels))
+	v.SetFieldLabelsCollection(ui.MapLabels(labels))
 }
 
 //SetFieldLabelsCollection set field labels collection to model
-func (v *Validator) SetFieldLabelsCollection(labels LabelsCollection) {
+func (v *Validator) SetFieldLabelsCollection(labels ui.Labels) {
 	v.labels = labels
 }
 
@@ -109,7 +88,7 @@ func (v *Validator) GetFieldLabel(field string) string {
 	if v.labels == nil {
 		return field
 	}
-	return v.labels.Get(field)
+	return v.labels.GetLabel(field)
 }
 
 //AddError add error by given field and plain msg.
@@ -147,9 +126,9 @@ func (v *Validator) ValidateFieldf(validated bool, field string, msg string) *Va
 }
 
 //ValidateFieldfString validated field then add error with given field name and  string interfcae msg if not validated.
-func (v *Validator) ValidateFieldfString(validated bool, field string, msg String) *ValidatedResult {
+func (v *Validator) ValidateFieldfString(validated bool, field string, msg ui.Label) *ValidatedResult {
 	if !validated {
-		v.AddErrorf(field, msg.String())
+		v.AddErrorf(field, msg.Label())
 	}
 	return &ValidatedResult{
 		Validated: validated,
@@ -197,7 +176,7 @@ type Fields interface {
 	//SetValidatorID set model id.
 	SetValidatorID(string)
 	//SetFieldLabelsCollection set field labels collection to model
-	SetFieldLabelsCollection(labels LabelsCollection)
+	SetFieldLabelsCollection(labels ui.Labels)
 	//GetFieldLabel get label by given label name.
 	GetFieldLabel(field string) string
 }

@@ -6,8 +6,8 @@ type Translated struct {
 	lang          string
 }
 
-//String return translated string
-func (t *Translated) String() string {
+//Label return translated string
+func (t *Translated) Label() string {
 	return t.translateable.Translate(t.lang)
 }
 

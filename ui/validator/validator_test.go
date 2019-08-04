@@ -23,7 +23,7 @@ func newTestModel() *testModel {
 
 type str string
 
-func (s str) String() string {
+func (s str) Label() string {
 	return string(s)
 }
 func (m *testModel) Validate() error {

@@ -14,8 +14,8 @@ func NewCollection(messages *Messages, messagesmap map[string]string) *Collectio
 	}
 }
 
-//Get get translated field label .
-func (m *Collection) Get(field string) string {
+//GetLabel get translated field label .
+func (m *Collection) GetLabel(field string) string {
 	label := m.messagesmap[field]
 	if label == "" {
 		return field

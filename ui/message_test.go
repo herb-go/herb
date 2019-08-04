@@ -22,7 +22,7 @@ func TestMessage(t *testing.T) {
 	if result != "test" {
 		t.Fatal(result)
 	}
-	result = message.Translated("").String()
+	result = message.Translated("").Label()
 	if result != "translated test" {
 		t.Fatal(result)
 	}
@@ -48,7 +48,7 @@ func TestTemplateMessage(t *testing.T) {
 	if result != "testtemplate" {
 		t.Fatal(result)
 	}
-	result = message.Translated("").String()
+	result = message.Translated("").Label()
 	if result != "translated testtemplate" {
 		t.Fatal(result)
 	}

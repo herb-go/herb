@@ -114,7 +114,7 @@ func (model *Form) HTTPRequest() *http.Request {
 //HasError return if model has any error.
 //Return true if form has a bad request error.
 func (model *Form) HasError() bool {
-	return model.badRequest || model.Model.HasError()
+	return model.badRequest || model.Validator.HasError()
 }
 
 //RequestValidator interface of request form that can be validated.
