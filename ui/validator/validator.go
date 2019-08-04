@@ -32,9 +32,8 @@ type ValidatedResult struct {
 
 //Validator model struct.
 type Validator struct {
-	modelID string
-	errors  []*FieldError
-	labels  ui.Labels
+	errors []*FieldError
+	labels ui.Labels
 }
 
 //MustValidate return model validate result.
@@ -49,12 +48,7 @@ func MustValidate(m Fields) bool {
 
 //ValidatorID get model id
 func (v *Validator) ValidatorID() string {
-	return v.modelID
-}
-
-//SetValidatorID set id to model.
-func (v *Validator) SetValidatorID(id string) {
-	v.modelID = id
+	return ""
 }
 
 func (v *Validator) getTextf(field, msg string) string {
@@ -129,8 +123,8 @@ func (v *Validator) ValidateFieldf(validated bool, field string, msg string) *Va
 	}
 }
 
-//ValidateFieldfString validated field then add error with given field name and  string interfcae msg if not validated.
-func (v *Validator) ValidateFieldfString(validated bool, field string, msg ui.Label) *ValidatedResult {
+//ValidateFieldfLabel validated field then add error with given field name and  string interfcae msg if not validated.
+func (v *Validator) ValidateFieldfLabel(validated bool, field string, msg ui.Label) *ValidatedResult {
 	if !validated {
 		v.AddErrorf(field, msg.Label())
 	}
@@ -177,8 +171,6 @@ type Fields interface {
 	Validate() error
 	//ValidatorID return model id.
 	ValidatorID() string
-	//SetValidatorID set model id.
-	SetValidatorID(string)
 	//SetFieldLabelsCollection set field labels collection to model
 	SetFieldLabelsCollection(labels ui.Labels)
 	//GetFieldLabel get label by given label name.

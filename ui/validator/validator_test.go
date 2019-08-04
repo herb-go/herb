@@ -30,7 +30,7 @@ func (m *testModel) Validate() error {
 	m.ValidateFieldf(m.Field1 != "", "Field1", "%[1]s required.")
 	m.ValidateField(m.Field2 != "", "Field2", "Field2 required.")
 	m.ValidateFieldf(m.Field3 != "", "Field3", "Field3 required")
-	m.ValidateFieldfString(m.Field4 != "", "Field4", str("%[1]s required."))
+	m.ValidateFieldfLabel(m.Field4 != "", "Field4", str("%[1]s required."))
 
 	return nil
 }
@@ -43,8 +43,7 @@ var testLabels = map[string]string{
 
 func TestModel(t *testing.T) {
 	m := newTestModel()
-	m.SetValidatorID("test")
-	if m.ValidatorID() != "test" {
+	if m.ValidatorID() != "" {
 		t.Fatal(m.ValidatorID())
 	}
 	MustValidate(m)
