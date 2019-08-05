@@ -26,8 +26,8 @@
 
     //表单验证函数
     func (f *ExampleForm) Validate() error {
-        f.ValidateFieldf(f.Field1 != "", "Field1", "%[1]s必填") 
-        f.ValidateFieldf(f.Field2 != nil, "Field2", "%[1]s必填") 
+        f.ValidateFieldf(f.Field1 != "", "Field1", "{{label}}必填") 
+        f.ValidateFieldf(f.Field2 != nil, "Field2", "{{label}}必填") 
         if !f.HasError() {
             //此处添加需要没有其他错误才执行的代码
         }

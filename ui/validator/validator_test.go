@@ -2,6 +2,8 @@ package validator
 
 import (
 	"testing"
+
+	"github.com/herb-go/herb/ui"
 )
 
 type testModel struct {
@@ -17,7 +19,7 @@ type testNoValidateModel struct {
 
 func newTestModel() *testModel {
 	m := &testModel{}
-	m.SetFieldLabels(testLabels)
+	m.SetComponentLabels(ui.MapLabels(testLabels))
 	return m
 }
 
@@ -27,10 +29,10 @@ func (s str) Label() string {
 	return string(s)
 }
 func (m *testModel) Validate() error {
-	m.ValidateFieldf(m.Field1 != "", "Field1", "%[1]s required.")
+	m.ValidateFieldf(m.Field1 != "", "Field1", "{{label}} required.")
 	m.ValidateField(m.Field2 != "", "Field2", "Field2 required.")
 	m.ValidateFieldf(m.Field3 != "", "Field3", "Field3 required")
-	m.ValidateFieldfLabel(m.Field4 != "", "Field4", str("%[1]s required."))
+	m.ValidateFieldLabelf(m.Field4 != "", "Field4", str("{{label}} required."))
 
 	return nil
 }
@@ -43,8 +45,8 @@ var testLabels = map[string]string{
 
 func TestModel(t *testing.T) {
 	m := newTestModel()
-	if m.ValidatorID() != "" {
-		t.Fatal(m.ValidatorID())
+	if m.ComponentID() != "" {
+		t.Fatal(m.ComponentID())
 	}
 	MustValidate(m)
 	if !m.HasError() {

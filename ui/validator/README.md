@@ -48,7 +48,7 @@
     form.ValidateField(form.field1==1,"field1","field1 must be 1")
     //验证字段。第一个参数为false的话，会为model添加名称为第二参数，值为第三参数的错误
     //传入的字符串有两个特殊的占位符
-    //%[1]s代表原始的Field名
+    //{{label}}代表原始的Field名
     //%[2]s代表通过SetFieldLabels设置的字段名
     form.ValidateFieldf(form.field1==1,"field1","%[2]s must be 1")
 
@@ -58,9 +58,9 @@
     form.AddError("field", "error msg")
     //添加转换字段信息和错误信息
     //传入的字符串有两个特殊的占位符
-    //%[1]s代表原始的Field名
+    //{{label}}代表原始的Field名
     //%[2]s代表通过SetFieldLabels设置的字段名
-    form.AddErrorf("field", " %[1]s error msg")
+    form.AddErrorf("field", " {{label}} error msg")
 
     //判断model对象是否有错误
     TrueOrFalse:=form.HasError()
