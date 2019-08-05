@@ -23,17 +23,11 @@ func newTestModel() *testModel {
 	return m
 }
 
-type str string
-
-func (s str) Label() string {
-	return string(s)
-}
 func (m *testModel) Validate() error {
 	m.ValidateFieldf(m.Field1 != "", "Field1", "{{label}} required.")
 	m.ValidateField(m.Field2 != "", "Field2", "Field2 required.")
 	m.ValidateFieldf(m.Field3 != "", "Field3", "Field3 required")
-	m.ValidateFieldLabelf(m.Field4 != "", "Field4", str("{{label}} required."))
-
+	m.ValidateFieldMessagef(m.Field4 != "", "Field4", ui.NewMessage("zh-cn", "{{label}} required."))
 	return nil
 }
 
@@ -44,6 +38,10 @@ var testLabels = map[string]string{
 }
 
 func TestModel(t *testing.T) {
+	ui.Lang = "zh-cn"
+	defer func() {
+		ui.Lang = ""
+	}()
 	m := newTestModel()
 	if m.ComponentID() != "" {
 		t.Fatal(m.ComponentID())

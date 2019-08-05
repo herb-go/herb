@@ -103,12 +103,11 @@ func (v *Validator) ValidateFieldf(validated bool, field string, msg string) {
 	}
 }
 
-//ValidateFieldLabelf validated field then add error with given field name and  string interfcae msg if not validated.
-func (v *Validator) ValidateFieldLabelf(validated bool, field string, msg ui.Label) {
+//ValidateFieldMessagef validated field then add error with given field name and  string interfcae msg if not validated.
+func (v *Validator) ValidateFieldMessagef(validated bool, field string, msg ui.Translatable) {
 	if !validated {
-		v.AddErrorf(field, msg.Label())
+		v.AddErrorf(field, msg.Translate(v.Lang()))
 	}
-
 }
 
 //Errors return error list of model
