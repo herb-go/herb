@@ -34,9 +34,9 @@
     //创建新Form对象
     func New() *Form{
         form:=&Form{}
-        form.SetFieldLabels(FormFieldLabels)
+        form.SetComponentI(ui.MapLabels(FormFieldLabels))
         //设置表单ID,便于在需要的时候快速处理和创建表单
-        form.SetModelID(FormID)
+        form.SetComponentID(FormID)
     }
 
 使用 Model 对象
@@ -48,9 +48,9 @@
     form.ValidateField(form.field1==1,"field1","field1 must be 1")
     //验证字段。第一个参数为false的话，会为model添加名称为第二参数，值为第三参数的错误
     //传入的字符串有两个特殊的占位符
-    //{{label}}代表原始的Field名
-    //%[2]s代表通过SetFieldLabels设置的字段名
-    form.ValidateFieldf(form.field1==1,"field1","%[2]s must be 1")
+    //{{field}}代表原始的Field名
+    //{{label}}代表通过SetFieldLabels设置的字段名
+    form.ValidateFieldf(form.field1==1,"field1","{{label}} must be 1")
 
     //添加不转换的错误信息
     form.AddPlainError("field", "error msg")
@@ -59,7 +59,7 @@
     //添加转换字段信息和错误信息
     //传入的字符串有两个特殊的占位符
     //{{label}}代表原始的Field名
-    //%[2]s代表通过SetFieldLabels设置的字段名
+    //{{field}}代表通过SetFieldLabels设置的字段名
     form.AddErrorf("field", " {{label}} error msg")
 
     //判断model对象是否有错误
