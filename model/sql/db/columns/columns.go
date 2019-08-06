@@ -10,8 +10,6 @@ var drivers = map[string]func() Loader{}
 
 //Column sql column info
 type Column struct {
-	//Raw raw column name
-	Raw string
 	//Field column name
 	Field string
 	//ColumnType golang type mapped to column data
@@ -29,7 +27,7 @@ type Loader interface {
 	// Columns return loaded columns
 	Columns() ([]*Column, error)
 	// Load load columns with given database and table name
-	Load(conn db.Database, table string, fieldPrefix string) error
+	Load(conn db.Database, table string) error
 }
 
 //Register register columns loader with given name

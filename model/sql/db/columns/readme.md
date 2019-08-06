@@ -6,7 +6,6 @@
 Column是数据库的每一列的信息
 
     type Column struct {
-        Raw string
         Field      string
         ColumnType string
         AutoValue  bool
@@ -14,7 +13,6 @@ Column是数据库的每一列的信息
         NotNull    bool
     }
 
-* Raw 原始列名
 * Field 列名
 * ColumnType 列对应的变量类型
 * AutoValue 列是否是自动赋值的
