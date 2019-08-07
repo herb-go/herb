@@ -116,10 +116,6 @@ func (c *AssetsStoreConfig) Create() (Driver, error) {
 		}
 		driver.Location = path.Join(root, c.Root, c.Location)
 	}
-	_, err := os.Stat(driver.Location)
-	if err != nil {
-		return nil, err
-	}
 	return driver, nil
 }
 
