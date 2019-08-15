@@ -2,6 +2,7 @@ package querybuilder
 
 //JoinData join clause struct
 type JoinData struct {
+	Builder *Builder
 	// Type join type
 	Type string
 	// TableJoin table struct.
@@ -22,6 +23,12 @@ func (d *JoinData) Alias(alias string, tableName string) *JoinData {
 // On add On condition
 func (d *JoinData) On(condition *PlainQuery) *JoinData {
 	d.Condition = condition
+	return d
+}
+
+//OnEqual On add On condition which given fieds equal
+func (d *JoinData) OnEqual(field1 string, field2 string) *JoinData {
+	d.Condition = d.Builder.New(field1 + "=" + field2)
 	return d
 }
 
@@ -63,6 +70,7 @@ func (q *JoinClause) join(jointype string) *JoinData {
 	data := &JoinData{
 		Type:      jointype,
 		Table:     [2]string{},
+		Builder:   q.Builder,
 		Condition: nil,
 	}
 	q.Data = append(q.Data, data)
