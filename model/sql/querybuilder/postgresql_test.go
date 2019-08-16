@@ -2,6 +2,7 @@ package querybuilder_test
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/herb-go/herb/model/sql/db"
@@ -48,7 +49,13 @@ func TestPostgresqlIsDuplicate(t *testing.T) {
 	if !builder.IsDuplicate(err) {
 		t.Fatal(err)
 	}
-
+	if builder.IsDuplicate(nil) {
+		t.Fatal(nil)
+	}
+	err = errors.New("error")
+	if builder.IsDuplicate(err) {
+		t.Fatal(err)
+	}
 }
 
 func TestPostgresql(t *testing.T) {

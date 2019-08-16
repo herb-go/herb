@@ -2,6 +2,7 @@ package querybuilder_test
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	_ "github.com/denisenkom/go-mssqldb"
@@ -49,7 +50,13 @@ func TestMssqlIsDuplicate(t *testing.T) {
 	if !builder.IsDuplicate(err) {
 		t.Fatal(err)
 	}
-
+	if builder.IsDuplicate(nil) {
+		t.Fatal(nil)
+	}
+	err = errors.New("error")
+	if builder.IsDuplicate(err) {
+		t.Fatal(err)
+	}
 }
 func TestMssql(t *testing.T) {
 	type Result struct {
