@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	mysqldriver "github.com/go-sql-driver/mysql"
 )
 
 //Builder query builder struct
@@ -12,6 +14,16 @@ type Builder struct {
 	Driver string
 	driver BuilderDriver
 	lock   sync.Mutex
+}
+
+//IsDuplicate check if error is Is duplicate error.
+func (b *Builder) IsDuplicate(err error) bool {
+	return b.LoadDriver().IsDuplicate(err)
+}
+
+//TruncateTableQuery return truncate table query
+func (b *Builder) TruncateTableQuery(table string) *PlainQuery {
+	return b.New(b.LoadDriver().TruncateTableCommandBuilder(table))
 }
 
 // Exec exec query in given db.
@@ -90,16 +102,23 @@ var DefaultDriver = &EmptyBuilderDriver{}
 //BuilderDriver query builder driver interface
 type BuilderDriver interface {
 	ConvertQuery(q Query) (string, []interface{})
+	TruncateTableCommandBuilder(t string) string
 	LimitCommandBuilder(q *LimitClause) string
 	LimitArgBuilder(q *LimitClause) []interface{}
 	DeleteCommandBuilder(q *DeleteClause) string
 	DeleteArgBuilder(q *DeleteClause) []interface{}
 	CountField() string
+	IsDuplicate(error) bool
 }
 
 // EmptyBuilderDriver empty query builder.
 // Using mysql statements
 type EmptyBuilderDriver struct {
+}
+
+//TruncateTableCommandBuilder return truncate table query.
+func (d EmptyBuilderDriver) TruncateTableCommandBuilder(t string) string {
+	return "TRUNCATE TABLE " + t
 }
 
 //ConvertQuery  convert query to command and args
@@ -150,6 +169,18 @@ func (d *EmptyBuilderDriver) DeleteCommandBuilder(q *DeleteClause) string {
 // DeleteArgBuilder build delete args  with given delete clause.
 func (d *EmptyBuilderDriver) DeleteArgBuilder(q *DeleteClause) []interface{} {
 	return q.Prefix.QueryArgs()
+}
+
+//IsDuplicate check if error is Is duplicate error.
+func (d *EmptyBuilderDriver) IsDuplicate(err error) bool {
+	if err == nil {
+		return false
+	}
+	e, ok := err.(*mysqldriver.MySQLError)
+	if ok == false {
+		return false
+	}
+	return e.Number == 1062
 }
 
 var drivers = map[string]BuilderDriver{}

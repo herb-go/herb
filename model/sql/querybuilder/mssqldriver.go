@@ -1,8 +1,22 @@
 package querybuilder
 
+import driver "github.com/denisenkom/go-mssqldb"
+
 // MSSQLBuilderDriver mssql bilder driver struct
 type MSSQLBuilderDriver struct {
 	EmptyBuilderDriver
+}
+
+//IsDuplicate check if error is Is duplicate error.
+func (d *MSSQLBuilderDriver) IsDuplicate(err error) bool {
+	if err == nil {
+		return false
+	}
+	e, ok := err.(driver.Error)
+	if ok == false {
+		return false
+	}
+	return e.Number == 2627
 }
 
 //LimitCommandBuilder build limit command with given limit query.

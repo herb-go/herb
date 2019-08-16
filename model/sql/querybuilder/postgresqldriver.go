@@ -3,11 +3,25 @@ package querybuilder
 import (
 	"strconv"
 	"strings"
+
+	driver "github.com/lib/pq"
 )
 
 // PostgreSQLBuilderDriver posgresql builder driver struct
 type PostgreSQLBuilderDriver struct {
 	EmptyBuilderDriver
+}
+
+//IsDuplicate check if error is Is duplicate error.
+func (d *PostgreSQLBuilderDriver) IsDuplicate(err error) bool {
+	if err == nil {
+		return false
+	}
+	e, ok := err.(*driver.Error)
+	if ok == false {
+		return false
+	}
+	return e.Code == "23505"
 }
 
 //ConvertQuery  convert query to command and args
