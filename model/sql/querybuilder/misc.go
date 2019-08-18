@@ -31,6 +31,16 @@ func (b *Builder) Equal(field string, arg interface{}) *PlainQuery {
 	return b.New(field+" = ?", arg)
 }
 
+// IsNull return field is null  query
+func (b *Builder) IsNull(field string) *PlainQuery {
+	return b.New(field + " IS NULL")
+}
+
+// IsNotNull return field is not null query
+func (b *Builder) IsNotNull(field string) *PlainQuery {
+	return b.New(field + " IS NOT NULL")
+}
+
 //Between return field between start and end query
 func (b *Builder) Between(field string, start interface{}, end interface{}) *PlainQuery {
 	return b.New(field+" BETWEEN ? AND ?", start, end)
