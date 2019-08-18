@@ -79,5 +79,22 @@ func TestMisc(t *testing.T) {
 	if len(args) != 1 || args[0] != "%\\\\test\\_\\%\\\\\\_\\\\\\%%" {
 		t.Fatal(args)
 	}
-
+	q = builder.IsNull("testfield")
+	cmd = q.QueryCommand()
+	if cmd != "testfield IS NULL" {
+		t.Fatal(cmd)
+	}
+	args = q.QueryArgs()
+	if len(args) != 0 {
+		t.Fatal(args)
+	}
+	q = builder.IsNotNull("testfield")
+	cmd = q.QueryCommand()
+	if cmd != "testfield IS NOT NULL" {
+		t.Fatal(cmd)
+	}
+	args = q.QueryArgs()
+	if len(args) != 0 {
+		t.Fatal(args)
+	}
 }
