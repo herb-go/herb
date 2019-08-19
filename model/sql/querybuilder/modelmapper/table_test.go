@@ -6,13 +6,25 @@ import (
 
 	"github.com/herb-go/herb/model/sql/db"
 	"github.com/herb-go/herb/model/sql/querybuilder/modelmapper"
+	_ "github.com/mattn/go-sqlite3"
 )
+
+var SqliteConfigJSON = `
+{
+	"Driver": "sqlite3",
+	"DataSource": "_test/sqlite.db",
+	"Prefix": "",
+	"MaxIdleConns":10,
+	"ConnMaxLifetimeInSecond":3600,
+	"MaxOpenConns":10
+}
+`
 
 func TestAlias(t *testing.T) {
 	var DB = db.New()
 	var config = db.NewConfig()
 	var err error
-	err = json.Unmarshal([]byte(MysqlConfigJSON), config)
+	err = json.Unmarshal([]byte(SqliteConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
