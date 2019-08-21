@@ -1,17 +1,17 @@
-# Model 数据模型模块
+# Validator 数据验证模块
 
 用于处理和用户有关的数据模型
 
 
-## Model 模型对象
+## Validator 验证器对象
 
-模型对象是一个用于集成的用户数据验证基础结构
+验证器对象是一个用于集成的用户数据验证基础结构
 
 提供了初始化，绑定 Http request,验证并存储用户输出数据错误的接口
 
     //继承对象
     type Form stuct{
-        model.Model
+        Validator.Validator
         httprequest *http.Request
     }
 
@@ -39,7 +39,7 @@
         form.SetComponentID(FormID)
     }
 
-使用 Model 对象
+使用 验证器 对象
 
     //创建新表单
     form:=NewForm()
