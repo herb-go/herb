@@ -81,19 +81,18 @@
 
 ### 数据模型工具
 
-> [Model 数据模型模块](middleware/model/readme.md)
->
-> > [Formdata 用户提交数据](middleware/formdata/readme.md)
-> >
 > > Redis
 > >
-> > > [Redis pool Redis 连接池](middleware/redis/redispool/readme.md)
+> > > [Redis pool Redis 连接池](model/redis/redispool/readme.md)
 > >
 > > SQL
 > >
-> > > [DB 数据库组件](middlewre/sql/db/readme.md)
+> > > [DB 数据库组件](model/sql/db/readme.md)
 > > >
-> > > [Querybuilder 请求构建器](middleware/sql/querybuilder/readme.md)
+> > > [Querybuilder 请求构建器](model/sql/querybuilder/readme.md)
+> > >
+> > >> [modelmapper 数据模型映射](model/sql/modelmapper/readme.md)
+
 
 ### 渲染框架
 
