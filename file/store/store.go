@@ -93,7 +93,7 @@ func Register(name string, f Factory) {
 	factorysMu.Lock()
 	defer factorysMu.Unlock()
 	if f == nil {
-		panic("file: Register cache factory is nil")
+		panic("file: Register store factory is nil")
 	}
 	if _, dup := factories[name]; dup {
 		panic("file: Register called twice for factory " + name)
