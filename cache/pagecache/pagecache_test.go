@@ -14,7 +14,7 @@ import (
 )
 
 func newTestCache(ttl int64) *cache.Cache {
-	config := &cache.ConfigJSON{}
+	config := &cache.ConfigMap{}
 	config.Set("Size", 10000000)
 	c := cache.New()
 	oc := &cache.OptionConfigMap{

@@ -8,7 +8,7 @@ import (
 )
 
 func TestOption(t *testing.T) {
-	o := &cache.OptionConfigJSON{}
+	o := &cache.OptionConfigMap{}
 	o.Driver = "dummycache"
 	o.Config = nil
 	o.TTL = 3600

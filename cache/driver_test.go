@@ -88,7 +88,7 @@ func TestMustNewDriver(t *testing.T) {
 
 func TestNewSubCache(t *testing.T) {
 	prefix := "test"
-	c := &cache.ConfigJSON{}
+	c := &cache.ConfigMap{}
 	c.Set(prefix+"Driver", "syncmapcache")
 	c.Set(prefix+"TTL", -1)
 	c.Set(prefix+"Config.Size", 100000)

@@ -17,10 +17,10 @@ import (
 )
 
 func getStore(ttl time.Duration) *Store {
-	config := &cache.ConfigJSON{}
+	config := &cache.ConfigMap{}
 	config.Set("Size", 10000000)
 	c := cache.New()
-	oc := &cache.OptionConfigJSON{
+	oc := &cache.OptionConfigMap{
 		Driver:    "syncmapcache",
 		TTL:       int64(ttl / time.Second),
 		Config:    *config,
@@ -45,7 +45,7 @@ func getStore(ttl time.Duration) *Store {
 
 func getTimeoutStore(ttl time.Duration, UpdateActiveInterval time.Duration) *Store {
 	c := cache.New()
-	config := &cache.OptionConfigJSON{}
+	config := &cache.OptionConfigMap{}
 	config.Marshaler = "json"
 	err := json.Unmarshal([]byte(testCache), config)
 	if err != nil {

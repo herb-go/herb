@@ -10,7 +10,7 @@ import (
 )
 
 func newNodeTestCache(ttl int64) *cache.Node {
-	config := &cache.ConfigJSON{}
+	config := &cache.ConfigMap{}
 	config.Set("Size", 10000000)
 	c := cache.New()
 	oc := &cache.OptionConfigMap{

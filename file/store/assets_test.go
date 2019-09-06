@@ -10,7 +10,7 @@ import (
 
 func TestAssets(t *testing.T) {
 	data := bytes.NewBuffer([]byte("filedata"))
-	config := NewOptionConfigJSON()
+	config := NewOptionConfigMap()
 	config.Driver = "assets"
 	config.Config.Set("URLHost", "http://www.test.com")
 	config.Config.Set("URLPrefix", "test")
@@ -85,7 +85,7 @@ func TestAssets(t *testing.T) {
 
 func TestFileNameFail(t *testing.T) {
 	data := bytes.NewBuffer([]byte("filedata"))
-	config := NewOptionConfigJSON()
+	config := NewOptionConfigMap()
 	config.Driver = "assets"
 	config.Config.Set("URLHost", "http://www.test.com")
 	config.Config.Set("URLPrefix", "test")
@@ -119,7 +119,7 @@ func TestFileNameFail(t *testing.T) {
 }
 
 func TestAbsolute(t *testing.T) {
-	config := NewOptionConfigJSON()
+	config := NewOptionConfigMap()
 	config.Driver = "assets"
 	config.Config.Set("URLHost", "http://www.test.com")
 	config.Config.Set("URLPrefix", "test")
@@ -140,7 +140,7 @@ func TestAbsolute(t *testing.T) {
 	}
 }
 func TestUrlEncode(t *testing.T) {
-	config := NewOptionConfigJSON()
+	config := NewOptionConfigMap()
 	config.Driver = "assets"
 	config.Config.Set("URLHost", "http://www.test.com")
 	config.Config.Set("URLPrefix", "test")

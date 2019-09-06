@@ -24,7 +24,7 @@ func NewCatpcha() *Captcha {
 	return captcha
 }
 func newEmptyCaptcha() *Captcha {
-	config := &cache.ConfigJSON{}
+	config := &cache.ConfigMap{}
 	config.Set("Size", 10000000)
 	sc := cache.New()
 	oc := &cache.OptionConfigMap{

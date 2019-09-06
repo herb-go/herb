@@ -8,10 +8,10 @@ import (
 )
 
 func NewTestCacheStore(ttl time.Duration) *Store {
-	config := cache.ConfigJSON{}
+	config := cache.ConfigMap{}
 	config.Set("Size", 10000000)
 	c := cache.New()
-	oc := &cache.OptionConfigJSON{
+	oc := &cache.OptionConfigMap{
 		Driver:    "syncmapcache",
 		TTL:       int64(ttl / time.Second),
 		Config:    config,

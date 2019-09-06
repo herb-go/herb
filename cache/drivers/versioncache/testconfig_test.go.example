@@ -2,12 +2,12 @@
 package versioncache
 
 var testConfig = `{
-        "Local.Driver":"\"syncmapcache\"",
-        "Local.Config.Size":"10000000",
-        "Local.Marshaler": "\"json\"",
-        "Local.TTL":"1200",
-        "Remote.Driver":"\"syncmapcache\"",
-        "Remote.Marshaler": "\"json\"",
-        "Remote.Config.Size": "10000000",
-        "Remote.TTL":"1200"
+        "Local.Driver":"syncmapcache",
+        "Local.Config.Size":10000000",
+        "Local.Marshaler": "json",
+        "Local.TTL":1200,
+        "Remote.Driver":"syncmapcache",
+        "Remote.Marshaler": "json",
+        "Remote.Config.Size": 10000000,
+        "Remote.TTL":1200
 }`

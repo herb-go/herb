@@ -3,7 +3,7 @@ package store
 import "testing"
 
 func TestJSONConfig(t *testing.T) {
-	c := NewOptionConfigJSON()
+	c := NewOptionConfigMap()
 	c.Driver = "assets"
 	err := c.Config.Set("Absolute", true)
 	if err != nil {
