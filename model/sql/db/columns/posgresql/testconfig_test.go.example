@@ -1,0 +1,11 @@
+package posgresqlcolumn
+
+var ConfigJSON = `
+{
+	"Driver": "postgres",
+	"DataSource": "postgres://user:password@localhost/tablename?sslmode=disable",
+	"Prefix": "",
+	"MaxIdleConns":10,
+	"ConnMaxLifetimeInSecond":3600,
+	"MaxOpenConns":10
+}`
