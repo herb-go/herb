@@ -1,6 +1,7 @@
 package captcha
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -32,10 +33,10 @@ func Register(name string, f Factory) {
 	factorysMu.Lock()
 	defer factorysMu.Unlock()
 	if f == nil {
-		panic("captcha: Register captcha factory is nil")
+		panic(errors.New("captcha: Register captcha factory is nil"))
 	}
 	if _, dup := factories[name]; dup {
-		panic("captcha: Register called twice for factory " + name)
+		panic(errors.New("captcha: Register called twice for factory " + name))
 	}
 	factories[name] = f
 }

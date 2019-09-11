@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -93,10 +94,10 @@ func Register(name string, f Factory) {
 	factorysMu.Lock()
 	defer factorysMu.Unlock()
 	if f == nil {
-		panic("file: Register store factory is nil")
+		panic(errors.New("file: Register store factory is nil"))
 	}
 	if _, dup := factories[name]; dup {
-		panic("file: Register called twice for factory " + name)
+		panic(errors.New("file: Register called twice for factory " + name))
 	}
 	factories[name] = f
 }

@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -44,10 +45,10 @@ func Register(name string, f Factory) {
 	factorysMu.Lock()
 	defer factorysMu.Unlock()
 	if f == nil {
-		panic("cache: Register cache factory is nil")
+		panic(errors.New("cache: Register cache factory is nil"))
 	}
 	if _, dup := factories[name]; dup {
-		panic("cache: Register called twice for factory " + name)
+		panic(errors.New("cache: Register called twice for factory " + name))
 	}
 	factories[name] = f
 }

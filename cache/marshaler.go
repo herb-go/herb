@@ -2,6 +2,7 @@ package cache
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -32,10 +33,10 @@ func RegisterMarshaler(name string, f MarshalerFactory) {
 	marshalerFactorysMu.Lock()
 	defer marshalerFactorysMu.Unlock()
 	if f == nil {
-		panic("cache: Register marshaler factory is nil")
+		panic(errors.New("cache: Register marshaler factory is nil"))
 	}
 	if _, dup := marshalerFactories[name]; dup {
-		panic("cache: Register marshaler twice for factory " + name)
+		panic(errors.New("cache: Register marshaler twice for factory " + name))
 	}
 	marshalerFactories[name] = f
 }
