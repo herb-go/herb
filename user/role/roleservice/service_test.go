@@ -1,4 +1,4 @@
-package role
+package roleservice
 
 import (
 	"net/http"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/herb-go/herb/middleware"
+	"github.com/herb-go/herb/user/role"
 )
 
 type identifier struct {
@@ -20,8 +21,8 @@ type roleProvider struct {
 	Prefix string
 }
 
-func (s *roleProvider) Roles(uid string) (*Roles, error) {
-	return NewRoles(s.Prefix + uid), nil
+func (s *roleProvider) Roles(uid string) (*role.Roles, error) {
+	return role.NewRoles(s.Prefix + uid), nil
 }
 
 func TestServuce(t *testing.T) {
