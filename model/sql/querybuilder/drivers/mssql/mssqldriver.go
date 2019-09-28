@@ -1,14 +1,15 @@
-package querybuilder
+package mssql
 
 import driver "github.com/denisenkom/go-mssqldb"
+import "github.com/herb-go/herb/model/sql/querybuilder"
 
-// MSSQLBuilderDriver mssql bilder driver struct
-type MSSQLBuilderDriver struct {
-	EmptyBuilderDriver
+// BuilderDriver mssql bilder driver struct
+type BuilderDriver struct {
+	querybuilder.EmptyBuilderDriver
 }
 
 //IsDuplicate check if error is Is duplicate error.
-func (d *MSSQLBuilderDriver) IsDuplicate(err error) bool {
+func (d *BuilderDriver) IsDuplicate(err error) bool {
 	if err == nil {
 		return false
 	}
@@ -20,7 +21,7 @@ func (d *MSSQLBuilderDriver) IsDuplicate(err error) bool {
 }
 
 //LimitCommandBuilder build limit command with given limit query.
-func (d *MSSQLBuilderDriver) LimitCommandBuilder(q *LimitClause) string {
+func (d *BuilderDriver) LimitCommandBuilder(q *querybuilder.LimitClause) string {
 	var command = ""
 	if q.Offset != nil {
 		command += " OFFSET ? ROWS "
@@ -33,7 +34,7 @@ func (d *MSSQLBuilderDriver) LimitCommandBuilder(q *LimitClause) string {
 }
 
 //LimitArgBuilder build limit args with given limit query.
-func (d *MSSQLBuilderDriver) LimitArgBuilder(q *LimitClause) []interface{} {
+func (d *BuilderDriver) LimitArgBuilder(q *querybuilder.LimitClause) []interface{} {
 	var args = []interface{}{}
 	if q.Limit != nil {
 		args = append(args, *q.Limit)
@@ -45,8 +46,8 @@ func (d *MSSQLBuilderDriver) LimitArgBuilder(q *LimitClause) []interface{} {
 }
 
 // MSSQLDriver mssql builder driver
-var MSSQLDriver = &MSSQLBuilderDriver{}
+var MSSQLDriver = &BuilderDriver{}
 
 func init() {
-	RegisterDriver("mssql", MSSQLDriver)
+	querybuilder.RegisterDriver("mssql", MSSQLDriver)
 }

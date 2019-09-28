@@ -1,0 +1,14 @@
+package postgres
+
+
+var PostgreConfigJSON = `
+{
+	"Driver": "postgres",
+	"DataSource": "postgres://postgres:123456@/dbtest?sslmode=disable",
+	"Prefix": "",
+	"MaxIdleConns":10,
+	"ConnMaxLifetimeInSecond":3600,
+	"MaxOpenConns":10
+}
+`
+

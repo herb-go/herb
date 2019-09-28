@@ -1,4 +1,4 @@
-package querybuilder_test
+package mysql
 
 import (
 	"encoding/json"

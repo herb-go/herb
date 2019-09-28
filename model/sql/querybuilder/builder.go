@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	mysqldriver "github.com/go-sql-driver/mysql"
 )
 
 //Builder query builder struct
@@ -173,14 +171,7 @@ func (d *EmptyBuilderDriver) DeleteArgBuilder(q *DeleteClause) []interface{} {
 
 //IsDuplicate check if error is Is duplicate error.
 func (d *EmptyBuilderDriver) IsDuplicate(err error) bool {
-	if err == nil {
-		return false
-	}
-	e, ok := err.(*mysqldriver.MySQLError)
-	if ok == false {
-		return false
-	}
-	return e.Number == 1062
+	return false
 }
 
 var drivers = map[string]BuilderDriver{}
@@ -199,8 +190,4 @@ func loadBuilderDriver(name string) BuilderDriver {
 		return DefaultDriver
 	}
 	return d
-}
-
-func init() {
-	RegisterDriver("mysql", DefaultDriver)
 }

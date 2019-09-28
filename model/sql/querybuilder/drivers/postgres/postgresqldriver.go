@@ -1,19 +1,21 @@
-package querybuilder
+package postgres
 
 import (
 	"strconv"
 	"strings"
 
+	"github.com/herb-go/herb/model/sql/querybuilder"
+
 	driver "github.com/lib/pq"
 )
 
-// PostgreSQLBuilderDriver posgresql builder driver struct
-type PostgreSQLBuilderDriver struct {
-	EmptyBuilderDriver
+// BuilderDriver posgresql builder driver struct
+type BuilderDriver struct {
+	querybuilder.EmptyBuilderDriver
 }
 
 //IsDuplicate check if error is Is duplicate error.
-func (d *PostgreSQLBuilderDriver) IsDuplicate(err error) bool {
+func (d *BuilderDriver) IsDuplicate(err error) bool {
 	if err == nil {
 		return false
 	}
@@ -25,7 +27,7 @@ func (d *PostgreSQLBuilderDriver) IsDuplicate(err error) bool {
 }
 
 //ConvertQuery  convert query to command and args
-func (d PostgreSQLBuilderDriver) ConvertQuery(q Query) (string, []interface{}) {
+func (d BuilderDriver) ConvertQuery(q querybuilder.Query) (string, []interface{}) {
 	cmd := q.QueryCommand()
 	arg := q.QueryArgs()
 	converted := ""
@@ -56,9 +58,6 @@ func (d PostgreSQLBuilderDriver) ConvertQuery(q Query) (string, []interface{}) {
 	return converted, arg
 }
 
-// PostgreSQLDriver postgre sql driver
-var PostgreSQLDriver = &PostgreSQLBuilderDriver{}
-
 func init() {
-	RegisterDriver("postgres", PostgreSQLDriver)
+	querybuilder.RegisterDriver("postgres", &BuilderDriver{})
 }

@@ -1,22 +1,21 @@
-package querybuilder_test
+package postgres
 
 import (
 	"encoding/json"
 	"errors"
 	"testing"
 
-	_ "github.com/denisenkom/go-mssqldb"
-
 	"github.com/herb-go/herb/model/sql/db"
 	"github.com/herb-go/herb/model/sql/querybuilder"
+	_ "github.com/lib/pq"
 )
 
-func TestMssqlIsDuplicate(t *testing.T) {
+func TestPostgresqlIsDuplicate(t *testing.T) {
 	var err error
 
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(MssqlConfigJSON), config)
+	err = json.Unmarshal([]byte(PostgreConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +57,8 @@ func TestMssqlIsDuplicate(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-func TestMssql(t *testing.T) {
+
+func TestPostgresql(t *testing.T) {
 	type Result struct {
 		ID   string
 		Body string
@@ -67,7 +67,7 @@ func TestMssql(t *testing.T) {
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(MssqlConfigJSON), config)
+	err = json.Unmarshal([]byte(PostgreConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,6 @@ func TestMssql(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	builder := querybuilder.New()
 	builder.Driver = DB.Driver()
 
@@ -102,7 +101,6 @@ func TestMssql(t *testing.T) {
 	if count != 0 {
 		t.Fatal(err)
 	}
-
 	insertquery := builder.NewInsertQuery("testtable1")
 	fields = querybuilder.NewFields()
 	fields.Set("id", "testid").Set("body", "testbody")
@@ -134,7 +132,6 @@ func TestMssql(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	fields = querybuilder.NewFields()
 	fields.Set(builder.CountField(), &count)
 	countquery = builder.NewSelectQuery()
@@ -173,7 +170,7 @@ func TestMssql(t *testing.T) {
 		results = append(results, result)
 	}
 	if len(results) != 2 {
-		t.Fatal(result)
+		t.Fatal(results)
 	}
 	if results[0].ID != "testid2" || results[0].Body != "testbody2" {
 		t.Fatal(*results[0], *results[1])
@@ -207,7 +204,7 @@ func TestMssql(t *testing.T) {
 		results = append(results, result)
 	}
 	if len(results) != 1 {
-		t.Fatal(result)
+		t.Fatal(results)
 	}
 	if results[0].ID != "testid" || results[0].Body != "testbody" {
 		t.Fatal(*results[0])
@@ -270,6 +267,7 @@ func TestMssql(t *testing.T) {
 	if results[0].ID != "testid" || results[0].Body != "testbody" {
 		t.Fatal(*results[0])
 	}
+
 	//Groupby test
 	insertquery = builder.NewInsertQuery("testtable1")
 	fields = querybuilder.NewFields()
@@ -319,8 +317,9 @@ func TestMssql(t *testing.T) {
 	if results[1].Body != "testbody" {
 		t.Fatal(*results[0], *results[1])
 	}
+
 }
-func TestMssqlJoin(t *testing.T) {
+func TestPostgresqlJoin(t *testing.T) {
 	type Result struct {
 		ID    string
 		Body  string
@@ -330,7 +329,7 @@ func TestMssqlJoin(t *testing.T) {
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(MssqlConfigJSON), config)
+	err = json.Unmarshal([]byte(PostgreConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -348,7 +347,6 @@ func TestMssqlJoin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	insertquery := builder.NewInsertQuery("testtable1")
 	fields := querybuilder.NewFields()
 	fields.Set("id", "testid").Set("body", "testbody")
@@ -372,7 +370,7 @@ func TestMssqlJoin(t *testing.T) {
 	selectquery := builder.NewSelectQuery()
 	selectquery.From.AddAlias("t1", "testtable1")
 	selectquery.Select.AddFields(fields)
-	selectquery.Join.LeftJoin().Alias("t2", "testtable2").On(builder.New("t1.id = t2.id"))
+	selectquery.Join.LeftJoin().Alias("t2", "testtable2").OnEqual("t1.id", " t2.id")
 	row := selectquery.QueryRow(DB)
 	err = selectquery.Result().BindFields(fields).ScanFrom(row)
 	if err != nil {
@@ -415,12 +413,12 @@ func TestMssqlJoin(t *testing.T) {
 	}
 }
 
-func TestMssqlSubquery(t *testing.T) {
+func TestPostgresqlSubquery(t *testing.T) {
 	querybuilder.Debug = true
 	var err error
 	var DB = db.New()
 	var config = db.NewConfig()
-	err = json.Unmarshal([]byte(MssqlConfigJSON), config)
+	err = json.Unmarshal([]byte(PostgreConfigJSON), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -428,6 +426,7 @@ func TestMssqlSubquery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	builder := querybuilder.New()
 	builder.Driver = DB.Driver()
 
@@ -469,6 +468,7 @@ func TestMssqlSubquery(t *testing.T) {
 	var body string
 	selectquery = builder.NewSelectQuery()
 	selectquery.From.AddAlias("t2", "testtable2")
+
 	selectquery.Select.Add("t2.body2")
 	selectquery.Where.Condition = builder.Equal("t2.id", "raw")
 	row := selectquery.QueryRow(DB)
@@ -491,7 +491,7 @@ func TestMssqlSubquery(t *testing.T) {
 	}
 	selectquery = builder.NewSelectQuery()
 	selectquery.From.AddAlias("t2", "testtable2")
-	selectquery.Select.Add("t2.body2")
+	selectquery.Select.Add(("t2.body2"))
 	selectquery.Where.Condition = builder.Equal("t2.id", "subquery")
 	row = selectquery.QueryRow(DB)
 	body = ""
@@ -507,14 +507,12 @@ func TestMssqlSubquery(t *testing.T) {
 	selectquery.Select.Add("t1.body")
 	selectquery.Where.Condition = builder.Equal("t1.id", "testid2")
 	updatequery := builder.NewUpdateQuery("testtable2")
-	// updatequery.Update.SetAlias(table2.Alias())
 	updatequery.Where.Condition = builder.Equal("id", "subquery")
 	updatequery.Update.AddSelect("body2", selectquery)
 	_, err = updatequery.Query().Exec(DB)
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	selectquery = builder.NewSelectQuery()
 	selectquery.From.AddAlias("t2", "testtable2")
 	selectquery.Select.Add("t2.body2")
@@ -528,19 +526,10 @@ func TestMssqlSubquery(t *testing.T) {
 	if body != "testbody2" {
 		t.Fatal(body)
 	}
-
-	insertquery = builder.NewInsertQuery("testtable1")
-	fields = querybuilder.NewFields()
-	fields.Set("id", "subquery").Set("body", "testbody")
-	insertquery.Insert.AddFields(fields)
-	_, err = insertquery.Query().Exec(DB)
-	if err != nil {
-		t.Fatal(err)
-	}
 	selectquery = builder.NewSelectQuery()
 	selectquery.From.AddAlias("t1", "testtable1")
-	selectquery.Select.Add("t1.body")
-	selectquery.Where.Condition = builder.New("t1.id=t2.id")
+	selectquery.Select.Add(("t1.body"))
+	selectquery.Where.Condition = builder.New("t1.body=t2.body2")
 	selectwithsubqueryquery := builder.NewSelectQuery()
 	selectwithsubqueryquery.From.AddAlias("t2", "testtable2")
 	selectwithsubqueryquery.Select.AddSelect(selectquery)
@@ -551,7 +540,7 @@ func TestMssqlSubquery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if body != "testbody" {
+	if body != "testbody2" {
 		t.Fatal(body)
 	}
 
