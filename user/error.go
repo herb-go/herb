@@ -6,4 +6,7 @@ import "errors"
 var ErrAccountBindingExists = errors.New("account binding exists")
 
 //ErrAccountUnbindingNotExists error rasied when account does not exist when unbinding
-var ErrAccountUnbindingNotExists = errors.New("account unbinding dose not exist")
+var ErrAccountUnbindingNotExists = errors.New("account unbinding does not exist")
+
+//ErrUserNotExists error raseid when user does not exist.
+var ErrUserNotExists = errors.New("user does not exist")
