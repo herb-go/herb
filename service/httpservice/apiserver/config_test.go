@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service/httpservice"
 )
 
 func TestConfig(t *testing.T) {
@@ -25,7 +25,7 @@ func TestConfig(t *testing.T) {
 		t.Fatal(c)
 	}
 	as.CleanConfig()
-	config := &server.HTTPConfig{}
+	config := &httpservice.Config{}
 	err = as.SetConfig(config)
 	if err != nil {
 		t.Fatal(err)

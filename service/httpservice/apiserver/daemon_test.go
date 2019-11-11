@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service/httpservice"
 )
 
 func newOption() *Option {
 	return &Option{
 		Server: Server{
 			Name: "testServer",
-			HTTPConfig: server.HTTPConfig{
+			HTTPConfig: httpservice.Config{
 				ListenerConfig: server.ListenerConfig{
 					Net:  "tcp",
 					Addr: "127.0.0.1:6789",
@@ -27,7 +28,7 @@ func newOption2() *Option {
 	return &Option{
 		Server: Server{
 			Name: "testServer2",
-			HTTPConfig: server.HTTPConfig{
+			HTTPConfig: httpservice.Config{
 				ListenerConfig: server.ListenerConfig{
 					Net:  "tcp",
 					Addr: "127.0.0.1:6788",

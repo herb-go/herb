@@ -8,7 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service/httpservice"
 )
 
 type serverMap struct {
@@ -33,7 +33,7 @@ type apiServer struct {
 	running      sync.Map
 	Handler      http.Handler
 	configured   bool
-	config       *server.HTTPConfig
+	config       *httpservice.Config
 	configLock   sync.Mutex
 }
 
@@ -130,7 +130,7 @@ func (as *apiServer) CleanConfig() {
 	as.configured = false
 }
 
-func (as *apiServer) SetConfig(c *server.HTTPConfig) error {
+func (as *apiServer) SetConfig(c *httpservice.Config) error {
 	as.configLock.Lock()
 	defer as.configLock.Unlock()
 	if as.configured {
@@ -141,7 +141,7 @@ func (as *apiServer) SetConfig(c *server.HTTPConfig) error {
 	return nil
 }
 
-func (as *apiServer) Config() *server.HTTPConfig {
+func (as *apiServer) Config() *httpservice.Config {
 	as.configLock.Lock()
 	defer as.configLock.Unlock()
 	if as.config == nil {

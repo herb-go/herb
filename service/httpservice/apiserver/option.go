@@ -3,11 +3,11 @@ package apiserver
 import (
 	"net/http"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service/httpservice"
 )
 
 type Server struct {
-	server.HTTPConfig
+	httpservice.Config
 	Name string
 }
 type Option struct {
