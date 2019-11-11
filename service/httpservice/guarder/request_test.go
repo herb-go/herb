@@ -45,7 +45,7 @@ func TestRequest(t *testing.T) {
 	if id != "" {
 		t.Fatal(id)
 	}
-	err = v.CredentialRequest(req)
+	err = v.InitRequest(req)
 	if err != nil {
 		t.Fatal(err)
 	}

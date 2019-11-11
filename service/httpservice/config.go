@@ -1,26 +1,18 @@
-package server
+package httpservice
 
 import (
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/herb-go/herb/service"
 )
 
-//ServerTLSCertPath return server tls cert path
-func (c *TLSConfig) ServerTLSCertPath() string {
-	return c.TLSCertPath
-}
-
-//ServerTLSKeyPath resturn serve tls key path
-func (c *TLSConfig) ServerTLSKeyPath() string {
-	return c.TLSKeyPath
-}
-
-//HTTPConfig http server config.
-type HTTPConfig struct {
-	ListenerConfig
-	TLSConfig
+//Config http server config.
+type Config struct {
+	service.ListenerConfig
+	service.TLSConfig
 	//BaseURL http scheme and host."http://127.0.0.1:8000" for example.
 	BaseURL string
 	//ReadTimeoutInSecond http conn read time out.
@@ -36,7 +28,7 @@ type HTTPConfig struct {
 }
 
 //IsEmpty check if config is empty
-func (c *HTTPConfig) IsEmpty() bool {
+func (c *Config) IsEmpty() bool {
 	if c == nil {
 		return true
 	}
@@ -77,7 +69,7 @@ func (c *HTTPConfig) IsEmpty() bool {
 }
 
 //Server create http server with config.
-func (c *HTTPConfig) Server() *http.Server {
+func (c *Config) Server() *http.Server {
 	server := &http.Server{
 		Addr:              c.Addr,
 		ReadTimeout:       time.Duration(c.ReadTimeoutInSecond) * time.Second,

@@ -1,4 +1,4 @@
-package server
+package service
 
 //TLSConfig tls config
 type TLSConfig struct {
@@ -13,4 +13,14 @@ type TLSConfig struct {
 //ServerIsTLSEnabeld return is server tls enabled
 func (c *TLSConfig) ServerIsTLSEnabeld() bool {
 	return c.TLS
+}
+
+//ServerTLSCertPath return server tls cert path
+func (c *TLSConfig) ServerTLSCertPath() string {
+	return c.TLSCertPath
+}
+
+//ServerTLSKeyPath resturn serve tls key path
+func (c *TLSConfig) ServerTLSKeyPath() string {
+	return c.TLSKeyPath
 }
