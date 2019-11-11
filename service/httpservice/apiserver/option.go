@@ -24,11 +24,11 @@ func (o *Option) ApplyServer() error {
 	if o.Server.IsEmpty() {
 		return nil
 	}
-	return apiserver(o.Server.Name).SetConfig(&o.Server.HTTPConfig)
+	return apiserver(o.Server.Name).SetConfig(&o.Server.Config)
 }
 
 func (o *Option) Start(handler func(w http.ResponseWriter, r *http.Request)) error {
-	return apiserver(o.Server.Name).Start(o.Channel, MethodMiddleware(o.Method, handler))
+	return apiserver(o.Server.Name).Start(o.Channel, handler)
 }
 
 func (o *Option) Stop() error {
