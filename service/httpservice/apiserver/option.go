@@ -10,9 +10,9 @@ type Server struct {
 	httpservice.Config
 	Name string
 }
+
 type Option struct {
-	Server  Server
-	Method  string
+	Server
 	Channel string
 }
 
