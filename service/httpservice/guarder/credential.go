@@ -6,7 +6,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service"
 )
 
 type Credential interface {
@@ -14,7 +14,7 @@ type Credential interface {
 }
 
 //CredentialFactory guarder factory
-type CredentialFactory func(conf server.Config, prefix string) (Credential, error)
+type CredentialFactory func(conf service.Config, prefix string) (Credential, error)
 
 var (
 	credentialFactorysMu sync.RWMutex
@@ -58,7 +58,7 @@ func CredentialFactories() []string {
 
 //NewCredentialDriver create new driver with given name,config and prefix.
 //Reutrn driver created and any error if raised.
-func NewCredentialDriver(name string, conf server.Config, prefix string) (Credential, error) {
+func NewCredentialDriver(name string, conf service.Config, prefix string) (Credential, error) {
 	credentialFactorysMu.RLock()
 	factoryi, ok := credentialFactories[name]
 	credentialFactorysMu.RUnlock()

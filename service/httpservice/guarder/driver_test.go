@@ -10,6 +10,7 @@ func initDrivers() {
 	registerBasicAuthFactory()
 	registerTokenMapFactory()
 	registerTokenFactory()
+	registerDummyFactory()
 }
 
 func TestDriver(t *testing.T) {

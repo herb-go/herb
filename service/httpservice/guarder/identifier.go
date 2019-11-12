@@ -6,7 +6,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service"
 )
 
 type Identifier interface {
@@ -14,7 +14,7 @@ type Identifier interface {
 }
 
 //IdentifierFactory guarder factory
-type IdentifierFactory func(conf server.Config, prefix string) (Identifier, error)
+type IdentifierFactory func(conf service.Config, prefix string) (Identifier, error)
 
 var (
 	identifierFactorysMu sync.RWMutex
@@ -58,7 +58,7 @@ func IdentifierFactories() []string {
 
 //NewIdentifierDriver create new driver with given name,config and prefix.
 //Reutrn driver created and any error if raised.
-func NewIdentifierDriver(name string, conf server.Config, prefix string) (Identifier, error) {
+func NewIdentifierDriver(name string, conf service.Config, prefix string) (Identifier, error) {
 	identifierFactorysMu.RLock()
 	factoryi, ok := identifierFactories[name]
 	identifierFactorysMu.RUnlock()

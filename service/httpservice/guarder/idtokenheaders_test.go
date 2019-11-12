@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service"
 )
 
 func TestIDTokenHeaders(t *testing.T) {
@@ -12,7 +12,7 @@ func TestIDTokenHeaders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c := &server.ConfigMap{}
+	c := &service.ConfigMap{}
 	c.Set("IDHeader", "id")
 	d, err := NewMapperDriver("header", c, "")
 	if err != nil {

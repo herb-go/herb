@@ -3,7 +3,7 @@ package guarder
 import (
 	"strings"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service"
 )
 
 func NewTokenMap() *TokenMap {
@@ -30,7 +30,7 @@ func (t *TokenMap) IdentifyParams(p *Params) (string, error) {
 	return id, nil
 }
 
-func createTokenMapWithConfig(conf server.Config, prefix string) (*TokenMap, error) {
+func createTokenMapWithConfig(conf service.Config, prefix string) (*TokenMap, error) {
 	var err error
 	v := NewTokenMap()
 	if err != nil {
@@ -47,7 +47,7 @@ func createTokenMapWithConfig(conf server.Config, prefix string) (*TokenMap, err
 	return v, nil
 }
 
-func tokenMapIdentifierFactory(conf server.Config, prefix string) (Identifier, error) {
+func tokenMapIdentifierFactory(conf service.Config, prefix string) (Identifier, error) {
 	return createTokenMapWithConfig(conf, prefix)
 }
 func registerTokenMapFactory() {

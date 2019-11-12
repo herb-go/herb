@@ -3,11 +3,11 @@ package guarder
 import (
 	"testing"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service"
 )
 
 func TestTokenMap(t *testing.T) {
-	c := &server.ConfigMap{}
+	c := &service.ConfigMap{}
 	c.Set("Tokens", map[string]string{"testid": "testtoken"})
 	d, err := NewIdentifierDriver("tokenmap", c, "")
 	if err != nil {

@@ -3,7 +3,7 @@ package guarder
 import (
 	"net/http"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service"
 )
 
 type BasicAuth struct {
@@ -27,13 +27,13 @@ func (h *BasicAuth) WriteParamsToRequest(r *http.Request, p *Params) error {
 	return nil
 }
 
-func createBasicAuthWithConfig(conf server.Config, prefix string) (*BasicAuth, error) {
+func createBasicAuthWithConfig(conf service.Config, prefix string) (*BasicAuth, error) {
 	var err error
 	v := NewBasicAuth()
 	return v, err
 }
 
-func basicAuthMapperFactory(conf server.Config, prefix string) (Mapper, error) {
+func basicAuthMapperFactory(conf service.Config, prefix string) (Mapper, error) {
 	return createBasicAuthWithConfig(conf, prefix)
 }
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service"
 )
 
 func TestBasicAuth(t *testing.T) {
@@ -12,7 +12,7 @@ func TestBasicAuth(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d, err := NewMapperDriver("basicauth", &server.ConfigMap{}, "")
+	d, err := NewMapperDriver("basicauth", &service.ConfigMap{}, "")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -7,7 +7,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/herb-go/herb/server"
+	"github.com/herb-go/herb/service"
 )
 
 type Mapper interface {
@@ -16,7 +16,7 @@ type Mapper interface {
 }
 
 //MapperFactory guarder factory
-type MapperFactory func(conf server.Config, prefix string) (Mapper, error)
+type MapperFactory func(conf service.Config, prefix string) (Mapper, error)
 
 var (
 	mapperFactorysMu sync.RWMutex
@@ -60,7 +60,7 @@ func MapperFactories() []string {
 
 //NewMapperDriver create new driver with given name,config and prefix.
 //Reutrn driver created and any error if raised.
-func NewMapperDriver(name string, conf server.Config, prefix string) (Mapper, error) {
+func NewMapperDriver(name string, conf service.Config, prefix string) (Mapper, error) {
 	mapperFactorysMu.RLock()
 	factoryi, ok := mapperFactories[name]
 	mapperFactorysMu.RUnlock()

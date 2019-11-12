@@ -1,6 +1,8 @@
 package guarder
 
-import "github.com/herb-go/herb/server"
+import (
+	"github.com/herb-go/herb/service"
+)
 
 type GuarderOption interface {
 	ApplyToGuarder(g *Guarder) error
@@ -13,7 +15,7 @@ type VisitorOption interface {
 type DriverConfig interface {
 	MapperDriverName() string
 	DriverName() string
-	DriverConfig() server.Config
+	DriverConfig() service.Config
 }
 
 func ApplyToGuarder(g *Guarder, c DriverConfig) error {
@@ -99,10 +101,10 @@ func NewDriverConfigMap() *DirverConfigMap {
 type DirverConfigMap struct {
 	DriverField
 	MapperDriverField
-	Config server.ConfigMap
+	Config service.ConfigMap
 }
 
-func (c *DirverConfigMap) DriverConfig() server.Config {
+func (c *DirverConfigMap) DriverConfig() service.Config {
 	return &c.Config
 }
 
