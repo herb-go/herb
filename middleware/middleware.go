@@ -186,3 +186,37 @@ type Middleware func(w http.ResponseWriter, r *http.Request, next http.HandlerFu
 
 // Middlewares middleware list interaface.
 type Middlewares []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
+
+// Handlers : Return all middlewares in app.
+func (m *Middlewares) Handlers() []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return *m
+}
+
+// SetHandlers : Set app's middlewares.
+func (m *Middlewares) SetHandlers(h []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) {
+	ms := make([]func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc), len(h))
+	copy(h, ms)
+	*m = ms
+}
+
+// Use : Append middlewares
+func (m *Middlewares) Use(middlewares ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) *Middlewares {
+	Use(m, middlewares...)
+	return m
+
+}
+
+//App create app with middlewares
+func (m *Middlewares) App(handler func(w http.ResponseWriter, r *http.Request)) *App {
+	app := New(m.Handlers()...)
+	app.HandleFunc(handler)
+	return app
+}
+
+//NewMiddlewares create new middlewares with given handlers
+func NewMiddlewares(middlewares ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) *Middlewares {
+	ms := make([]func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc), len(middlewares))
+	copy(middlewares, ms)
+	m := Middlewares(ms)
+	return &m
+}

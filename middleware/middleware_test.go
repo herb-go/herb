@@ -326,3 +326,21 @@ func TestErrorServeMiddleware(t *testing.T) {
 	}()
 	ServeMiddleware(&wrongMiddleware{}, nil, nil, nil)
 }
+
+func TestMiddlewares(t *testing.T) {
+	m := func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {}
+	middlewares := NewMiddlewares(m)
+	h := middlewares.Handlers()
+	if len(h) != 1 {
+		t.Fatal(h)
+	}
+	middlewares.Use(m)
+	h = middlewares.Handlers()
+	if len(h) != 2 {
+		t.Fatal(h)
+	}
+	app := middlewares.App(func(w http.ResponseWriter, r *http.Request) {})
+	if len(app.Handlers()) != 3 {
+		t.Fatal(app)
+	}
+}
