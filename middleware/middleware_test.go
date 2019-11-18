@@ -168,11 +168,11 @@ func TestFuncAppToMiddlewares(t *testing.T) {
 
 }
 
-func TestFuncUse(t *testing.T) {
+func TestFuncAppend(t *testing.T) {
 	var ret testResults
 	var app = New(ret.newBeforeMiddleware("a"), ret.newBeforeMiddleware("b"), ret.newBeforeMiddleware("c"))
-	Use(app, ret.newAfterMiddleware("f"))
-	Use(app, ret.newBeforeMiddleware("d"), ret.newBeforeMiddleware("e"))
+	Append(app, ret.newAfterMiddleware("f"))
+	Append(app, ret.newBeforeMiddleware("d"), ret.newBeforeMiddleware("e"))
 	r, err := http.NewRequest("GET", "/", nil)
 	if err != nil {
 		t.Fatal(err)

@@ -9,8 +9,8 @@ import (
 	"github.com/herb-go/herb/service/httpservice"
 )
 
-func newOption() *Option {
-	return &Option{
+func newChannel() *Channel {
+	return &Channel{
 		Server: Server{
 			Name: "testServer",
 			Config: httpservice.Config{
@@ -24,8 +24,8 @@ func newOption() *Option {
 	}
 }
 
-func newOption2() *Option {
-	return &Option{
+func newChannel2() *Channel {
+	return &Channel{
 		Server: Server{
 			Name: "testServer2",
 			Config: httpservice.Config{
@@ -41,7 +41,7 @@ func newOption2() *Option {
 func TestRouter(t *testing.T) {
 	var err error
 	Reset()
-	o := newOption()
+	o := newChannel()
 	err = o.ApplyServer()
 	if err != nil {
 		t.Fatal(err)
@@ -97,7 +97,7 @@ func TestRouter(t *testing.T) {
 func TestDaemon(t *testing.T) {
 	var err error
 	Reset()
-	o := newOption()
+	o := newChannel()
 	as := o.server()
 	defer Reset()
 	defer func() {
@@ -168,7 +168,7 @@ func TestDaemon(t *testing.T) {
 func TestMutliOption(t *testing.T) {
 	var err error
 	Reset()
-	o := newOption()
+	o := newChannel()
 	err = o.ApplyServer()
 	if err != nil {
 		t.Fatal(err)
@@ -180,7 +180,7 @@ func TestMutliOption(t *testing.T) {
 		Reset()
 		as.CleanConfig()
 	}()
-	o2 := newOption2()
+	o2 := newChannel2()
 	err = o2.ApplyServer()
 	if err != nil {
 		t.Fatal(err)

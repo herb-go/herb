@@ -10,7 +10,7 @@ import (
 func TestConfig(t *testing.T) {
 	var err error
 	Reset()
-	o := newOption()
+	o := newChannel()
 	as := o.server()
 	as.CleanConfig()
 	defer func() {

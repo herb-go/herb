@@ -14,12 +14,12 @@ func New(funcs ...func(w http.ResponseWriter, r *http.Request, next http.Handler
 	return app
 }
 
-//ServeHTTP : Server app as http.
+//ServeHTTP : Serve app as http.
 func ServeHTTP(app HandlerSlice, w http.ResponseWriter, r *http.Request) {
 	ServeMiddleware(app, w, r, voidNextFunc)
 }
 
-// ServeMiddleware : Server  app as middleware.
+// ServeMiddleware : Serve  app as middleware.
 func ServeMiddleware(app HandlerSlice, w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	handlers := app.Handlers()
 	if len(handlers) == 0 {
@@ -77,8 +77,8 @@ func AppToMiddlewares(app ...HandlerSlice) []func(w http.ResponseWriter, r *http
 	return funcs
 }
 
-//Use : Append middlewares tp app.
-func Use(app HandlerChain, middlewares ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) {
+//Append : Append middlewares tp app.
+func Append(app HandlerChain, middlewares ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) {
 	funcs := append(app.Handlers(), middlewares...)
 	f := make([]func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc), len(funcs))
 	copy(f, funcs)
@@ -147,19 +147,25 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // HandleFunc : Use http HandlerFunc as last middleware.
 func (a *App) HandleFunc(HandlerFunc http.HandlerFunc) *App {
-	Use(a, WrapFunc(HandlerFunc))
+	Append(a, WrapFunc(HandlerFunc))
 	return a
 }
 
 // Handle : Use http Handler as last middleware.
 func (a *App) Handle(Handler http.Handler) *App {
-	Use(a, Wrap(Handler))
+	Append(a, Wrap(Handler))
 	return a
 }
 
-// Use : Append middlewares to app.
+//Append : Append middlewares tp app.
+func (a *App) Append(middlewares ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) {
+	Append(a, middlewares...)
+
+}
+
+// Use : Append middlewares to app and return app self.
 func (a *App) Use(middlewares ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) *App {
-	Use(a, middlewares...)
+	a.Append(middlewares...)
 	return a
 }
 
@@ -177,31 +183,47 @@ func (a *App) UseApp(apps ...*App) *App {
 	for k := range apps {
 		funcs[k] = apps[k].ServeMiddleware
 	}
-	Use(a, funcs...)
+	Append(a, funcs...)
 	return a
 }
 
 //Middleware middleware interface.
 type Middleware func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
 
+// Handlers : Return all middlewares in app.
+func (m Middleware) Handlers() []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){m}
+}
+
+// ServeHTTP : Use middleware as a http handler.
+func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ServeHTTP(m, w, r)
+}
+
 // Middlewares middleware list interaface.
 type Middlewares []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
 
-// Handlers : Return all middlewares in app.
+// Handlers : Return all middlewares in middlewares.
 func (m *Middlewares) Handlers() []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return *m
 }
 
-// SetHandlers : Set app's middlewares.
+// SetHandlers : Set middlewares's middlewares.
 func (m *Middlewares) SetHandlers(h []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) {
 	ms := make([]func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc), len(h))
 	copy(h, ms)
 	*m = ms
 }
 
-// Use : Append middlewares
+//Append : Append middlewares tp app.
+func (m *Middlewares) Append(middlewares ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) {
+	Append(m, middlewares...)
+
+}
+
+// Use : Append middlewares and return middlewares self.
 func (m *Middlewares) Use(middlewares ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) *Middlewares {
-	Use(m, middlewares...)
+	m.Append(middlewares...)
 	return m
 
 }
@@ -211,6 +233,16 @@ func (m *Middlewares) App(handler func(w http.ResponseWriter, r *http.Request)) 
 	app := New(m.Handlers()...)
 	app.HandleFunc(handler)
 	return app
+}
+
+// ServeMiddleware : Use middlewares as a middleware.
+func (m *Middlewares) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	ServeMiddleware(m, w, r, next)
+}
+
+// ServeHTTP : Use middlewares as a http handler.
+func (m *Middlewares) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ServeHTTP(m, w, r)
 }
 
 //NewMiddlewares create new middlewares with given handlers
