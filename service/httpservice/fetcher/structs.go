@@ -30,7 +30,7 @@ func (r *PlainResult) ToResponse() (*http.Response, error) {
 	return r.Response, nil
 }
 func (r *PlainResult) Error() string {
-
+	return ""
 }
 
 type PlainTarget struct {
