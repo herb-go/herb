@@ -98,7 +98,7 @@ func (c *DummyCache) ExpireCounter(key string, ttl time.Duration) error {
 }
 
 func init() {
-	Register("dummycache", func(conf Config, prefix string) (Driver, error) {
+	Register("dummycache", func(loader func(interface{}) error) (Driver, error) {
 		return &DummyCache{}, nil
 	})
 }

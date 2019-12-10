@@ -243,9 +243,12 @@ func (config *Config) Create() (cache.Driver, error) {
 }
 
 func init() {
-	cache.Register("freecache", func(conf cache.Config, prefix string) (cache.Driver, error) {
+	cache.Register("freecache", func(loader func(interface{}) error) (cache.Driver, error) {
 		c := &Config{}
-		conf.Get(prefix+"Size", &c.Size)
+		err := loader(c)
+		if err != nil {
+			return nil, err
+		}
 		return c.Create()
 	})
 }

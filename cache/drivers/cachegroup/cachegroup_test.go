@@ -1,10 +1,11 @@
-package cachegroup
+package cachegroup_test
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/herb-go/herb/cache"
+	"github.com/herb-go/herbconfig/loader"
+	_ "github.com/herb-go/herbconfig/loader/drivers/jsonconfig"
 
 	"bytes"
 	"time"
@@ -35,18 +36,12 @@ func BenchmarkCacheWrite(b *testing.B) {
 }
 func newTestCache(ttl int64) *cache.Cache {
 	c := cache.New()
-	config := &cache.ConfigMap{}
-	err := json.Unmarshal([]byte(testConfig), config)
+	oc := cache.NewOptionConfig()
+	err := loader.LoadConfig("json", []byte(testConfig), oc)
 	if err != nil {
 		panic(err)
 	}
-	oc := &cache.OptionConfigMap{
-		Driver:    "cachegroup",
-		TTL:       ttl,
-		Config:    *config,
-		Marshaler: "json",
-	}
-
+	oc.TTL = ttl
 	err = c.Init(oc)
 
 	if err != nil {

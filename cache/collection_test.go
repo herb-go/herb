@@ -2,24 +2,33 @@ package cache_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/herb-go/herb/cache"
-	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
+	"github.com/herb-go/herb/cache/drivers/syncmapcache"
 )
 
 func newCollectionTestCache(ttl int64) *cache.Collection {
-	config := &cache.ConfigMap{}
-	config.Set("Size", 10000000)
-	c := cache.New()
-	oc := &cache.OptionConfigMap{
-		Driver:    "syncmapcache",
-		TTL:       int64(ttl),
-		Config:    nil,
-		Marshaler: "json",
+	config := syncmapcache.Config{
+		Size: 10000000,
 	}
-	err := c.Init(oc)
+	buf := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buf)
+	decoder := json.NewDecoder(buf)
+	err := encoder.Encode(config)
+	if err != nil {
+		panic(err)
+	}
+	c := cache.New()
+	oc := cache.NewOptionConfig()
+	oc.Driver = "syncmapcache"
+	oc.TTL = int64(ttl)
+	oc.Config = decoder.Decode
+	oc.Marshaler = "json"
+
+	err = c.Init(oc)
 	if err != nil {
 		panic(err)
 	}

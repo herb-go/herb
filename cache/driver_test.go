@@ -2,7 +2,6 @@ package cache_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/herb-go/herb/cache"
 	"github.com/herb-go/herb/cache/drivers/syncmapcache"
@@ -13,7 +12,7 @@ func TestDriver(t *testing.T) {
 	if len(factories) != 2 {
 		t.Fatal(factories)
 	}
-	dc, err := cache.NewDriver("dummycache", nil, "")
+	dc, err := cache.NewDriver("dummycache", nil)
 	if err != nil {
 		t.Errorf("New driver  error %s", err)
 	}
@@ -25,7 +24,7 @@ func TestDriver(t *testing.T) {
 	if len(factories) != 0 {
 		t.Fatal(factories)
 	}
-	cache.Register("dummycache", func(conf cache.Config, prefix string) (cache.Driver, error) {
+	cache.Register("dummycache", func(func(interface{}) error) (cache.Driver, error) {
 		return &cache.DummyCache{}, nil
 	})
 	syncmapcache.Register()
@@ -52,7 +51,7 @@ func TestDupdriver(t *testing.T) {
 			t.Fatal(stage)
 		}
 	}()
-	var testfactory = func(conf cache.Config, prefix string) (cache.Driver, error) {
+	var testfactory = func(func(interface{}) error) (cache.Driver, error) {
 		return nil, nil
 	}
 	cache.Register("test", testfactory)
@@ -62,7 +61,7 @@ func TestDupdriver(t *testing.T) {
 }
 
 func TestNotExistDriver(t *testing.T) {
-	_, err := cache.NewDriver("notexist", nil, "")
+	_, err := cache.NewDriver("notexist", nil)
 	if err == nil {
 		t.Fatal(err)
 	}
@@ -80,31 +79,31 @@ func TestMustNewDriver(t *testing.T) {
 		}
 	}()
 
-	_ = cache.MustNewDriver("dummycache", nil, "")
+	_ = cache.MustNewDriver("dummycache", nil)
 	stage = 1
-	_ = cache.MustNewDriver("notexist", nil, "")
+	_ = cache.MustNewDriver("notexist", nil)
 	stage = 2
 }
 
-func TestNewSubCache(t *testing.T) {
-	prefix := "test"
-	c := &cache.ConfigMap{}
-	c.Set(prefix+"Driver", "syncmapcache")
-	c.Set(prefix+"TTL", -1)
-	c.Set(prefix+"Config.Size", 100000)
-	c.Set(prefix+"Marshaler", "json")
-	ca, err := cache.NewSubCache(c, prefix)
-	if err != nil {
-		panic(err)
-	}
-	if ca.TTL != -1*time.Second {
-		t.Fatal(ca.TTL)
-	}
-	driver := ca.Driver.(*syncmapcache.Cache)
-	if driver == nil {
-		t.Fatal(driver)
-	}
-	if driver.Size != 100000 {
-		t.Fatal(driver)
-	}
-}
+// func TestNewSubCache(t *testing.T) {
+// 	prefix := "test"
+// 	c := &cache.ConfigMap{}
+// 	c.Set(prefix+"Driver", "syncmapcache")
+// 	c.Set(prefix+"TTL", -1)
+// 	c.Set(prefix+"Config.Size", 100000)
+// 	c.Set(prefix+"Marshaler", "json")
+// 	ca, err := cache.NewSubCache(c, prefix)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	if ca.TTL != -1*time.Second {
+// 		t.Fatal(ca.TTL)
+// 	}
+// 	driver := ca.Driver.(*syncmapcache.Cache)
+// 	if driver == nil {
+// 		t.Fatal(driver)
+// 	}
+// 	if driver.Size != 100000 {
+// 		t.Fatal(driver)
+// 	}
+// }

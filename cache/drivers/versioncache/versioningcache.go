@@ -8,9 +8,9 @@ import (
 	"github.com/herb-go/herb/cache"
 )
 
-const versionTypeKey = byte(1)
-const versionTypeValue = byte(2)
-const versionMinLength = 256
+const VersionTypeKey = byte(1)
+const VersionTypeValue = byte(2)
+const VersionMinLength = 256
 
 //ErrVersionFormatWrong raised when version format wrong
 var ErrVersionFormatWrong = errors.New("error version format wrong")
@@ -82,7 +82,7 @@ func (c *Cache) getVersion(key string) (byte, []byte, error) {
 	if err != nil {
 		return 0, nil, err
 	}
-	if len(b) < 2 || !(b[0] == versionTypeKey || b[0] == versionTypeValue) {
+	if len(b) < 2 || !(b[0] == VersionTypeKey || b[0] == VersionTypeValue) {
 		return 0, nil, ErrVersionFormatWrong
 	}
 	return b[0], b[1:], nil
@@ -92,15 +92,15 @@ func (c *Cache) getVersion(key string) (byte, []byte, error) {
 //Return any error raised.
 func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	var err error
-	if len(bytes) < versionMinLength {
+	if len(bytes) < VersionMinLength {
 		b := make([]byte, len(bytes)+1)
-		b[0] = versionTypeValue
+		b[0] = VersionTypeValue
 		copy(b[1:], bytes)
 		return c.Remote.SetBytesValue(key+cache.KeyPrefix, b, ttl)
 	}
 	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
 	b := make([]byte, len(ts)+1)
-	b[0] = versionTypeKey
+	b[0] = VersionTypeKey
 	copy(b[1:], ts)
 	err = c.Remote.SetBytesValue(key+cache.KeyPrefix, b, ttl)
 	if err != nil {
@@ -114,15 +114,15 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 //Return any error raised.
 func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	var err error
-	if len(bytes) < versionMinLength {
+	if len(bytes) < VersionMinLength {
 		b := make([]byte, len(bytes)+1)
-		b[0] = versionTypeValue
+		b[0] = VersionTypeValue
 		copy(b[1:], bytes)
 		return c.Remote.UpdateBytesValue(key+cache.KeyPrefix, b, ttl)
 	}
 	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
 	b := make([]byte, len(ts)+1)
-	b[0] = versionTypeKey
+	b[0] = VersionTypeKey
 	copy(b[1:], ts)
 	err = c.Remote.UpdateBytesValue(key+cache.KeyPrefix, b, ttl)
 
@@ -158,9 +158,9 @@ func (c *Cache) mGetVersions(data *map[string][]byte, keys ...string) (values ma
 		if bytesvalues[k] == nil {
 			continue
 		}
-		if bytesvalues[k][0] == versionTypeValue {
+		if bytesvalues[k][0] == VersionTypeValue {
 			(*data)[k[:len(k)-prefixLength]] = bytesvalues[k][1:]
-		} else if bytesvalues[k][0] == versionTypeKey {
+		} else if bytesvalues[k][0] == VersionTypeKey {
 			var key = k + string(bytesvalues[k][1:])
 			versions[versionsLength] = key
 			values[key] = k[:len(k)-prefixLength]
@@ -244,14 +244,14 @@ func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error 
 	var RemoteData = make(map[string][]byte, len(data))
 	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
 	for k := range data {
-		if len(data[k]) < versionMinLength {
+		if len(data[k]) < VersionMinLength {
 			b := make([]byte, len(data[k])+1)
-			b[0] = versionTypeValue
+			b[0] = VersionTypeValue
 			copy(b[1:], data[k])
 			versions[k+cache.KeyPrefix] = b
 		} else {
 			b := make([]byte, len(ts)+1)
-			b[0] = versionTypeKey
+			b[0] = VersionTypeKey
 			copy(b[1:], ts)
 			versions[k+cache.KeyPrefix] = b
 			RemoteData[k+cache.KeyPrefix+string(ts)] = data[k]
@@ -276,7 +276,7 @@ func (c *Cache) Del(key string) error {
 	if err != nil {
 		return err
 	}
-	if t == versionTypeValue {
+	if t == VersionTypeValue {
 		return nil
 	}
 	k := string(b)
@@ -295,7 +295,7 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	if err != nil {
 		return b, err
 	}
-	if t == versionTypeValue {
+	if t == VersionTypeValue {
 		return b, nil
 	}
 	versionKey := key + cache.KeyPrefix + string(b)
@@ -324,7 +324,7 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 	if err != nil {
 		return err
 	}
-	if t == versionTypeValue {
+	if t == VersionTypeValue {
 		return nil
 	}
 	versionKey := key + cache.KeyPrefix + string(b)
@@ -345,19 +345,24 @@ func (c *Cache) SetGCErrHandler(f func(err error)) {
 
 //Config Cache driver config.
 type Config struct {
-	Local  cache.Config
-	Remote cache.Config
+	Local  cache.OptionConfig
+	Remote cache.OptionConfig
 }
 
 func init() {
-	cache.Register("versioncache", func(conf cache.Config, prefix string) (cache.Driver, error) {
+	cache.Register("versioncache", func(loader func(interface{}) error) (cache.Driver, error) {
 		var err error
 		cc := &Cache{}
-		cc.Local, err = cache.NewSubCache(conf, prefix+"Local.")
+		config := &Config{}
+		err = loader(config)
 		if err != nil {
 			return nil, err
 		}
-		cc.Remote, err = cache.NewSubCache(conf, prefix+"Remote.")
+		cc.Local, err = cache.NewSubCache(&config.Local)
+		if err != nil {
+			return nil, err
+		}
+		cc.Remote, err = cache.NewSubCache(&config.Remote)
 		if err != nil {
 			return nil, err
 		}

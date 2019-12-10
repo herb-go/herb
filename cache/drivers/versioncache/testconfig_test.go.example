@@ -1,13 +1,26 @@
 //please rename this file to testconfig_test.go
-package versioncache
+package versioncache_test
 
-var testConfig = `{
-        "Local.Driver":"syncmapcache",
-        "Local.Config.Size":10000000",
-        "Local.Marshaler": "json",
-        "Local.TTL":1200,
-        "Remote.Driver":"syncmapcache",
-        "Remote.Marshaler": "json",
-        "Remote.Config.Size": 10000000,
-        "Remote.TTL":1200
+var testConfig = `
+{
+        "Driver":"versioncache",
+        "Marshaler": "json",
+        "Config":{
+                "Local":{
+                        "Driver":"syncmapcache",
+                        "Config":{
+                                "Size":10000000
+                        },
+                        "Marshaler": "json",
+                        "TTL":1200
+                },
+                "Remote":{
+                        "Driver":"syncmapcache",
+                        "Marshaler": "json",
+                        "Config":{
+                                "Size":10000000
+                        },
+                        "TTL":1200
+                }
+        }
 }`

@@ -368,14 +368,12 @@ func (config *Config) Create() (cache.Driver, error) {
 
 // Register syncmap cache to cache module
 func Register() {
-	cache.Register("syncmapcache", func(conf cache.Config, prefix string) (cache.Driver, error) {
+	cache.Register("syncmapcache", func(loader func(interface{}) error) (cache.Driver, error) {
 		c := &Config{}
-
-		conf.Get(prefix+"CleanupIntervalInSecond", &c.CleanupIntervalInSecond)
-		if c.CleanupIntervalInSecond == 0 {
-			c.CleanupIntervalInSecond = defaultCleanupIntervalInSecond
+		err := loader(c)
+		if err != nil {
+			return nil, err
 		}
-		conf.Get(prefix+"Size", &c.Size)
 		if c.Size <= 0 {
 			c.Size = defaultSize
 		}

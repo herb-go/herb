@@ -8,12 +8,12 @@ import (
 )
 
 func TestOption(t *testing.T) {
-	o := &cache.OptionConfigMap{}
-	o.Driver = "dummycache"
-	o.Config = nil
-	o.TTL = 3600
+	oc := cache.NewOptionConfig()
+	oc.Driver = "dummycache"
+	oc.TTL = int64(3600)
+	oc.Config = nil
 	c := cache.New()
-	err := c.Init(o)
+	err := c.Init(oc)
 	if err == nil {
 		t.Fatal(err)
 	}

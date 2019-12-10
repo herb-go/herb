@@ -210,13 +210,15 @@ func (config *Config) Create() (cache.Driver, error) {
 }
 
 func init() {
-	cache.Register("gocache", func(conf cache.Config, prefix string) (cache.Driver, error) {
+	cache.Register("gocache", func(loader func(interface{}) error) (cache.Driver, error) {
 		c := &Config{}
-		conf.Get(prefix+"DefaultExpirationInSecond", &c.DefaultExpirationInSecond)
+		err := loader(c)
+		if err != nil {
+			return nil, err
+		}
 		if c.DefaultExpirationInSecond == 0 {
 			c.DefaultExpirationInSecond = defaultExpirationInsecond
 		}
-		conf.Get(prefix+"CleanupIntervalInSecond", &c.CleanupIntervalInSecond)
 		if c.CleanupIntervalInSecond == 0 {
 			c.CleanupIntervalInSecond = defaultCleanupIntervalInSecond
 		}

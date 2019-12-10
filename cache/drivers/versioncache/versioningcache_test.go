@@ -1,4 +1,4 @@
-package versioncache
+package versioncache_test
 
 import (
 	"strings"
@@ -7,10 +7,12 @@ import (
 	"github.com/herb-go/herb/cache"
 
 	"bytes"
-	"encoding/json"
 	"time"
 
 	_ "github.com/herb-go/herb/cache/drivers/syncmapcache"
+	"github.com/herb-go/herb/cache/drivers/versioncache"
+	"github.com/herb-go/herbconfig/loader"
+	_ "github.com/herb-go/herbconfig/loader/drivers/jsonconfig"
 )
 
 func BenchmarkCacheRead(b *testing.B) {
@@ -37,18 +39,12 @@ func BenchmarkCacheWrite(b *testing.B) {
 func newTestCache(ttl int64) *cache.Cache {
 
 	c := cache.New()
-	config := &cache.ConfigMap{}
-	err := json.Unmarshal([]byte(testConfig), config)
+	oc := cache.NewOptionConfig()
+	err := loader.LoadConfig("json", []byte(testConfig), oc)
 	if err != nil {
 		panic(err)
 	}
-	oc := &cache.OptionConfigMap{
-		Driver:    "versioncache",
-		TTL:       ttl,
-		Config:    *config,
-		Marshaler: "json",
-	}
-
+	oc.TTL = ttl
 	err = c.Init(oc)
 	if err != nil {
 		panic(err)
@@ -171,8 +167,8 @@ func TestMSetMGet(t *testing.T) {
 		testkeys[0]: []byte("testModel1"),
 		testkeys[1]: []byte("testModel2"),
 		testkeys[2]: []byte("testModel3"),
-		testkeys[3]: []byte("testModel4" + strings.Repeat(".", versionMinLength)),
-		testkeys[4]: []byte("testModel5" + strings.Repeat(".", versionMinLength)),
+		testkeys[3]: []byte("testModel4" + strings.Repeat(".", versioncache.VersionMinLength)),
+		testkeys[4]: []byte("testModel5" + strings.Repeat(".", versioncache.VersionMinLength)),
 	}
 	var unusedKey = "unuseds"
 
@@ -321,7 +317,7 @@ func TestDefaulTTL(t *testing.T) {
 	testKey := "testKey"
 	testKey2 := "testKey2"
 	testKey3 := "testKey3"
-	testDataModel := "test" + strings.Repeat(".", versionMinLength)
+	testDataModel := "test" + strings.Repeat(".", versioncache.VersionMinLength)
 	var resultDataModel string
 	testDataBytes := []byte("testbytes")
 	var resultDataBytes []byte

@@ -16,12 +16,11 @@ func TestDummyCache(t *testing.T) {
 	testIncrement := int64(1)
 	testIntValue := int64(2)
 	var model string
-	oc := &cache.OptionConfigMap{
-		Driver:    "dummycache",
-		TTL:       int64(testTTL),
-		Config:    nil,
-		Marshaler: "json",
-	}
+	oc := cache.NewOptionConfig()
+	oc.Driver = "dummycache"
+	oc.TTL = int64(testTTL)
+	oc.Config = nil
+	oc.Marshaler = "json"
 	err := c.Init(oc)
 	if err != nil {
 		t.Fatal(err)

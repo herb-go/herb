@@ -1,13 +1,23 @@
-package cachegroup
+package cachegroup_test
 
-var testConfig = `{
-		"Caches":["Cache1","Cache2"],
-		"Cache1.Driver":"syncmapcache",
-		"Cache1.Config.Size": 10000000,
-		"Cache1.Marshaler": "json",
-		"Cache1.TTL":-1,
-		"Cache2.Driver":"syncmapcache",
-		"Cache2.Config.Size": 10000000,
-		"Cache2.Marshaler": "json",
-		"Cache2.TTL":-1
-		}`
+var testConfig = `
+{
+		"Driver":"cachegroup",
+		"Marshaler": "json",
+		"Config":
+			[{
+				"Driver":"syncmapcache",
+				"Config":{
+					"Size": 10000000
+				},
+				"Marshaler": "json",
+				"TTL":-1
+			},{
+				"Driver":"syncmapcache",
+				"Config":{
+					"Size": 10000000
+				},
+				"Marshaler": "json",
+				"TTL":-1
+			}]
+}`

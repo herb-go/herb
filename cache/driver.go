@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-//Factory create driver with given config and prefix
+//Factory create driver with given loader.
 //Reutrn driver created and any error if raised..
-type Factory func(conf Config, prefix string) (Driver, error)
+type Factory func(loader func(v interface{}) error) (Driver, error)
 
 //Driver : Cache driver interface.Should Never used directly
 type Driver interface {
@@ -75,62 +75,33 @@ func Factories() []string {
 
 //NewDriver create new dirver with given driver name,config and prefix.
 //Return driver created and any error if raised.
-func NewDriver(name string, conf Config, prefix string) (Driver, error) {
+func NewDriver(name string, loader func(v interface{}) error) (Driver, error) {
 	factorysMu.RLock()
 	factoryi, ok := factories[name]
 	factorysMu.RUnlock()
 	if !ok {
 		return nil, fmt.Errorf("cache: unknown driver %q (forgotten import?)", name)
 	}
-	return factoryi(conf, prefix)
+	return factoryi(loader)
 }
 
-//NewSubCache  create subcache with given config and prefix.
+//NewSubCache  create subcache with given loader.
 //Return cache created and any error if raised.
-func NewSubCache(conf Config, prefix string) (*Cache, error) {
+func NewSubCache(conf *OptionConfig) (*Cache, error) {
 	var err error
 	c := New()
-	var TTL int64
-	var DriverName string
-	var d Driver
-	err = conf.Get(prefix+"TTL", &TTL)
+	err = conf.ApplyTo(c)
 	if err != nil {
 		return nil, err
 	}
-	c.TTL = time.Duration(TTL) * time.Second
-	err = conf.Get(prefix+"Driver", &DriverName)
-	if err != nil {
-		return nil, err
-	}
-	d, err = NewDriver(DriverName, conf, prefix+"Config.")
-	if err != nil {
-		return nil, err
-	}
-	var mname = ""
-	if mname == "" {
-		mname = DefaultMarshaler
-	}
-	err = conf.Get(prefix+"Marshaler", &mname)
-	if err != nil {
-		return nil, err
-	}
-	marshaler, err := NewMarshaler(mname)
-	if err != nil {
-		return nil, err
-	}
-	u := NewUtil()
-	u.Marshaler = marshaler
-	d.SetUtil(u)
-
-	c.Driver = d
 	return c, nil
 }
 
-//MustNewDriver  create new dirver with given driver name,config and prefix.
+//MustNewDriver  create new dirver with given driver name and loader.
 //Return driver created.
 //Painc is any error raised.
-func MustNewDriver(name string, conf Config, prefix string) Driver {
-	d, err := NewDriver(name, conf, prefix)
+func MustNewDriver(name string, loader func(v interface{}) error) Driver {
+	d, err := NewDriver(name, loader)
 	if err != nil {
 		panic(err)
 	}

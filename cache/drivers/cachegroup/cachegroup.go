@@ -272,13 +272,16 @@ func (c *Cache) Flush() error {
 }
 
 func init() {
-	cache.Register("cachegroup", func(conf cache.Config, prefix string) (cache.Driver, error) {
+	cache.Register("cachegroup", func(loader func(interface{}) error) (cache.Driver, error) {
 		cc := Cache{}
-		var caches = []string{}
-		conf.Get(prefix+"Caches", &caches)
+		caches := []*cache.OptionConfig{}
+		err := loader(&caches)
+		if err != nil {
+			return nil, err
+		}
 		cc.SubCaches = make([]*cache.Cache, len(caches))
 		for k, v := range caches {
-			subcache, err := cache.NewSubCache(conf, prefix+v+".")
+			subcache, err := cache.NewSubCache(v)
 			if err != nil {
 				return nil, err
 			}

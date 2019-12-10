@@ -2,6 +2,7 @@ package syncmapcache
 
 import (
 	"bytes"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -31,17 +32,26 @@ func BenchmarkCacheWrite(b *testing.B) {
 }
 
 func newGCTestCache(ttl int64) *cache.Cache {
-	config := cache.ConfigMap{}
-	config.Set("Size", 10000000)
-	config.Set("CleanupIntervalInSecond", 2)
-	c := cache.New()
-	oc := &cache.OptionConfigMap{
-		Driver:    "syncmapcache",
-		TTL:       int64(ttl),
-		Config:    config,
-		Marshaler: "json",
+
+	config := Config{
+		Size: 10000000,
+		CleanupIntervalInSecond: 2,
 	}
-	err := c.Init(oc)
+	buf := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buf)
+	decoder := json.NewDecoder(buf)
+	err := encoder.Encode(config)
+	if err != nil {
+		panic(err)
+	}
+	c := cache.New()
+	oc := cache.NewOptionConfig()
+	oc.Driver = "syncmapcache"
+	oc.TTL = int64(ttl)
+	oc.Config = decoder.Decode
+	oc.Marshaler = "json"
+
+	err = c.Init(oc)
 	if err != nil {
 		panic(err)
 	}
@@ -143,16 +153,24 @@ func TestGc(t *testing.T) {
 }
 
 func newAutoRemoveTestCache(ttl int64) *cache.Cache {
-	config := cache.ConfigMap{}
-	config.Set("Size", 6)
-	c := cache.New()
-	oc := &cache.OptionConfigMap{
-		Driver:    "syncmapcache",
-		TTL:       int64(ttl),
-		Config:    config,
-		Marshaler: "json",
+	config := Config{
+		Size: 6,
 	}
-	err := c.Init(oc)
+	buf := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buf)
+	decoder := json.NewDecoder(buf)
+	err := encoder.Encode(config)
+	if err != nil {
+		panic(err)
+	}
+	c := cache.New()
+	oc := cache.NewOptionConfig()
+	oc.Driver = "syncmapcache"
+	oc.TTL = int64(ttl)
+	oc.Config = decoder.Decode
+	oc.Marshaler = "json"
+
+	err = c.Init(oc)
 	if err != nil {
 		panic(err)
 	}

@@ -1,10 +1,13 @@
 package gocache
 
-import "testing"
-import "github.com/herb-go/herb/cache"
+import (
+	"bytes"
+	"encoding/json"
+	"testing"
+	"time"
 
-import "bytes"
-import "time"
+	"github.com/herb-go/herb/cache"
+)
 
 func BenchmarkCacheRead(b *testing.B) {
 	c := newTestCache(300)
@@ -28,16 +31,23 @@ func BenchmarkCacheWrite(b *testing.B) {
 	})
 }
 func newTestCache(ttl int64) *cache.Cache {
-	config := cache.ConfigMap{}
-	config.Set("Size", 10000000)
-	c := cache.New()
-	oc := &cache.OptionConfigMap{
-		Driver:    "gocache",
-		TTL:       int64(ttl),
-		Config:    config,
-		Marshaler: "json",
+
+	config := Config{}
+	buf := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buf)
+	decoder := json.NewDecoder(buf)
+	err := encoder.Encode(config)
+	if err != nil {
+		panic(err)
 	}
-	err := c.Init(oc)
+	c := cache.New()
+	oc := cache.NewOptionConfig()
+	oc.Driver = "gocache"
+	oc.TTL = int64(ttl)
+	oc.Config = decoder.Decode
+	oc.Marshaler = "json"
+
+	err = c.Init(oc)
 	if err != nil {
 		panic(err)
 	}
