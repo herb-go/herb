@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/herb-go/herb/cache"
 	"github.com/herb-go/herb/cache/session"
 )
 
@@ -24,7 +23,7 @@ type Driver interface {
 
 //Factory driver createor with given config and prefix.
 //Return driver and any error raised.
-type Factory func(conf cache.Config, prefix string) (Driver, error)
+type Factory func(loader func(interface{}) error) (Driver, error)
 
 // Register makes a driver creator available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
@@ -63,12 +62,12 @@ func Factories() []string {
 
 //NewDriver create new driver with given name,config and prefix.
 //Return driver created and any error if raised.
-func NewDriver(name string, conf cache.Config, prefix string) (Driver, error) {
+func NewDriver(name string, loader func(interface{}) error) (Driver, error) {
 	factorysMu.RLock()
 	factoryi, ok := factories[name]
 	factorysMu.RUnlock()
 	if !ok {
 		return nil, fmt.Errorf("captcha: unknown driver %q (forgotten import?)", name)
 	}
-	return factoryi(conf, prefix)
+	return factoryi(loader)
 }

@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+var dummoyLoader = func(v interface{}) error {
+	return nil
+}
+
 //Factory create driver with given loader.
 //Reutrn driver created and any error if raised..
 type Factory func(loader func(v interface{}) error) (Driver, error)
@@ -76,6 +80,9 @@ func Factories() []string {
 //NewDriver create new dirver with given driver name,config and prefix.
 //Return driver created and any error if raised.
 func NewDriver(name string, loader func(v interface{}) error) (Driver, error) {
+	if loader == nil {
+		loader = dummoyLoader
+	}
 	factorysMu.RLock()
 	factoryi, ok := factories[name]
 	factorysMu.RUnlock()

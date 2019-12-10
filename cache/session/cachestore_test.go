@@ -2,7 +2,6 @@ package session
 
 import (
 	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -17,16 +16,14 @@ import (
 )
 
 func getStore(ttl time.Duration) *Store {
-	config := &cache.ConfigMap{}
-	config.Set("Size", 10000000)
 	c := cache.New()
-	oc := &cache.OptionConfigMap{
-		Driver:    "syncmapcache",
-		TTL:       int64(ttl / time.Second),
-		Config:    *config,
-		Marshaler: "json",
-	}
+	oc := cache.NewOptionConfig()
+	oc.Driver = "syncmapcache"
+	oc.TTL = int64(ttl) * int64(time.Second)
+	oc.Config = nil
+	oc.Marshaler = "json"
 	err := c.Init(oc)
+
 	if err != nil {
 		panic(err)
 	}
@@ -45,13 +42,12 @@ func getStore(ttl time.Duration) *Store {
 
 func getTimeoutStore(ttl time.Duration, UpdateActiveInterval time.Duration) *Store {
 	c := cache.New()
-	config := &cache.OptionConfigMap{}
-	config.Marshaler = "json"
-	err := json.Unmarshal([]byte(testCache), config)
-	if err != nil {
-		panic(err)
-	}
-	err = c.Init(config)
+	oc := cache.NewOptionConfig()
+	oc.Driver = "syncmapcache"
+	oc.TTL = int64(ttl) * int64(time.Second)
+	oc.Config = nil
+	oc.Marshaler = "json"
+	err := c.Init(oc)
 	if err != nil {
 		panic(err)
 	}

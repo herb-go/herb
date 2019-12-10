@@ -8,15 +8,12 @@ import (
 )
 
 func NewTestCacheStore(ttl time.Duration) *Store {
-	config := cache.ConfigMap{}
-	config.Set("Size", 10000000)
 	c := cache.New()
-	oc := &cache.OptionConfigMap{
-		Driver:    "syncmapcache",
-		TTL:       int64(ttl / time.Second),
-		Config:    config,
-		Marshaler: "json",
-	}
+	oc := cache.NewOptionConfig()
+	oc.Driver = "syncmapcache"
+	oc.TTL = int64(ttl) * int64(time.Second)
+	oc.Config = nil
+	oc.Marshaler = "json"
 	err := c.Init(oc)
 	if err != nil {
 		panic(err)

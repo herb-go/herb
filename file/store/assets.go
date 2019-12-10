@@ -121,26 +121,11 @@ func (c *AssetsStoreConfig) Create() (Driver, error) {
 
 //RegisterAssets register assets driver .
 func RegisterAssets() {
-	Register("assets", func(conf Config, prefix string) (Driver, error) {
+	Register("assets", func(loader func(v interface{}) error) (Driver, error) {
 		var err error
 		c := &AssetsStoreConfig{}
-		err = conf.Get(prefix+"URLHost", &c.URLHost)
-		if err != nil {
-			return nil, err
-		}
-		err = conf.Get(prefix+"URLPrefix", &c.URLPrefix)
-		if err != nil {
-			return nil, err
-		}
-		err = conf.Get(prefix+"Root", &c.Root)
-		if err != nil {
-			return nil, err
-		}
-		err = conf.Get(prefix+"Absolute", &c.Absolute)
-		if err != nil {
-			return nil, err
-		}
-		err = conf.Get(prefix+"Location", &c.Location)
+		err = loader(c)
+
 		if err != nil {
 			return nil, err
 		}

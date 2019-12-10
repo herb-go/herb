@@ -24,15 +24,12 @@ func NewCatpcha() *Captcha {
 	return captcha
 }
 func newEmptyCaptcha() *Captcha {
-	config := &cache.ConfigMap{}
-	config.Set("Size", 10000000)
 	sc := cache.New()
-	oc := &cache.OptionConfigMap{
-		Driver:    "syncmapcache",
-		TTL:       3600,
-		Config:    nil,
-		Marshaler: "json",
-	}
+	oc := cache.NewOptionConfig()
+	oc.Driver = "syncmapcache"
+	oc.TTL = 3600
+	oc.Config = nil
+	oc.Marshaler = "json"
 	err := sc.Init(oc)
 	if err != nil {
 		panic(err)

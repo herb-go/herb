@@ -1,19 +1,17 @@
 package captcha
 
-import "github.com/herb-go/herb/cache"
-
 //Config captcha config struct.
 type Config struct {
 	Enabled        bool
 	Driver         string
 	DisabledScenes map[string]bool
 	AddrWhiteList  []string
-	Config         cache.ConfigMap
+	Config         func(interface{}) error `config:", lazyload"`
 }
 
 //ApplyTo apply config to captcha.
 func (c *Config) ApplyTo(captcha *Captcha) error {
-	d, err := NewDriver(c.Driver, &c.Config, "")
+	d, err := NewDriver(c.Driver, c.Config)
 	if err != nil {
 		return err
 	}

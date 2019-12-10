@@ -14,15 +14,12 @@ import (
 )
 
 func newTestCache(ttl int64) *cache.Cache {
-	config := &cache.ConfigMap{}
-	config.Set("Size", 10000000)
 	c := cache.New()
-	oc := &cache.OptionConfigMap{
-		Driver:    "syncmapcache",
-		TTL:       ttl * int64(time.Second),
-		Config:    nil,
-		Marshaler: "json",
-	}
+	oc := cache.NewOptionConfig()
+	oc.Driver = "syncmapcache"
+	oc.TTL = ttl * int64(time.Second)
+	oc.Config = nil
+	oc.Marshaler = "json"
 	err := c.Init(oc)
 	if err != nil {
 		panic(err)

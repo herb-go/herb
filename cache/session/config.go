@@ -33,7 +33,7 @@ type StoreConfig struct {
 	ClientStoreKey               string
 	TokenPrefixMode              string
 	TokenLength                  int
-	Cache                        cache.OptionConfigMap
+	Cache                        cache.OptionConfig
 }
 
 //ApplyTo apply config to store.

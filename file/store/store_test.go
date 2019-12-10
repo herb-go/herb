@@ -32,13 +32,13 @@ func TestDupDriver(t *testing.T) {
 			t.Fatal(r)
 		}
 	}()
-	Register("assets", func(conf Config, prefix string) (Driver, error) {
+	Register("assets", func(func(interface{}) error) (Driver, error) {
 		return nil, nil
 	})
 }
 
 func TestNotExistDriver(t *testing.T) {
-	_, err := NewDriver("notexist", nil, "")
+	_, err := NewDriver("notexist", nil)
 	if err == nil {
 		t.Fatal("err")
 	}

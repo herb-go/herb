@@ -2,6 +2,7 @@ package store
 
 import (
 	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path"
@@ -10,11 +11,13 @@ import (
 
 func TestAssets(t *testing.T) {
 	data := bytes.NewBuffer([]byte("filedata"))
-	config := NewOptionConfigMap()
+	config := NewOptionConfig()
 	config.Driver = "assets"
-	config.Config.Set("URLHost", "http://www.test.com")
-	config.Config.Set("URLPrefix", "test")
-	config.Config.Set("Absolute", true)
+	conf := AssetsStoreConfig{
+		URLHost:   "http://www.test.com",
+		URLPrefix: "test",
+		Absolute:  true,
+	}
 	tmpdir, err := ioutil.TempDir("", "")
 	if err != nil {
 		t.Fatal(err)
@@ -22,8 +25,14 @@ func TestAssets(t *testing.T) {
 
 	defer os.RemoveAll(tmpdir)
 	os.Mkdir(path.Join(tmpdir, "local"), 0700)
-	config.Config.Set("Root", tmpdir)
-	config.Config.Set("Location", "local")
+	conf.Root = tmpdir
+	conf.Location = "local"
+	buf := bytes.NewBuffer(nil)
+	err = json.NewEncoder(buf).Encode(conf)
+	if err != nil {
+		panic(err)
+	}
+	config.Config = json.NewDecoder(buf).Decode
 	store := New()
 	err = store.Init(config)
 	if err != nil {
@@ -85,11 +94,14 @@ func TestAssets(t *testing.T) {
 
 func TestFileNameFail(t *testing.T) {
 	data := bytes.NewBuffer([]byte("filedata"))
-	config := NewOptionConfigMap()
+	config := NewOptionConfig()
 	config.Driver = "assets"
-	config.Config.Set("URLHost", "http://www.test.com")
-	config.Config.Set("URLPrefix", "test")
-	config.Config.Set("Absolute", true)
+	conf := AssetsStoreConfig{
+		URLHost:   "http://www.test.com",
+		URLPrefix: "test",
+		Absolute:  true,
+	}
+
 	tmpdir, err := ioutil.TempDir("", "")
 	if err != nil {
 		t.Fatal(err)
@@ -97,8 +109,15 @@ func TestFileNameFail(t *testing.T) {
 
 	defer os.RemoveAll(tmpdir)
 	os.Mkdir(path.Join(tmpdir, "local"), 0700)
-	config.Config.Set("Root", tmpdir)
-	config.Config.Set("Location", "local")
+	conf.Root = tmpdir
+	conf.Location = "local"
+	buf := bytes.NewBuffer(nil)
+	err = json.NewEncoder(buf).Encode(conf)
+	if err != nil {
+		panic(err)
+	}
+	config.Config = json.NewDecoder(buf).Decode
+
 	store := New()
 	err = store.Init(config)
 	if err != nil {
@@ -119,18 +138,26 @@ func TestFileNameFail(t *testing.T) {
 }
 
 func TestAbsolute(t *testing.T) {
-	config := NewOptionConfigMap()
+	config := NewOptionConfig()
 	config.Driver = "assets"
-	config.Config.Set("URLHost", "http://www.test.com")
-	config.Config.Set("URLPrefix", "test")
-	config.Config.Set("Absolute", false)
-	config.Config.Set("Root", "/")
-	config.Config.Set("Location", "testdata")
+	conf := AssetsStoreConfig{
+		URLHost:   "http://www.test.com",
+		URLPrefix: "test",
+		Absolute:  false,
+		Root:      "/",
+		Location:  "testdata",
+	}
+	buf := bytes.NewBuffer(nil)
+	err := json.NewEncoder(buf).Encode(conf)
+	if err != nil {
+		panic(err)
+	}
+	config.Config = json.NewDecoder(buf).Decode
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
-	driver, err := NewDriver(config.Driver, &config.Config, "")
+	driver, err := NewDriver(config.Driver, config.Config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,13 +167,21 @@ func TestAbsolute(t *testing.T) {
 	}
 }
 func TestUrlEncode(t *testing.T) {
-	config := NewOptionConfigMap()
+	config := NewOptionConfig()
 	config.Driver = "assets"
-	config.Config.Set("URLHost", "http://www.test.com")
-	config.Config.Set("URLPrefix", "test")
-	config.Config.Set("Absolute", true)
+	conf := AssetsStoreConfig{
+		URLHost:   "http://www.test.com",
+		URLPrefix: "test",
+		Absolute:  true,
+	}
 	store := New()
-	err := store.Init(config)
+	buf := bytes.NewBuffer(nil)
+	err := json.NewEncoder(buf).Encode(conf)
+	if err != nil {
+		panic(err)
+	}
+	config.Config = json.NewDecoder(buf).Decode
+	err = store.Init(config)
 	if err != nil {
 		t.Fatal(err)
 	}

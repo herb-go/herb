@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/herb-go/herb/cache"
 	"github.com/herb-go/herb/cache/session"
 )
 
@@ -50,7 +49,7 @@ func (d *testDriver) Verify(s *session.Store, r *http.Request, scene string, tok
 }
 
 func registerTestDriver() {
-	Register("testcaptcha", func(conf cache.Config, prefix string) (Driver, error) {
+	Register("testcaptcha", func(func(interface{}) error) (Driver, error) {
 		return &testDriver{}, nil
 	})
 }
@@ -85,13 +84,13 @@ func TestRegisterDupDriver(t *testing.T) {
 			t.Fatal(r)
 		}
 	}()
-	Register("testcaptcha", func(conf cache.Config, prefix string) (Driver, error) {
+	Register("testcaptcha", func(func(interface{}) error) (Driver, error) {
 		return &testDriver{}, nil
 	})
 }
 
 func TestNotExistDriver(t *testing.T) {
-	_, err := NewDriver("NotExist", nil, "")
+	_, err := NewDriver("NotExist", nil)
 	if err == nil {
 		t.Fatal(err)
 	}

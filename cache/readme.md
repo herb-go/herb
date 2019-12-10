@@ -46,7 +46,7 @@
 ### 创建缓存对象
 
     c:=cache.New()
-    config:=&cache.OptionConfigMap{}
+    config:=&cache.OptionConfig{}
     err:=config.ApplyTo(c)
 
 ### 操作二进制数据([]byte)
