@@ -1,12 +1,16 @@
-package guarder
+package guarder_test
 
 import (
-	"encoding/json"
 	"net/http"
 	"testing"
+
+	"github.com/herb-go/herbconfig/loader"
+	_ "github.com/herb-go/herbconfig/loader/drivers/jsonconfig"
+
+	"github.com/herb-go/herb/service/httpservice/guarder"
 )
 
-func newConfig() *DirverConfigMap {
+func newConfig() *guarder.DriverConfig {
 	config := `{
 		"Driver":"token",
 		"MapperDriver":"header",
@@ -17,8 +21,8 @@ func newConfig() *DirverConfigMap {
 			"Token":"testtoken"
 		}
 		}`
-	m := NewDriverConfigMap()
-	err := json.Unmarshal([]byte(config), m)
+	m := guarder.NewDriverConfig()
+	err := loader.LoadConfig("json", []byte(config), m)
 	if err != nil {
 		panic(err)
 	}
@@ -27,9 +31,9 @@ func newConfig() *DirverConfigMap {
 func TestRequest(t *testing.T) {
 	var err error
 	c := newConfig()
-	g := NewGuarder()
+	g := guarder.NewGuarder()
 	err = g.Init(c)
-	v := NewVisitor()
+	v := guarder.NewVisitor()
 	err = v.Init(c)
 	if err != nil {
 		t.Fatal(err)

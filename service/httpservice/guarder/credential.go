@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"sync"
-
-	"github.com/herb-go/herb/service"
 )
 
 type Credential interface {
@@ -14,7 +12,7 @@ type Credential interface {
 }
 
 //CredentialFactory guarder factory
-type CredentialFactory func(conf service.Config, prefix string) (Credential, error)
+type CredentialFactory func(loader func(interface{}) error) (Credential, error)
 
 var (
 	credentialFactorysMu sync.RWMutex
@@ -56,14 +54,14 @@ func CredentialFactories() []string {
 	return list
 }
 
-//NewCredentialDriver create new driver with given name,config and prefix.
+//NewCredentialDriver create new driver with given name and loader.
 //Reutrn driver created and any error if raised.
-func NewCredentialDriver(name string, conf service.Config, prefix string) (Credential, error) {
+func NewCredentialDriver(name string, loader func(interface{}) error) (Credential, error) {
 	credentialFactorysMu.RLock()
 	factoryi, ok := credentialFactories[name]
 	credentialFactorysMu.RUnlock()
 	if !ok {
 		return nil, fmt.Errorf("guarder: unknown credential driver %q (forgotten import?)", name)
 	}
-	return factoryi(conf, prefix)
+	return factoryi(loader)
 }

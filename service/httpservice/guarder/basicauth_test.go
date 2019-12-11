@@ -1,10 +1,10 @@
 package guarder
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"testing"
-
-	"github.com/herb-go/herb/service"
 )
 
 func TestBasicAuth(t *testing.T) {
@@ -12,7 +12,12 @@ func TestBasicAuth(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d, err := NewMapperDriver("basicauth", &service.ConfigMap{}, "")
+	buf := bytes.NewBuffer(nil)
+	err = json.NewEncoder(buf).Encode(BasicAuth{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	d, err := NewMapperDriver("basicauth", json.NewDecoder(buf).Decode)
 	if err != nil {
 		t.Fatal(err)
 	}

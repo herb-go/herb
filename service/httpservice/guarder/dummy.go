@@ -1,9 +1,5 @@
 package guarder
 
-import (
-	"github.com/herb-go/herb/service"
-)
-
 func NewDummy() *Dummy {
 	return &Dummy{}
 }
@@ -16,14 +12,14 @@ func (d *Dummy) IdentifyParams(p *Params) (string, error) {
 	return d.ID, nil
 }
 
-func blockAllIdentifierFactory(conf service.Config, prefix string) (Identifier, error) {
+func blockAllIdentifierFactory(loader func(interface{}) error) (Identifier, error) {
 	d := NewDummy()
 	return d, nil
 }
-func dummyIdentifierFactory(conf service.Config, prefix string) (Identifier, error) {
+func dummyIdentifierFactory(loader func(interface{}) error) (Identifier, error) {
 	var err error
 	d := NewDummy()
-	err = conf.Get("ID", &d.ID)
+	err = loader(d)
 	if err != nil {
 		return nil, err
 	}

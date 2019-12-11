@@ -1,15 +1,23 @@
 package guarder
 
 import (
+	"bytes"
+	"encoding/json"
 	"testing"
-
-	"github.com/herb-go/herb/service"
 )
 
 func TestTokenMap(t *testing.T) {
-	c := &service.ConfigMap{}
-	c.Set("Tokens", map[string]string{"testid": "testtoken"})
-	d, err := NewIdentifierDriver("tokenmap", c, "")
+	var err error
+
+	buf := bytes.NewBuffer(nil)
+	err = json.NewEncoder(buf).Encode(TokenMap{
+		Tokens: map[string]string{"testid": "testtoken"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d, err := NewIdentifierDriver("tokenmap", json.NewDecoder(buf).Decode)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,8 +53,16 @@ func TestTokenMap(t *testing.T) {
 	if id != "testid" {
 		t.Fatal(id)
 	}
-	c.Set("ToLower", true)
-	d, err = NewIdentifierDriver("tokenmap", c, "")
+
+	err = json.NewEncoder(buf).Encode(TokenMap{
+		Tokens:  map[string]string{"testid": "testtoken"},
+		ToLower: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d, err = NewIdentifierDriver("tokenmap", json.NewDecoder(buf).Decode)
 	if err != nil {
 		t.Fatal(err)
 	}

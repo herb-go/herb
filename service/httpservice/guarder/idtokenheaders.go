@@ -2,8 +2,6 @@ package guarder
 
 import (
 	"net/http"
-
-	"github.com/herb-go/herb/service"
 )
 
 type IDTokenHeaders struct {
@@ -30,17 +28,10 @@ func (h *IDTokenHeaders) WriteParamsToRequest(r *http.Request, p *Params) error 
 	return nil
 }
 
-func createIDTokenHeadersWithConfig(conf service.Config, prefix string) (*IDTokenHeaders, error) {
+func createIDTokenHeaders(loader func(interface{}) error) (*IDTokenHeaders, error) {
 	var err error
 	v := NewIDTokenHeaders()
-	if err != nil {
-		return nil, err
-	}
-	err = conf.Get("IDHeader", &v.IDHeader)
-	if err != nil {
-		return nil, err
-	}
-	err = conf.Get("TokenHeader", &v.TokenHeader)
+	err = loader(v)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +41,8 @@ func createIDTokenHeadersWithConfig(conf service.Config, prefix string) (*IDToke
 	return v, nil
 }
 
-func idTokenHeadersMapperFactory(conf service.Config, prefix string) (Mapper, error) {
-	return createIDTokenHeadersWithConfig(conf, prefix)
+func idTokenHeadersMapperFactory(loader func(interface{}) error) (Mapper, error) {
+	return createIDTokenHeaders(loader)
 }
 
 func registerIDTokenHeadersFactory() {

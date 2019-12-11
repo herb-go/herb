@@ -1,15 +1,22 @@
 package guarder
 
 import (
+	"bytes"
+	"encoding/json"
 	"testing"
-
-	"github.com/herb-go/herb/service"
 )
 
 func TestDummy(t *testing.T) {
-	c := &service.ConfigMap{}
-	c.Set("ID", "testid")
-	d, err := NewIdentifierDriver("dummy", c, "")
+	var err error
+	buf := bytes.NewBuffer(nil)
+	err = json.NewEncoder(buf).Encode(Dummy{
+		ID: "testid",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d, err := NewIdentifierDriver("dummy", json.NewDecoder(buf).Decode)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,9 +32,16 @@ func TestDummy(t *testing.T) {
 }
 
 func TestDummyDefault(t *testing.T) {
-	c := &service.ConfigMap{}
-	c.Set("ID", "testid")
-	d, err := NewIdentifierDriver("", c, "")
+	var err error
+	buf := bytes.NewBuffer(nil)
+	err = json.NewEncoder(buf).Encode(Dummy{
+		ID: "testid",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d, err := NewIdentifierDriver("", json.NewDecoder(buf).Decode)
 	if err != nil {
 		t.Fatal(err)
 	}

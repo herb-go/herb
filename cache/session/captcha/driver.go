@@ -21,7 +21,7 @@ type Driver interface {
 	Verify(s *session.Store, r *http.Request, scene string, token string) (bool, error)
 }
 
-//Factory driver createor with given config and prefix.
+//Factory driver createor with given loader.
 //Return driver and any error raised.
 type Factory func(loader func(interface{}) error) (Driver, error)
 
@@ -60,7 +60,7 @@ func Factories() []string {
 	return list
 }
 
-//NewDriver create new driver with given name,config and prefix.
+//NewDriver create new driver with given name loader.
 //Return driver created and any error if raised.
 func NewDriver(name string, loader func(interface{}) error) (Driver, error) {
 	factorysMu.RLock()

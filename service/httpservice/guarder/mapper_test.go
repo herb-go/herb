@@ -32,7 +32,7 @@ func TestMapperDriver(t *testing.T) {
 		registerBasicAuthFactory()
 		registerBasicAuthFactory()
 	}()
-	_, err := NewMapperDriver("notexistsdriver", nil, "")
+	_, err := NewMapperDriver("notexistsdriver", nil)
 	if err == nil {
 		t.Fatal(err)
 	}

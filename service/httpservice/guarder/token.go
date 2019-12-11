@@ -1,9 +1,5 @@
 package guarder
 
-import (
-	"github.com/herb-go/herb/service"
-)
-
 type Token struct {
 	Token string
 	ID    StaticID
@@ -38,24 +34,20 @@ func (t *Token) CredentialParams() (*Params, error) {
 	return p, nil
 }
 
-func createTokenWithConfig(conf service.Config, prefix string) (*Token, error) {
+func createToken(loader func(interface{}) error) (*Token, error) {
 	var err error
 	t := NewToken()
-	err = conf.Get("Token", &t.Token)
-	if err != nil {
-		return nil, err
-	}
-	err = conf.Get("ID", &t.ID)
+	err = loader(t)
 	if err != nil {
 		return nil, err
 	}
 	return t, nil
 }
-func tokenCredentialFactory(conf service.Config, prefix string) (Credential, error) {
-	return createTokenWithConfig(conf, prefix)
+func tokenCredentialFactory(loader func(interface{}) error) (Credential, error) {
+	return createToken(loader)
 }
-func tokenIdentifierFactory(conf service.Config, prefix string) (Identifier, error) {
-	return createTokenWithConfig(conf, prefix)
+func tokenIdentifierFactory(loader func(interface{}) error) (Identifier, error) {
+	return createToken(loader)
 }
 func registerTokenFactory() {
 	RegisterCredential("token", tokenCredentialFactory)

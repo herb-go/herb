@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"sync"
-
-	"github.com/herb-go/herb/service"
 )
 
 type Identifier interface {
@@ -14,7 +12,7 @@ type Identifier interface {
 }
 
 //IdentifierFactory guarder factory
-type IdentifierFactory func(conf service.Config, prefix string) (Identifier, error)
+type IdentifierFactory func(loader func(interface{}) error) (Identifier, error)
 
 var (
 	identifierFactorysMu sync.RWMutex
@@ -56,14 +54,14 @@ func IdentifierFactories() []string {
 	return list
 }
 
-//NewIdentifierDriver create new driver with given name,config and prefix.
+//NewIdentifierDriver create new driver with given name and loader.
 //Reutrn driver created and any error if raised.
-func NewIdentifierDriver(name string, conf service.Config, prefix string) (Identifier, error) {
+func NewIdentifierDriver(name string, loader func(interface{}) error) (Identifier, error) {
 	identifierFactorysMu.RLock()
 	factoryi, ok := identifierFactories[name]
 	identifierFactorysMu.RUnlock()
 	if !ok {
 		return nil, fmt.Errorf("guarder: unknown identifier driver %q (forgotten import?)", name)
 	}
-	return factoryi(conf, prefix)
+	return factoryi(loader)
 }

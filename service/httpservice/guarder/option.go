@@ -1,9 +1,5 @@
 package guarder
 
-import (
-	"github.com/herb-go/herb/service"
-)
-
 type GuarderOption interface {
 	ApplyToGuarder(g *Guarder) error
 }
@@ -12,17 +8,28 @@ type VisitorOption interface {
 	ApplyToVisitor(v *Visitor) error
 }
 
-type DriverConfig interface {
-	MapperDriverName() string
-	DriverName() string
-	DriverConfig() service.Config
+func NewDriverConfig() *DriverConfig {
+	return &DriverConfig{}
 }
 
-func ApplyToGuarder(g *Guarder, c DriverConfig) error {
-	config := c.DriverConfig()
+type DriverConfig struct {
+	DriverField
+	MapperDriverField
+	Config func(interface{}) error `config:", lazyload"`
+}
+
+func (c *DriverConfig) ApplyToGuarder(g *Guarder) error {
+	return ApplyToGuarder(g, c)
+}
+
+func (c *DriverConfig) ApplyToVisitor(v *Visitor) error {
+	return ApplyToVisitor(v, c)
+}
+
+func ApplyToGuarder(g *Guarder, c *DriverConfig) error {
 	if g.Mapper == nil {
 		d := c.MapperDriverName()
-		driver, err := NewMapperDriver(d, config, "")
+		driver, err := NewMapperDriver(d, c.Config)
 		if err != nil {
 			return err
 		}
@@ -30,7 +37,7 @@ func ApplyToGuarder(g *Guarder, c DriverConfig) error {
 	}
 	if g.Identifier == nil {
 		d := c.DriverName()
-		driver, err := NewIdentifierDriver(d, config, "")
+		driver, err := NewIdentifierDriver(d, c.Config)
 		if err != nil {
 			return err
 		}
@@ -41,11 +48,10 @@ func ApplyToGuarder(g *Guarder, c DriverConfig) error {
 
 }
 
-func ApplyToVisitor(v *Visitor, c DriverConfig) error {
-	config := c.DriverConfig()
+func ApplyToVisitor(v *Visitor, c *DriverConfig) error {
 	if v.Mapper == nil {
 		d := c.MapperDriverName()
-		driver, err := NewMapperDriver(d, config, "")
+		driver, err := NewMapperDriver(d, c.Config)
 		if err != nil {
 			return err
 		}
@@ -53,7 +59,7 @@ func ApplyToVisitor(v *Visitor, c DriverConfig) error {
 	}
 	if v.Credential == nil {
 		d := c.DriverName()
-		driver, err := NewCredentialDriver(d, config, "")
+		driver, err := NewCredentialDriver(d, c.Config)
 		if err != nil {
 			return err
 		}
@@ -92,26 +98,4 @@ func (f *MapperDriverField) MapperDriverName() string {
 		return f.MapperDriver
 	}
 	return f.staticMapperDriver
-}
-
-func NewDriverConfigMap() *DirverConfigMap {
-	return &DirverConfigMap{}
-}
-
-type DirverConfigMap struct {
-	DriverField
-	MapperDriverField
-	Config service.ConfigMap
-}
-
-func (c *DirverConfigMap) DriverConfig() service.Config {
-	return &c.Config
-}
-
-func (c *DirverConfigMap) ApplyToGuarder(g *Guarder) error {
-	return ApplyToGuarder(g, c)
-}
-
-func (c *DirverConfigMap) ApplyToVisitor(v *Visitor) error {
-	return ApplyToVisitor(v, c)
 }

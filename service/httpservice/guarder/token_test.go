@@ -1,19 +1,32 @@
 package guarder
 
 import (
+	"bytes"
+	"encoding/json"
 	"testing"
-
-	"github.com/herb-go/herb/service"
 )
 
 func TestToken(t *testing.T) {
-	c := &service.ConfigMap{}
-	c.Set("Token", "testtoken")
-	idDriver, err := NewIdentifierDriver("token", c, "")
+	var err error
+	buf := bytes.NewBuffer(nil)
+	err = json.NewEncoder(buf).Encode(Token{
+		Token: "testtoken",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	cDriver, err := NewCredentialDriver("token", c, "")
+	idDriver, err := NewIdentifierDriver("token", json.NewDecoder(buf).Decode)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = json.NewEncoder(buf).Encode(Token{
+		Token: "testtoken",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cDriver, err := NewCredentialDriver("token", json.NewDecoder(buf).Decode)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,12 +49,27 @@ func TestToken(t *testing.T) {
 	if id != DefaultStaticID {
 		t.Fatal(id)
 	}
-	c.Set("ID", "testid")
-	idDriver, err = NewIdentifierDriver("token", c, "")
+	err = json.NewEncoder(buf).Encode(Token{
+		ID:    "testid",
+		Token: "testtoken",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	cDriver, err = NewCredentialDriver("token", c, "")
+
+	idDriver, err = NewIdentifierDriver("token", json.NewDecoder(buf).Decode)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = json.NewEncoder(buf).Encode(Token{
+		ID:    "testid",
+		Token: "testtoken",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cDriver, err = NewCredentialDriver("token", json.NewDecoder(buf).Decode)
 	if err != nil {
 		t.Fatal(err)
 	}

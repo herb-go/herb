@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"sort"
 	"sync"
-
-	"github.com/herb-go/herb/service"
 )
 
 type Mapper interface {
@@ -16,7 +14,7 @@ type Mapper interface {
 }
 
 //MapperFactory guarder factory
-type MapperFactory func(conf service.Config, prefix string) (Mapper, error)
+type MapperFactory func(loader func(interface{}) error) (Mapper, error)
 
 var (
 	mapperFactorysMu sync.RWMutex
@@ -58,14 +56,14 @@ func MapperFactories() []string {
 	return list
 }
 
-//NewMapperDriver create new driver with given name,config and prefix.
+//NewMapperDriver create new driver with given name and loader.
 //Reutrn driver created and any error if raised.
-func NewMapperDriver(name string, conf service.Config, prefix string) (Mapper, error) {
+func NewMapperDriver(name string, loader func(interface{}) error) (Mapper, error) {
 	mapperFactorysMu.RLock()
 	factoryi, ok := mapperFactories[name]
 	mapperFactorysMu.RUnlock()
 	if !ok {
 		return nil, fmt.Errorf("guarder: unknown mapper driver %q (forgotten import?)", name)
 	}
-	return factoryi(conf, prefix)
+	return factoryi(loader)
 }

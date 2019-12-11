@@ -32,7 +32,7 @@ func TestCredentialDriver(t *testing.T) {
 		registerTokenMapFactory()
 		registerTokenMapFactory()
 	}()
-	_, err := NewCredentialDriver("notexistsdriver", nil, "")
+	_, err := NewCredentialDriver("notexistsdriver", nil)
 	if err == nil {
 		t.Fatal(err)
 	}

@@ -77,7 +77,7 @@ func Factories() []string {
 	return list
 }
 
-//NewDriver create new dirver with given driver name,config and prefix.
+//NewDriver create new dirver with given driver name and loader.
 //Return driver created and any error if raised.
 func NewDriver(name string, loader func(v interface{}) error) (Driver, error) {
 	if loader == nil {

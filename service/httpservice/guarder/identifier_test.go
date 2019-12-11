@@ -32,7 +32,7 @@ func TestIdentifierDriver(t *testing.T) {
 		registerTokenFactory()
 		registerTokenFactory()
 	}()
-	_, err := NewIdentifierDriver("notexistsdriver", nil, "")
+	_, err := NewIdentifierDriver("notexistsdriver", nil)
 	if err == nil {
 		t.Fatal(err)
 	}

@@ -1,10 +1,10 @@
 package guarder
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"testing"
-
-	"github.com/herb-go/herb/service"
 )
 
 func TestIDTokenHeaders(t *testing.T) {
@@ -12,9 +12,16 @@ func TestIDTokenHeaders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c := &service.ConfigMap{}
-	c.Set("IDHeader", "id")
-	d, err := NewMapperDriver("header", c, "")
+
+	buf := bytes.NewBuffer(nil)
+	err = json.NewEncoder(buf).Encode(IDTokenHeaders{
+		IDHeader: "id",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d, err := NewMapperDriver("header", json.NewDecoder(buf).Decode)
 	if err != nil {
 		t.Fatal(err)
 	}
