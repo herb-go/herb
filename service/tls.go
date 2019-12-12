@@ -10,6 +10,14 @@ type TLSConfig struct {
 	TLSKeyPath string
 }
 
+func (c *TLSConfig) Clone() *TLSConfig {
+	return &TLSConfig{
+		TLS:         c.TLS,
+		TLSCertPath: c.TLSCertPath,
+		TLSKeyPath:  c.TLSKeyPath,
+	}
+}
+
 //ServerIsTLSEnabeld return is server tls enabled
 func (c *TLSConfig) ServerIsTLSEnabeld() bool {
 	return c.TLS

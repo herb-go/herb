@@ -27,6 +27,19 @@ type Config struct {
 	MaxHeaderBytes int
 }
 
+func (c *Config) Clone() *Config {
+	return &Config{
+		ListenerConfig:            *c.ListenerConfig.Clone(),
+		TLSConfig:                 *c.TLSConfig.Clone(),
+		BaseURL:                   c.BaseURL,
+		ReadTimeoutInSecond:       c.ReadTimeoutInSecond,
+		ReadHeaderTimeoutInSecond: c.ReadHeaderTimeoutInSecond,
+		WriteTimeoutInSecond:      c.WriteTimeoutInSecond,
+		IdleTimeoutInSecond:       c.IdleTimeoutInSecond,
+		MaxHeaderBytes:            c.MaxHeaderBytes,
+	}
+}
+
 //IsEmpty check if config is empty
 func (c *Config) IsEmpty() bool {
 	if c == nil {
