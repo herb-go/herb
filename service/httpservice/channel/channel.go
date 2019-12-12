@@ -1,6 +1,7 @@
 package channel
 
 import (
+	"net/http"
 	"net/url"
 	"sync"
 
@@ -20,4 +21,11 @@ func (c *Channel) Host() string {
 		Host:   c.Addr,
 	}
 	return u.String()
+}
+
+func (c *Channel) Handle(h http.Handler) error {
+	locker.Lock()
+	defer locker.Unlock()
+	s := getServer(c.Host())
+	return s.handle(c.Path, h)
 }

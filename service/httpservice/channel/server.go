@@ -1,6 +1,7 @@
 package channel
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -28,24 +29,44 @@ func setConfig(host string, c *httpservice.Config) {
 var DefaultConfig = &httpservice.Config{}
 
 type Server struct {
-	handelrs map[string]Handler
+	running  *int
+	handlers map[string]*Handler
 	server   *http.Server
+	mux      *http.ServeMux
 	channels sync.Map
 }
 
+func (s *Server) handle(path string, h http.Handler) error {
+	_, ok := s.handlers[path]
+	if ok {
+		return fmt.Errorf("channel: %s %w", path, ErrChannelUsed)
+	}
+	s.handlers[path] = NewHandler(h)
+	return nil
+}
 func newServer(host string) *Server {
 	c := getConfig(host)
 	if c == nil {
 		c = DefaultConfig.Clone()
 	}
+	running := 0
+	s := c.Server()
+	m := http.NewServeMux()
+	s.Handler = m
 	return &Server{
-		handelrs: map[string]Handler{},
-		server:   c.Server(),
+		running:  &running,
+		handlers: map[string]*Handler{},
+		server:   s,
+		mux:      m,
 	}
 }
+
 func GetServer(host string) *Server {
 	locker.Lock()
 	defer locker.Unlock()
+	return getServer(host)
+}
+func getServer(host string) *Server {
 	s := servers[host]
 	if s != nil {
 		return s
