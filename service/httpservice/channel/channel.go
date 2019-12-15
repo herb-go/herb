@@ -10,6 +10,10 @@ import (
 
 var channels = sync.Map{}
 
+var DefaultNet = "tcp"
+
+var DefaulAddr = "127.0.0.1:2531"
+
 type Channel struct {
 	service.ListenerConfig
 	Path string
@@ -19,6 +23,12 @@ func (c *Channel) Host() string {
 	u := &url.URL{
 		Scheme: c.Net,
 		Host:   c.Addr,
+	}
+	if u.Scheme == "" {
+		u.Scheme = DefaultNet
+	}
+	if u.Host == "" {
+		u.Host = DefaulAddr
 	}
 	return u.String()
 }

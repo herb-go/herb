@@ -27,7 +27,11 @@ func setConfig(host string, c *httpservice.Config) {
 	configs.Store(host, c)
 }
 
-var DefaultConfig = &httpservice.Config{}
+var DefaultConfig = PresetDefaultConfig()
+
+func PresetDefaultConfig() *httpservice.Config {
+	return &httpservice.Config{}
+}
 
 type Server struct {
 	running  int
@@ -97,12 +101,22 @@ func (s *Server) stop(path string) error {
 }
 
 func (s *Server) stopServer() error {
-	var err error
-	err = s.server.Close()
+	var err, errlistener error
+	if s.server != nil {
+		err = s.server.Close()
+	}
+	s.server = nil
+	if s.listener != nil {
+		errlistener = s.listener.Close()
+	}
+	s.listener = nil
 	if err != nil {
 		return err
 	}
-	return s.listener.Close()
+	if errlistener != nil {
+		return errlistener
+	}
+	return nil
 }
 func (s *Server) handle(path string, h http.Handler) error {
 	_, ok := s.handlers[path]
@@ -141,4 +155,17 @@ func getServer(host string) *Server {
 	s = newServer(host)
 	servers[host] = s
 	return s
+}
+
+func ResetServers() {
+	locker.Lock()
+	defer locker.Unlock()
+	for _, s := range servers {
+		s.stopServer()
+	}
+	servers = map[string]*Server{}
+}
+
+func ResetConfigs() {
+
 }
