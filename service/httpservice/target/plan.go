@@ -13,7 +13,7 @@ type PlainPlan struct {
 func (p *PlainPlan) Execute() (*http.Response, error) {
 	return Execute(p)
 }
-func (p *PlainPlan) WithDoder(d Doer) *PlainPlan {
+func (p *PlainPlan) WithDoer(d Doer) *PlainPlan {
 	p.Doer = d
 	return p
 }

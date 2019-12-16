@@ -11,10 +11,10 @@ type Handler struct {
 }
 
 func (h *Handler) Start() {
-	h.stoped.Store(true)
+	h.stoped.Store(false)
 }
 func (h *Handler) Stop() {
-	h.stoped.Store(false)
+	h.stoped.Store(true)
 }
 func (h *Handler) Stoped() bool {
 	return h.stoped.Load().(bool)

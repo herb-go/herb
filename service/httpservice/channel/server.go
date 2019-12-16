@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/herb-go/herb/service"
 	"github.com/herb-go/herb/service/httpservice"
 )
 
@@ -37,7 +38,6 @@ type Server struct {
 	running  int
 	handlers map[string]*Handler
 	server   *http.Server
-	listener net.Listener
 	mux      *http.ServeMux
 	channels sync.Map
 	config   *httpservice.Config
@@ -68,8 +68,8 @@ func (s *Server) startServer() error {
 	if err != nil {
 		return err
 	}
-	s.listener = l
 	s.server = s.config.Server()
+	s.server.Handler = s.mux
 	go func() {
 		if !s.config.TLS {
 			s.server.Serve(l)
@@ -101,58 +101,62 @@ func (s *Server) stop(path string) error {
 }
 
 func (s *Server) stopServer() error {
-	var err, errlistener error
+	var err error
 	if s.server != nil {
 		err = s.server.Close()
 	}
 	s.server = nil
-	if s.listener != nil {
-		errlistener = s.listener.Close()
-	}
-	s.listener = nil
-	if err != nil {
-		return err
-	}
-	if errlistener != nil {
-		return errlistener
-	}
-	return nil
+	return err
 }
-func (s *Server) handle(path string, h http.Handler) error {
+func (s *Server) handle(path string, h http.Handler) (err error) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+		e := r.(error)
+		if e == nil {
+			panic(r)
+		}
+		err = e
+	}()
 	_, ok := s.handlers[path]
 	if ok {
 		return fmt.Errorf("channel: %s %w", path, ErrChannelUsed)
 	}
-	s.handlers[path] = NewHandler(h)
+	handler := NewHandler(http.StripPrefix(path, h))
+	s.handlers[path] = handler
+	s.mux.Handle(path, handler)
 	return nil
 }
-func newServer(host string) *Server {
+func newServer(l *service.ListenerConfig) *Server {
+	host := convertListenerToString(getListener(l))
 	c := getConfig(host)
 	if c == nil {
 		c = DefaultConfig.Clone()
 	}
-	s := c.Server()
+	c.ListenerConfig = *l
 	m := http.NewServeMux()
-	s.Handler = m
 	return &Server{
 		running:  0,
+		config:   c,
 		handlers: map[string]*Handler{},
-		server:   s,
 		mux:      m,
 	}
 }
 
-func GetServer(host string) *Server {
+func GetServer(l *service.ListenerConfig) *Server {
 	locker.Lock()
 	defer locker.Unlock()
-	return getServer(host)
+	return getServer(l)
 }
-func getServer(host string) *Server {
+func getServer(l *service.ListenerConfig) *Server {
+	host := convertListenerToString(getListener(l))
 	s := servers[host]
 	if s != nil {
 		return s
 	}
-	s = newServer(host)
+	s = newServer(l)
 	servers[host] = s
 	return s
 }

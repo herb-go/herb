@@ -12,28 +12,37 @@ var channels = sync.Map{}
 
 var DefaultNet = "tcp"
 
-var DefaulAddr = "127.0.0.1:2531"
+var DefaultAddr = "127.0.0.1:2531"
 
 type Channel struct {
 	service.ListenerConfig
 	Path string
 }
 
-func (c *Channel) Host() string {
+func getListener(l *service.ListenerConfig) (string, string) {
+	net := DefaultNet
+	addr := DefaultAddr
+	if l != nil {
+		if l.Net != "" {
+			net = l.Net
+		}
+		if l.Addr != "" {
+			addr = l.Addr
+		}
+	}
+	return net, addr
+}
+
+func convertListenerToString(net, addr string) string {
 	u := &url.URL{
-		Scheme: c.Net,
-		Host:   c.Addr,
-	}
-	if u.Scheme == "" {
-		u.Scheme = DefaultNet
-	}
-	if u.Host == "" {
-		u.Host = DefaulAddr
+		Scheme: net,
+		Host:   addr,
 	}
 	return u.String()
 }
+
 func (c *Channel) getServer() *Server {
-	return getServer(c.Host())
+	return getServer(&c.ListenerConfig)
 }
 func (c *Channel) Handle(h http.Handler) error {
 	locker.Lock()
@@ -51,4 +60,8 @@ func (c *Channel) Stop() error {
 	locker.Lock()
 	defer locker.Unlock()
 	return c.getServer().stop(c.Path)
+}
+
+func NewChannel() *Channel {
+	return &Channel{}
 }
