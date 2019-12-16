@@ -12,7 +12,7 @@ var channels = sync.Map{}
 
 var DefaultNet = "tcp"
 
-var DefaultAddr = "127.0.0.1:2531"
+var DefaultAddr = "127.0.0.1:3125"
 
 type Channel struct {
 	service.ListenerConfig
