@@ -1,6 +1,7 @@
 package channel
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -115,9 +116,13 @@ func (s *Server) handle(path string, h http.Handler) (err error) {
 		if r == nil {
 			return
 		}
-		e := r.(error)
-		if e == nil {
-			panic(r)
+		e, ok := r.(error)
+		if ok == false {
+			s, ok := r.(string)
+			if ok == false {
+				panic(r)
+			}
+			e = errors.New(s)
 		}
 		err = e
 	}()

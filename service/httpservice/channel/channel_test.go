@@ -44,15 +44,21 @@ func TestChannel(t *testing.T) {
 	defer resetAll()
 	channel := newTestChannel("/test")
 	channel2 := newTestChannel("/test2/")
-	channel.Handle(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	err := channel.Handle(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		result = append(result, "test")
 		w.Write(nil)
 	}))
-	channel2.Handle(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = channel2.Handle(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		result = append(result, r.URL.Path)
 		w.Write(nil)
 	}))
-	err := channel.Start()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = channel.Start()
 	if err != nil {
 		t.Fatal(err)
 	}
