@@ -2,7 +2,6 @@ package channel
 
 import (
 	"fmt"
-	"net"
 	"net/http"
 	"sync"
 
@@ -73,19 +72,12 @@ func (s *Server) start(path string) error {
 }
 
 func (s *Server) startServer() error {
-	l, err := net.Listen(s.config.Net, s.config.Addr)
+	server, err := s.config.Serve(s.mux)
 	if err != nil {
 		return err
 	}
-	s.server = s.config.Server()
+	s.server = server
 	s.server.Handler = s.mux
-	go func() {
-		if !s.config.TLS {
-			s.server.Serve(l)
-		} else {
-			s.server.ServeTLS(l, s.config.TLSCertPath, s.config.TLSKeyPath)
-		}
-	}()
 	return nil
 }
 func (s *Server) stop(path string) error {

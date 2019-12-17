@@ -3,6 +3,7 @@ package httpservice
 import (
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"time"
 
@@ -93,6 +94,25 @@ func (c *Config) Server() *http.Server {
 	}
 	server.ErrorLog = log.New(ioutil.Discard, "", 0)
 	return server
+}
+
+func (c *Config) Serve(h http.Handler) (*http.Server, error) {
+	var err error
+	l, err := net.Listen(c.Net, c.Addr)
+	if err != nil {
+		return nil, err
+	}
+	server := c.Server()
+	server.Handler = h
+	go func() {
+		if !c.TLS {
+			server.Serve(l)
+		} else {
+			server.ServeTLS(l, c.TLSCertPath, c.TLSKeyPath)
+		}
+	}()
+	return server, nil
+
 }
 
 //NewConfig create new config.
