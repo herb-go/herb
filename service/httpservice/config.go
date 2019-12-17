@@ -94,3 +94,8 @@ func (c *Config) Server() *http.Server {
 	server.ErrorLog = log.New(ioutil.Discard, "", 0)
 	return server
 }
+
+//NewConfig create new config.
+func NewConfig() *Config {
+	return &Config{}
+}

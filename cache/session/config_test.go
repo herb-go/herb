@@ -11,8 +11,8 @@ func TestCacheStoreConfig(t *testing.T) {
 	config.DriverName = DriverNameCacheStore
 	config.Cache.Driver = "syncmapcache"
 	config.Cache.TTL = 3600
-	config.TokenLifetimeInHour = 1
-	config.TokenMaxLifetimeInDay = 7
+	config.TokenLifetime = "1h"
+	config.TokenMaxLifetime = "168h"
 	config.TokenContextName = "token"
 	config.CookieName = "cookiename"
 	config.CookiePath = "/"
@@ -51,29 +51,13 @@ func TestCacheStoreConfig(t *testing.T) {
 	}
 }
 
-func TestCacheLifetimeInDay(t *testing.T) {
-	var err error
-	config := &StoreConfig{}
-	config.DriverName = DriverNameCacheStore
-	config.Cache.Driver = "syncmapcache"
-	config.TokenLifetimeInDay = 1
-	store := New()
-	err = config.ApplyTo(store)
-	if err != nil {
-		panic(err)
-	}
-	if store.TokenLifetime != 24*time.Hour {
-		t.Fatal(store.TokenLifetime)
-	}
-
-}
 func TestClientStoreConfig(t *testing.T) {
 	var err error
 	config := &StoreConfig{}
 	config.DriverName = DriverNameClientStore
 	config.ClientStoreKey = "test"
-	config.TokenLifetimeInHour = 1
-	config.TokenMaxLifetimeInDay = 7
+	config.TokenLifetime = "1h"
+	config.TokenMaxLifetime = "168h"
 	config.TokenContextName = "token"
 	config.CookieName = "cookiename"
 	config.CookiePath = "/"

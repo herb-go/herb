@@ -3,6 +3,8 @@ package channel
 import (
 	"net/http"
 	"testing"
+
+	"github.com/herb-go/herb/service/httpservice"
 )
 
 func newTestChannel(prefix string) *Channel {
@@ -18,15 +20,23 @@ func resetAll() {
 	DefaultConfig = PresetDefaultConfig()
 }
 func TestDefaultChannel(t *testing.T) {
-	// defer resetAll()
-	// channel := NewChannel()
-	// d := &url.URL{
-	// 	Scheme: DefaultNet,
-	// 	Host:   DefaulAddr,
-	// }
-	// if channel.Host() != d.String() {
-	// 	t.Fatal(channel)
-	// }
+	channel := NewChannel()
+	net, addr := getListener(&channel.ListenerConfig)
+	if net != DefaultNet || addr != DefaultAddr {
+		t.Fatal(net, addr)
+	}
+}
+
+func TestSetConfig(t *testing.T) {
+	defer resetAll()
+	config := httpservice.NewConfig()
+	config.ListenerConfig = testConfigListener
+	config.MaxHeaderBytes = 100
+	SetConfig(config)
+	s := GetServer(&testConfigListener)
+	if s.config.MaxHeaderBytes != 100 {
+		t.Fatal(s)
+	}
 }
 
 func TestChannel(t *testing.T) {

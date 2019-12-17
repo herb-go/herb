@@ -28,6 +28,15 @@ func setConfig(host string, c *httpservice.Config) {
 	configs.Store(host, c)
 }
 
+func SetConfig(c *httpservice.Config) {
+	if c == nil {
+		return
+
+	}
+	host := convertListenerToString(getListener(&c.ListenerConfig))
+	setConfig(host, c)
+}
+
 var DefaultConfig = PresetDefaultConfig()
 
 func PresetDefaultConfig() *httpservice.Config {
@@ -171,5 +180,7 @@ func ResetServers() {
 }
 
 func ResetConfigs() {
-
+	locker.Lock()
+	defer locker.Unlock()
+	configs = sync.Map{}
 }
