@@ -1,8 +1,11 @@
 package target
 
-type Config struct {
+type ClientConfig struct {
 	ClientDriver string
 	Client       func(v interface{}) error `config:", lazyload"`
-	TargetDriver string
-	Target       func(v interface{}) error `config:", lazyload"`
+}
+
+type Server struct {
+	URLTarget
+	ClientConfig
 }
