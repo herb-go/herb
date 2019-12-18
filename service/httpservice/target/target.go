@@ -110,3 +110,33 @@ func NewRequest(t Target, b ...Builder) (req *http.Request, err error) {
 	}
 	return pt.NewRequest()
 }
+
+type URLTarget struct {
+	URL     string
+	Method  string
+	Headers http.Header
+}
+
+func NewURLTarget() *URLTarget {
+	return &URLTarget{}
+}
+
+//RequestMethod return request method
+func (t *URLTarget) RequestMethod() string {
+	return t.Method
+}
+
+//RequestURL return request url
+func (t *URLTarget) RequestURL() string {
+	return t.URL
+}
+
+//RequestBody return request body
+func (t *URLTarget) RequestBody() io.Reader {
+	return nil
+}
+
+//RequestBuilders return request builders
+func (t *URLTarget) RequestBuilders() []func(*http.Request) error {
+	return []func(*http.Request) error{}
+}
