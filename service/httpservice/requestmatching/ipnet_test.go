@@ -16,29 +16,29 @@ func TestIPNet(t *testing.T) {
 	r, _ = http.NewRequest("", "http://127.0.0.1/", nil)
 	setRequestIP(r, "192.168.0.1")
 	n := NewIPNets()
-	if !mustMatch(n, r) {
+	if !MustMatch(r, n) {
 		t.Fatal(n)
 	}
 	n.Add("127.0.0.1/24")
-	if mustMatch(n, r) {
+	if MustMatch(r, n) {
 		t.Fatal(n)
 	}
 	n.Add("192.168.0.1/24")
-	if !mustMatch(n, r) {
+	if !MustMatch(r, n) {
 		t.Fatal(n)
 	}
 	r, _ = http.NewRequest("", "http://127.0.0.1/", nil)
 	setRequestIPv6(r, "2001:0db8:0000:0000:0000:ff00:0042:8329")
 	n = NewIPNets()
-	if !mustMatch(n, r) {
+	if !MustMatch(r, n) {
 		t.Fatal(n)
 	}
 	n.Add("2002::/64")
-	if mustMatch(n, r) {
+	if MustMatch(r, n) {
 		t.Fatal(n)
 	}
 	n.Add("2001:0db8:0000:0000::/64")
-	if !mustMatch(n, r) {
+	if !MustMatch(r, n) {
 		t.Fatal(n)
 	}
 
@@ -73,12 +73,12 @@ func TestNilIP(t *testing.T) {
 	setRequestIP(r, "192.168.0.1")
 	n := NewIPNets()
 	n.Add("192.168.0.1/32")
-	if !mustMatch(n, r) {
+	if !MustMatch(r, n) {
 		t.Fatal(n)
 	}
 	r, _ = http.NewRequest("", "http://127.0.0.1/", nil)
 	r.RemoteAddr = "abcde"
-	if mustMatch(n, r) {
+	if MustMatch(r, n) {
 		t.Fatal(n)
 	}
 }

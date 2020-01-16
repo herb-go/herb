@@ -5,14 +5,6 @@ import (
 	"testing"
 )
 
-func mustMatch(p Pattern, r *http.Request) bool {
-	result, err := p.MatchRequest(r)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
 func TestPatternConfig(t *testing.T) {
 	var c PatternConfig
 	var p Pattern
@@ -21,7 +13,7 @@ func TestPatternConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !mustMatch(p, nil) {
+	if !MustMatch(nil, p) {
 		t.Fatal()
 	}
 	c.IPList = []string{"127.0.0.1"}
@@ -64,62 +56,62 @@ func TestPatternConfig(t *testing.T) {
 func TestPattern(t *testing.T) {
 	var p = NewPlainPattern()
 	var r *http.Request
-	if mustMatch(p, nil) != true {
+	if MustMatch(nil, p) != true {
 		t.Fatal(p)
 	}
 	p.Disabled = true
-	if mustMatch(p, nil) != false {
+	if MustMatch(nil, p) != false {
 		t.Fatal(p)
 	}
 	p = NewPlainPattern()
 	r, _ = http.NewRequest("POST", "http://127.0.0.1/abc", nil)
 	setRequestIP(r, "127.0.0.1")
 	p.IPNets.Add("127.0.0.2/32")
-	if mustMatch(p, r) != false {
+	if MustMatch(r, p) != false {
 		t.Fatal(p)
 	}
 	p.IPNets.Add("127.0.0.1/32")
-	if mustMatch(p, r) != true {
+	if MustMatch(r, p) != true {
 		t.Fatal(p)
 	}
 	p = NewPlainPattern()
 	r, _ = http.NewRequest("POST", "http://127.0.0.1/abc", nil)
 	p.Methods.Add("get")
-	if mustMatch(p, r) != false {
+	if MustMatch(r, p) != false {
 		t.Fatal(p)
 	}
 	p.Methods.Add("Post")
-	if mustMatch(p, r) != true {
+	if MustMatch(r, p) != true {
 		t.Fatal(p)
 	}
 	p = NewPlainPattern()
 	r, _ = http.NewRequest("POST", "http://127.0.0.1/abc", nil)
 	p.Exts.Add(".html")
-	if mustMatch(p, r) != false {
+	if MustMatch(r, p) != false {
 		t.Fatal(p)
 	}
 	p.Exts.Add("")
-	if mustMatch(p, r) != true {
+	if MustMatch(r, p) != true {
 		t.Fatal(p)
 	}
 	p = NewPlainPattern()
 	r, _ = http.NewRequest("POST", "http://127.0.0.1/abc?dd=15", nil)
 	p.Paths.Add("127.0.0.2/abc")
-	if mustMatch(p, r) != false {
+	if MustMatch(r, p) != false {
 		t.Fatal(p)
 	}
 	p.Paths.Add("/abc")
-	if mustMatch(p, r) != true {
+	if MustMatch(r, p) != true {
 		t.Fatal(p)
 	}
 	p = NewPlainPattern()
 	r, _ = http.NewRequest("POST", "http://127.0.0.1/abc", nil)
 	p.Prefixs.Add("127.0.0.2/abc")
-	if mustMatch(p, r) != false {
+	if MustMatch(r, p) != false {
 		t.Fatal(p)
 	}
 	p.Prefixs.Add("/a")
-	if mustMatch(p, r) != true {
+	if MustMatch(r, p) != true {
 		t.Fatal(p)
 	}
 
@@ -127,34 +119,38 @@ func TestPattern(t *testing.T) {
 	r, _ = http.NewRequest("POST", "http://127.0.0.1/abc", nil)
 	setRequestIP(r, "127.0.0.1")
 	p.IPNets.Add("127.0.0.2/32")
-	if mustMatch(p, r) != false {
+	if MustMatch(r, p) != false {
 		t.Fatal(p)
 	}
 	p.IPNets.Add("127.0.0.1/32")
-	if mustMatch(p, r) != true {
+	if MustMatch(r, p) != true {
 		t.Fatal(p)
 	}
 	p.Paths.Add("/cba")
-	if mustMatch(p, r) != false {
+	if MustMatch(r, p) != false {
 		t.Fatal(p)
 	}
 	p.Paths.Add("/abc")
-	if mustMatch(p, r) != true {
+	if MustMatch(r, p) != true {
 		t.Fatal(p)
 	}
 }
 
-func createSuccessPattern() *PlainPattern {
-	s := NewPlainPattern()
-	s.Paths.Add("/success")
+var patternConfigSuccess = &PatternConfig{
+	URLList: []string{"/success"},
+}
+var patternConfigFail = &PatternConfig{
+	URLList: []string{"/fail"},
+}
 
-	return s
+func createSuccessPattern() *PlainPattern {
+
+	return MustCreatePattern(patternConfigSuccess).(*PlainPattern)
 }
 
 func createFailPattern() *PlainPattern {
-	f := NewPlainPattern()
-	f.Paths.Add("/fail")
-	return f
+	return MustCreatePattern(patternConfigFail).(*PlainPattern)
+
 }
 
 func createSuccessRequest() *http.Request {
@@ -165,7 +161,7 @@ func TestData(t *testing.T) {
 	s := createSuccessPattern()
 	f := createFailPattern()
 	r := createSuccessRequest()
-	if !mustMatch(s, r) || mustMatch(f, r) {
+	if !MustMatch(r, s) || MustMatch(r, f) {
 		t.Fatal(s, f, r)
 	}
 }
@@ -177,32 +173,32 @@ func TestSubPattern(t *testing.T) {
 	p = createSuccessPattern()
 	p.And = true
 	p.Patterns = append(p.Patterns, createFailPattern())
-	if mustMatch(p, r) {
+	if MustMatch(r, p) {
 		t.Fatal()
 	}
 	p = createSuccessPattern()
 	p.And = true
 	p.Patterns = append(p.Patterns, createSuccessPattern())
-	if !mustMatch(p, r) {
+	if !MustMatch(r, p) {
 		t.Fatal()
 	}
 
 	p = createSuccessPattern()
 	p.And = false
 	p.Patterns = append(p.Patterns, createFailPattern())
-	if !mustMatch(p, r) {
+	if !MustMatch(r, p) {
 		t.Fatal()
 	}
 	p = createSuccessPattern()
 	p.And = true
 	p.Patterns = append(p.Patterns, createSuccessPattern())
-	if !mustMatch(p, r) {
+	if !MustMatch(r, p) {
 		t.Fatal()
 	}
 	p = createFailPattern()
 	p.And = true
 	p.Patterns = append(p.Patterns, createSuccessPattern())
-	if !mustMatch(p, r) {
+	if !MustMatch(r, p) {
 		t.Fatal()
 	}
 }
@@ -214,16 +210,24 @@ func TestOperationPattern(t *testing.T) {
 
 	p := createSuccessPattern()
 	p.Not = true
-	if mustMatch(p, r) {
+	if MustMatch(r, p) {
 		t.Fatal()
+	}
+	result = MustMatchAll(r)
+	if !result {
+		t.Fatal(result)
 	}
 	result, err = MatchAll(r, createSuccessPattern(), createSuccessPattern())
 	if !result || err != nil {
 		t.Fatal(result, err)
 	}
-	result, err = MatchAll(r, createSuccessPattern(), createFailPattern())
-	if result || err != nil {
-		t.Fatal(result, err)
+	result = MustMatchAll(r, createSuccessPattern(), createFailPattern())
+	if result {
+		t.Fatal(result)
+	}
+	result = MustMatchAny(r)
+	if !result {
+		t.Fatal(result)
 	}
 	result, err = MatchAny(r, createSuccessPattern(), createSuccessPattern())
 	if !result || err != nil {
@@ -233,8 +237,38 @@ func TestOperationPattern(t *testing.T) {
 	if !result || err != nil {
 		t.Fatal(result, err)
 	}
-	result, err = MatchAny(r, createFailPattern(), createFailPattern())
-	if result || err != nil {
-		t.Fatal(result, err)
+	result = MustMatchAny(r, createFailPattern(), createFailPattern())
+	if result {
+		t.Fatal(result)
+	}
+}
+
+func TestConfigs(t *testing.T) {
+	configAllSuccess := &PatternAllConfig{patternConfigSuccess, patternConfigSuccess}
+	configAllSuccessAndFail := &PatternAllConfig{patternConfigSuccess, patternConfigFail}
+	configAllFail := &PatternAllConfig{patternConfigFail, patternConfigFail}
+	configAnySuccess := &PatternAnyConfig{patternConfigSuccess, patternConfigSuccess}
+	configAnySuccessAndFail := &PatternAnyConfig{patternConfigSuccess, patternConfigFail}
+	configAnyFail := &PatternAnyConfig{patternConfigFail, patternConfigFail}
+	r := createSuccessRequest()
+
+	if !MustMatch(r, MustCreatePattern(configAllSuccess)) {
+		t.Fatal(configAllSuccess)
+	}
+	if MustMatch(r, MustCreatePattern(configAllSuccessAndFail)) {
+		t.Fatal(configAllSuccessAndFail)
+	}
+	if MustMatch(r, MustCreatePattern(configAllFail)) {
+		t.Fatal(configAllFail)
+	}
+
+	if !MustMatch(r, MustCreatePattern(configAnySuccess)) {
+		t.Fatal(configAnySuccess)
+	}
+	if !MustMatch(r, MustCreatePattern(configAnySuccessAndFail)) {
+		t.Fatal(configAnySuccessAndFail)
+	}
+	if MustMatch(r, MustCreatePattern(configAnyFail)) {
+		t.Fatal(configAnyFail)
 	}
 }

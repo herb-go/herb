@@ -4,6 +4,16 @@ import (
 	"net/http"
 )
 
+//MustMatch match request with given pattern
+//Panic if any error raised.
+func MustMatch(r *http.Request, p Pattern) bool {
+	result, err := p.MatchRequest(r)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 //Pattern request matching pattern interafe
 type Pattern interface {
 	//MatchRequest match request.
@@ -26,12 +36,26 @@ func MatchAll(r *http.Request, p ...Pattern) (bool, error) {
 	return true, nil
 }
 
+//MustMatchAll match given request and given partterns.
+//Match will fail if any pattern fail.
+//Return result and painc if any error raised.
+func MustMatchAll(r *http.Request, p ...Pattern) bool {
+	result, err := MatchAll(r, p...)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 //MatchAny match given request and given partterns.
-//Match will success if any pattern success.
+//Match will success if any pattern success or no patterns given.
 //Return result and any error if raised.
 func MatchAny(r *http.Request, p ...Pattern) (bool, error) {
 	var result bool
 	var err error
+	if len(p) == 0 {
+		return true, nil
+	}
 	for k := range p {
 		result, err = p[k].MatchRequest(r)
 		if err != nil {
@@ -42,6 +66,17 @@ func MatchAny(r *http.Request, p ...Pattern) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+//MustMatchAny match given request and given partterns.
+//Match will success if any pattern success.
+//Return result and painc if any error raised.
+func MustMatchAny(r *http.Request, p ...Pattern) bool {
+	result, err := MatchAny(r, p...)
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
 
 //PlainPattern plain pattern struct
@@ -150,4 +185,69 @@ func (c *PatternConfig) CreatePattern() (Pattern, error) {
 		p.Patterns = append(p.Patterns, pattern)
 	}
 	return p, nil
+}
+
+type PatternAny []Pattern
+
+//MatchRequest match request.
+//Return result and any error if raised.
+func (p *PatternAny) MatchRequest(r *http.Request) (bool, error) {
+	return MatchAny(r, (*p)...)
+}
+
+type PatternAnyConfig []*PatternConfig
+
+//CreatePattern create plain pattern.
+//Retyurn pattern created and any error if raised.
+func (c *PatternAnyConfig) CreatePattern() (Pattern, error) {
+	p := PatternAny{}
+	for k := range *c {
+		pattern, err := (*c)[k].CreatePattern()
+		if err != nil {
+			return nil, err
+		}
+		p = append(p, pattern)
+	}
+	return &p, nil
+}
+
+type PatternAll []Pattern
+
+//MatchRequest match request.
+//Return result and any error if raised.
+func (p *PatternAll) MatchRequest(r *http.Request) (bool, error) {
+	return MatchAll(r, (*p)...)
+}
+
+type PatternAllConfig []*PatternConfig
+
+//CreatePattern create plain pattern.
+//Retyurn pattern created and any error if raised.
+func (c *PatternAllConfig) CreatePattern() (Pattern, error) {
+	p := PatternAll{}
+	for k := range *c {
+		pattern, err := (*c)[k].CreatePattern()
+		if err != nil {
+			return nil, err
+		}
+		p = append(p, pattern)
+	}
+	return &p, nil
+}
+
+//Factory Factory interface
+type Factory interface {
+	//CreatePattern create plain pattern.
+	//Retyurn pattern created and any error if raised.
+	CreatePattern() (Pattern, error)
+}
+
+//MustCreatePattern create pattern with given factory.
+//Panic if any error raised.
+func MustCreatePattern(f Factory) Pattern {
+	p, err := f.CreatePattern()
+	if err != nil {
+		panic(err)
+	}
+	return p
 }

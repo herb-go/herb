@@ -9,21 +9,21 @@ func TestExts(t *testing.T) {
 	var r *http.Request
 	r, _ = http.NewRequest("POST", "http://127.0.0.1/1.html", nil)
 	e := NewExts()
-	if !mustMatch(e, r) {
+	if !MustMatch(r, e) {
 		t.Fatal(e)
 	}
 	e.Add("")
-	if mustMatch(e, r) {
+	if MustMatch(r, e) {
 		t.Fatal(e)
 	}
 	e.Add(".html")
-	if !mustMatch(e, r) {
+	if !MustMatch(r, e) {
 		t.Fatal(e)
 	}
 	r, _ = http.NewRequest("POST", "http://127.0.0.1/1.HTml", nil)
 	e = NewExts()
 	e.Add(".htML")
-	if !mustMatch(e, r) {
+	if !MustMatch(r, e) {
 		t.Fatal(e)
 	}
 }
