@@ -187,6 +187,7 @@ func (c *PatternConfig) CreatePattern() (Pattern, error) {
 	return p, nil
 }
 
+//Filters pattern filters type
 type Filters []Pattern
 
 //MatchRequest match request.
@@ -195,6 +196,7 @@ func (f *Filters) MatchRequest(r *http.Request) (bool, error) {
 	return MatchAny(r, (*f)...)
 }
 
+//FiltersConfig filters config struct
 type FiltersConfig []*PatternConfig
 
 //CreatePattern create plain pattern.
@@ -212,6 +214,7 @@ func (c *FiltersConfig) CreatePattern() (Pattern, error) {
 	return &f, nil
 }
 
+//Whitelist whitelist pattern type
 type Whitelist []Pattern
 
 //MatchRequest match request.
@@ -224,11 +227,12 @@ func (w *Whitelist) MatchRequest(r *http.Request) (bool, error) {
 	return MatchAny(r, (*w)...)
 }
 
-type WhiteListConfig []*PatternConfig
+//WhitelistConfig whitelist config type
+type WhitelistConfig []*PatternConfig
 
 //CreatePattern create plain pattern.
 //Return pattern created and any error if raised.
-func (c *WhiteListConfig) CreatePattern() (Pattern, error) {
+func (c *WhitelistConfig) CreatePattern() (Pattern, error) {
 	w := Whitelist{}
 	for k := range *c {
 		pattern, err := (*c)[k].CreatePattern()
@@ -240,6 +244,7 @@ func (c *WhiteListConfig) CreatePattern() (Pattern, error) {
 	return &w, nil
 }
 
+//PatternAll pattern all type
 type PatternAll []Pattern
 
 //MatchRequest match request.
@@ -248,6 +253,7 @@ func (p *PatternAll) MatchRequest(r *http.Request) (bool, error) {
 	return MatchAll(r, (*p)...)
 }
 
+//PatternAllConfig pattern all type
 type PatternAllConfig []*PatternConfig
 
 //CreatePattern create plain pattern.
