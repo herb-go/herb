@@ -250,9 +250,9 @@ func TestConfigs(t *testing.T) {
 	configFiltersSuccess := &FiltersConfig{patternConfigSuccess, patternConfigSuccess}
 	configFiltersSuccessAndFail := &FiltersConfig{patternConfigSuccess, patternConfigFail}
 	configFiltersFail := &FiltersConfig{patternConfigFail, patternConfigFail}
-	configWhitelistSuccess := &FiltersConfig{patternConfigSuccess, patternConfigSuccess}
-	configWhitelistSuccessAndFail := &FiltersConfig{patternConfigSuccess, patternConfigFail}
-	configWhitelistFail := &FiltersConfig{patternConfigFail, patternConfigFail}
+	configWhitelistSuccess := &WhitelistConfig{patternConfigSuccess, patternConfigSuccess}
+	configWhitelistSuccessAndFail := &WhitelistConfig{patternConfigSuccess, patternConfigFail}
+	configWhitelistFail := &WhitelistConfig{patternConfigFail, patternConfigFail}
 
 	r := createSuccessRequest()
 
