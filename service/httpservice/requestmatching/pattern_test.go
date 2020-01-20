@@ -247,9 +247,13 @@ func TestConfigs(t *testing.T) {
 	configAllSuccess := &PatternAllConfig{patternConfigSuccess, patternConfigSuccess}
 	configAllSuccessAndFail := &PatternAllConfig{patternConfigSuccess, patternConfigFail}
 	configAllFail := &PatternAllConfig{patternConfigFail, patternConfigFail}
-	configAnySuccess := &PatternAnyConfig{patternConfigSuccess, patternConfigSuccess}
-	configAnySuccessAndFail := &PatternAnyConfig{patternConfigSuccess, patternConfigFail}
-	configAnyFail := &PatternAnyConfig{patternConfigFail, patternConfigFail}
+	configFiltersSuccess := &FiltersConfig{patternConfigSuccess, patternConfigSuccess}
+	configFiltersSuccessAndFail := &FiltersConfig{patternConfigSuccess, patternConfigFail}
+	configFiltersFail := &FiltersConfig{patternConfigFail, patternConfigFail}
+	configWhitelistSuccess := &FiltersConfig{patternConfigSuccess, patternConfigSuccess}
+	configWhitelistSuccessAndFail := &FiltersConfig{patternConfigSuccess, patternConfigFail}
+	configWhitelistFail := &FiltersConfig{patternConfigFail, patternConfigFail}
+
 	r := createSuccessRequest()
 
 	if !MustMatch(r, MustCreatePattern(configAllSuccess)) {
@@ -261,14 +265,29 @@ func TestConfigs(t *testing.T) {
 	if MustMatch(r, MustCreatePattern(configAllFail)) {
 		t.Fatal(configAllFail)
 	}
+	if !MustMatch(r, &Filters{}) {
+		t.Fatal()
+	}
+	if !MustMatch(r, MustCreatePattern(configFiltersSuccess)) {
+		t.Fatal(configFiltersSuccess)
+	}
+	if !MustMatch(r, MustCreatePattern(configFiltersSuccessAndFail)) {
+		t.Fatal(configFiltersSuccessAndFail)
+	}
+	if MustMatch(r, MustCreatePattern(configFiltersFail)) {
+		t.Fatal(configFiltersFail)
+	}
+	if MustMatch(r, &Whitelist{}) {
+		t.Fatal()
+	}
+	if !MustMatch(r, MustCreatePattern(configWhitelistSuccess)) {
+		t.Fatal(configWhitelistSuccess)
+	}
+	if !MustMatch(r, MustCreatePattern(configWhitelistSuccessAndFail)) {
+		t.Fatal(configWhitelistSuccessAndFail)
+	}
+	if MustMatch(r, MustCreatePattern(configWhitelistFail)) {
+		t.Fatal(configWhitelistFail)
+	}
 
-	if !MustMatch(r, MustCreatePattern(configAnySuccess)) {
-		t.Fatal(configAnySuccess)
-	}
-	if !MustMatch(r, MustCreatePattern(configAnySuccessAndFail)) {
-		t.Fatal(configAnySuccessAndFail)
-	}
-	if MustMatch(r, MustCreatePattern(configAnyFail)) {
-		t.Fatal(configAnyFail)
-	}
 }

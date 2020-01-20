@@ -187,28 +187,57 @@ func (c *PatternConfig) CreatePattern() (Pattern, error) {
 	return p, nil
 }
 
-type PatternAny []Pattern
+type Filters []Pattern
 
 //MatchRequest match request.
 //Return result and any error if raised.
-func (p *PatternAny) MatchRequest(r *http.Request) (bool, error) {
-	return MatchAny(r, (*p)...)
+func (f *Filters) MatchRequest(r *http.Request) (bool, error) {
+	return MatchAny(r, (*f)...)
 }
 
-type PatternAnyConfig []*PatternConfig
+type FiltersConfig []*PatternConfig
 
 //CreatePattern create plain pattern.
-//Retyurn pattern created and any error if raised.
-func (c *PatternAnyConfig) CreatePattern() (Pattern, error) {
-	p := PatternAny{}
+//Return pattern created and any error if raised.
+//Match will success if filters is empty
+func (c *FiltersConfig) CreatePattern() (Pattern, error) {
+	f := Filters{}
 	for k := range *c {
 		pattern, err := (*c)[k].CreatePattern()
 		if err != nil {
 			return nil, err
 		}
-		p = append(p, pattern)
+		f = append(f, pattern)
 	}
-	return &p, nil
+	return &f, nil
+}
+
+type Whitelist []Pattern
+
+//MatchRequest match request.
+//Return result and any error if raised.
+//Match will fail if whitelist is empty
+func (w *Whitelist) MatchRequest(r *http.Request) (bool, error) {
+	if len(*w) == 0 {
+		return false, nil
+	}
+	return MatchAny(r, (*w)...)
+}
+
+type WhiteListConfig []*PatternConfig
+
+//CreatePattern create plain pattern.
+//Return pattern created and any error if raised.
+func (c *WhiteListConfig) CreatePattern() (Pattern, error) {
+	w := Whitelist{}
+	for k := range *c {
+		pattern, err := (*c)[k].CreatePattern()
+		if err != nil {
+			return nil, err
+		}
+		w = append(w, pattern)
+	}
+	return &w, nil
 }
 
 type PatternAll []Pattern
@@ -222,7 +251,7 @@ func (p *PatternAll) MatchRequest(r *http.Request) (bool, error) {
 type PatternAllConfig []*PatternConfig
 
 //CreatePattern create plain pattern.
-//Retyurn pattern created and any error if raised.
+//Return pattern created and any error if raised.
 func (c *PatternAllConfig) CreatePattern() (Pattern, error) {
 	p := PatternAll{}
 	for k := range *c {
