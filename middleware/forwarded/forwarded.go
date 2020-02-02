@@ -1,6 +1,9 @@
 package forwarded
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 //Middleware main middleware struct.
 type Middleware struct {
@@ -62,7 +65,7 @@ func (m *Middleware) ServeMiddleware(w http.ResponseWriter, r *http.Request, nex
 	if m.ForwardedForHeader != "" {
 		forwardedFor := headers.Get(m.ForwardedForHeader)
 		if forwardedFor != "" {
-			r.RemoteAddr = forwardedFor + ":-1"
+			r.RemoteAddr = strings.TrimSpace(strings.Split(forwardedFor, ",")[0]) + ":-1"
 		}
 	}
 	if m.ForwardedProtoHeader != "" {
