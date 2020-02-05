@@ -29,8 +29,7 @@ func unmarshalMapElement(s Store, creator func() interface{}, key string, data [
 //Return any error if raised.
 func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interface{}, error), creator func() interface{}, keys ...string) error {
 	var keysmap = make(map[string]bool, len(keys))
-	var filteredKeys = make([]string, len(keys))
-	var filteredKeysLength = 0
+	var filteredKeys = make([]string, 0, len(keys))
 	var err error
 	if len(keys) == 0 {
 		return nil
@@ -42,12 +41,10 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 		keysmap[keys[k]] = true
 		if _, ok := s.Load(keys[k]); !ok {
 
-			filteredKeys[filteredKeysLength] = keys[k]
-			filteredKeysLength++
+			filteredKeys = append(filteredKeys, keys[k])
 		}
 	}
-	filteredKeys = filteredKeys[:filteredKeysLength]
-	if filteredKeysLength == 0 {
+	if len(filteredKeys) == 0 {
 		return nil
 	}
 	var results map[string][]byte
@@ -60,13 +57,11 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 	} else {
 		results = map[string][]byte{}
 	}
-	var uncachedKeys = make([]string, len(filteredKeys))
-	var uncachedKeysLength = 0
+	var uncachedKeys = make([]string, 0, len(filteredKeys))
 	for i := range filteredKeys {
 		k := filteredKeys[i]
 		if _, ok := results[k]; !ok {
-			uncachedKeys[uncachedKeysLength] = k
-			uncachedKeysLength++
+			uncachedKeys = append(uncachedKeys, k)
 		} else {
 			err = unmarshalMapElement(s, creator, k, results[k], c)
 			if err != nil {
@@ -74,13 +69,10 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 			}
 		}
 	}
-	uncachedKeys = uncachedKeys[:uncachedKeysLength]
-
-	if uncachedKeysLength == 0 {
+	if len(uncachedKeys) == 0 {
 		return nil
 	}
-	var unreloadkeys = make([]string, len(uncachedKeys))
-	var unreloadkeysLength = 0
+	var unreloadkeys = make([]string, 0, len(uncachedKeys))
 
 	sort.Strings(uncachedKeys)
 	if c != nil {
@@ -108,18 +100,15 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 				locker.Lock()
 				defer locker.Unlock()
 			}
-			unreloadkeys[unreloadkeysLength] = uncachedKeys[k]
-			unreloadkeysLength++
+			unreloadkeys = append(unreloadkeys, uncachedKeys[k])
 
 		}
 
 	} else {
 		unreloadkeys = uncachedKeys
-		unreloadkeysLength = uncachedKeysLength
 	}
-	unreloadkeys = unreloadkeys[:unreloadkeysLength]
 
-	if unreloadkeysLength == 0 {
+	if len(unreloadkeys) == 0 {
 		return nil
 	}
 	loaded, err := loader(unreloadkeys...)
