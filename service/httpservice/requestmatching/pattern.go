@@ -5,8 +5,12 @@ import (
 )
 
 //MustMatch match request with given pattern
+//Return false if pattern is nil.
 //Panic if any error raised.
 func MustMatch(r *http.Request, p Pattern) bool {
+	if p == nil {
+		return false
+	}
 	result, err := p.MatchRequest(r)
 	if err != nil {
 		panic(err)
