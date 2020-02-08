@@ -30,11 +30,12 @@ func (p Paths) MatchRequest(r *http.Request) (bool, error) {
 	if len(p) == 0 {
 		return true, nil
 	}
+	urlpath := strings.ToLower(r.URL.Path)
 	h := r.Host
 	if h != "" {
 		data = p[h]
 		if data != nil {
-			if data[r.URL.Path] == true {
+			if data[urlpath] == true {
 				return true, nil
 			}
 		}
@@ -52,6 +53,7 @@ func NewPaths() *Paths {
 	return &Paths{}
 }
 func splitURL(url string) (host string, path string) {
+	url = strings.ToLower(url)
 	if url[0] == '/' {
 		path = url
 	} else {
@@ -89,10 +91,11 @@ func (p Prefixs) MatchRequest(r *http.Request) (bool, error) {
 	if len(p) == 0 {
 		return true, nil
 	}
+	urlpath := strings.ToLower(r.URL.Path)
 	h := r.Host
 	if h != "" {
 		data = p[h]
-		if data != nil && data.Has(r.URL.Path) {
+		if data != nil && data.Has(urlpath) {
 			return true, nil
 
 		}

@@ -41,6 +41,18 @@ func TestPaths(t *testing.T) {
 	if !MustMatch(r, p) {
 		t.Fatal(p)
 	}
+	p = NewPaths()
+	if !MustMatch(r, p) {
+		t.Fatal(p)
+	}
+	p.Add("127.0.0.2/path")
+	if MustMatch(r, p) {
+		t.Fatal(p)
+	}
+	p.Add("127.0.0.1/Path")
+	if !MustMatch(r, p) {
+		t.Fatal(p)
+	}
 
 }
 
@@ -80,6 +92,19 @@ func TestPrefixs(t *testing.T) {
 	if !MustMatch(r, p) {
 		t.Fatal(p)
 	}
+	p = NewPrefixs()
+	if !MustMatch(r, p) {
+		t.Fatal(p)
+	}
+	p.Add("127.0.0.2/path")
+	if MustMatch(r, p) {
+		t.Fatal(p)
+	}
+	p.Add("127.0.0.1/Path")
+	if !MustMatch(r, p) {
+		t.Fatal(p)
+	}
+
 	p = NewPrefixs()
 	if !MustMatch(r, p) {
 		t.Fatal(p)
