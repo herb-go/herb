@@ -90,6 +90,7 @@ type PlainPattern struct {
 	Exts     *Exts
 	Paths    *Paths
 	Prefixs  *Prefixs
+	Suffixs  *Suffixs
 	Disabled bool
 	Not      bool
 	And      bool
@@ -104,6 +105,7 @@ func NewPlainPattern() *PlainPattern {
 		Exts:    NewExts(),
 		Paths:   NewPaths(),
 		Prefixs: NewPrefixs(),
+		Suffixs: NewSuffixs(),
 	}
 }
 
@@ -148,6 +150,7 @@ type PatternConfig struct {
 	IPList     []string
 	URLList    []string
 	PrefixList []string
+	SuffixList []string
 	ExtList    []string
 	MethodList []string
 	Disabled   bool
@@ -171,6 +174,9 @@ func (c *PatternConfig) CreatePattern() (Pattern, error) {
 	}
 	for k := range c.PrefixList {
 		p.Prefixs.Add(c.PrefixList[k])
+	}
+	for k := range c.SuffixList {
+		p.Suffixs.Add(c.SuffixList[k])
 	}
 	for k := range c.ExtList {
 		p.Exts.Add(c.ExtList[k])

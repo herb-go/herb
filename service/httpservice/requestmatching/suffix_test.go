@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-func TestPaths(t *testing.T) {
+func TestSuffixs(t *testing.T) {
 	var r *http.Request
-	var p *Paths
-	r, _ = http.NewRequest("POST", "http://127.0.0.1/path?a=123", nil)
-	p = NewPaths()
+	var p *Suffixs
+	r, _ = http.NewRequest("POST", "http://127.0.0.1/url/path?a=123", nil)
+	p = NewSuffixs()
 	if !MustMatch(r, p) {
 		t.Fatal(p)
 	}
@@ -29,7 +29,7 @@ func TestPaths(t *testing.T) {
 	if !MustMatch(r, p) {
 		t.Fatal(p)
 	}
-	p = NewPaths()
+	p = NewSuffixs()
 	if !MustMatch(r, p) {
 		t.Fatal(p)
 	}
@@ -41,7 +41,7 @@ func TestPaths(t *testing.T) {
 	if !MustMatch(r, p) {
 		t.Fatal(p)
 	}
-	p = NewPaths()
+	p = NewSuffixs()
 	if !MustMatch(r, p) {
 		t.Fatal(p)
 	}
@@ -50,6 +50,19 @@ func TestPaths(t *testing.T) {
 		t.Fatal(p)
 	}
 	p.Add("127.0.0.1/Path")
+	if !MustMatch(r, p) {
+		t.Fatal(p)
+	}
+
+	p = NewSuffixs()
+	if !MustMatch(r, p) {
+		t.Fatal(p)
+	}
+	p.Add("127.0.0.2/path")
+	if MustMatch(r, p) {
+		t.Fatal(p)
+	}
+	p.Add("127.0.0.1/")
 	if !MustMatch(r, p) {
 		t.Fatal(p)
 	}
