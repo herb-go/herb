@@ -22,16 +22,17 @@ func TestPatternConfig(t *testing.T) {
 		t.Fatal(p, err)
 	}
 	c = PatternConfig{
-		IPList:     []string{"127.0.0.1/8", "127.0.0.2/24"},
-		URLList:    []string{"127.0.0.1/path", "path2", "path3"},
-		PrefixList: []string{"127.0.0.1/path", "path2", "path3", "path4"},
-		MethodList: []string{"get", "post", "3", "4", "5"},
-		ExtList:    []string{".html", "", ".3", ".4", ".5", ".6"},
-		SuffixList: []string{"127.0.0.1/path", "path2", "path3", "path4", "path5", "path6", "path7"},
-		Disabled:   true,
-		Not:        true,
-		And:        true,
-		Patterns:   []*PatternConfig{&PatternConfig{}},
+		IPList:      []string{"127.0.0.1/8", "127.0.0.2/24"},
+		URLList:     []string{"127.0.0.1/path", "path2", "path3"},
+		PrefixList:  []string{"127.0.0.1/path", "path2", "path3", "path4"},
+		MethodList:  []string{"get", "post", "3", "4", "5"},
+		ExtList:     []string{".html", "", ".3", ".4", ".5", ".6"},
+		SuffixList:  []string{"127.0.0.1/path", "path2", "path3", "path4", "path5", "path6", "path7"},
+		KeywordList: []string{"1", "2", "3", "4", "5", "6", "7", "8"},
+		Disabled:    true,
+		Not:         true,
+		And:         true,
+		Patterns:    []*PatternConfig{&PatternConfig{}},
 	}
 	p, err = c.CreatePattern()
 	if p == nil || err != nil {
@@ -50,7 +51,8 @@ func TestPatternConfig(t *testing.T) {
 		pattern.Not != true ||
 		pattern.And != true ||
 		len(pattern.Patterns) != 1 ||
-		len(*pattern.Suffixs) != 7 {
+		len(*pattern.Suffixs) != 7 ||
+		len(*pattern.Keywords) != 8 {
 		t.Fatal(pattern)
 	}
 }

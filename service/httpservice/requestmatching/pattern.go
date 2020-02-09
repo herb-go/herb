@@ -91,6 +91,7 @@ type PlainPattern struct {
 	Paths    *Paths
 	Prefixs  *Prefixs
 	Suffixs  *Suffixs
+	Keywords *Keywords
 	Disabled bool
 	Not      bool
 	And      bool
@@ -100,12 +101,13 @@ type PlainPattern struct {
 //NewPlainPattern create new pattern struct.
 func NewPlainPattern() *PlainPattern {
 	return &PlainPattern{
-		IPNets:  NewIPNets(),
-		Methods: NewMethods(),
-		Exts:    NewExts(),
-		Paths:   NewPaths(),
-		Prefixs: NewPrefixs(),
-		Suffixs: NewSuffixs(),
+		IPNets:   NewIPNets(),
+		Methods:  NewMethods(),
+		Exts:     NewExts(),
+		Paths:    NewPaths(),
+		Prefixs:  NewPrefixs(),
+		Suffixs:  NewSuffixs(),
+		Keywords: NewKeywords(),
 	}
 }
 
@@ -147,16 +149,17 @@ func (p *PlainPattern) matchRequest(r *http.Request) (bool, error) {
 
 //PatternConfig plainpattern config struct
 type PatternConfig struct {
-	IPList     []string
-	URLList    []string
-	PrefixList []string
-	SuffixList []string
-	ExtList    []string
-	MethodList []string
-	Disabled   bool
-	Not        bool
-	And        bool
-	Patterns   []*PatternConfig
+	IPList      []string
+	URLList     []string
+	PrefixList  []string
+	SuffixList  []string
+	ExtList     []string
+	MethodList  []string
+	KeywordList []string
+	Disabled    bool
+	Not         bool
+	And         bool
+	Patterns    []*PatternConfig
 }
 
 //CreatePattern create plain pattern.
@@ -177,6 +180,9 @@ func (c *PatternConfig) CreatePattern() (Pattern, error) {
 	}
 	for k := range c.SuffixList {
 		p.Suffixs.Add(c.SuffixList[k])
+	}
+	for k := range c.KeywordList {
+		p.Keywords.Add(c.KeywordList[k])
 	}
 	for k := range c.ExtList {
 		p.Exts.Add(c.ExtList[k])
