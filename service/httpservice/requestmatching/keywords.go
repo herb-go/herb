@@ -5,12 +5,17 @@ import (
 	"strings"
 )
 
+//Keywords keywords pattern
 type Keywords []string
 
+//Add add keyword to keywords.
+//Method will be converted to lower.
 func (k *Keywords) Add(keyword string) {
 	*k = append(*k, strings.ToLower(keyword))
 }
 
+//MatchRequest match request.
+//Return result and any error if raised.
 func (k *Keywords) MatchRequest(r *http.Request) (bool, error) {
 	if len(*k) == 0 {
 		return true, nil
@@ -24,6 +29,7 @@ func (k *Keywords) MatchRequest(r *http.Request) (bool, error) {
 	return false, nil
 }
 
+//NewKeywords create new keywords
 func NewKeywords() *Keywords {
 	return &Keywords{}
 }
