@@ -93,6 +93,7 @@ type PlainPattern struct {
 	Suffixs  *Suffixs
 	Keywords *Keywords
 	RegExps  *RegExps
+	Headers  *Headers
 	Disabled bool
 	Not      bool
 	And      bool
@@ -109,6 +110,7 @@ func NewPlainPattern() *PlainPattern {
 		Prefixs:  NewPrefixs(),
 		Suffixs:  NewSuffixs(),
 		Keywords: NewKeywords(),
+		Headers:  NewHeaders(),
 		RegExps:  NewRegExps(),
 	}
 }
@@ -159,6 +161,7 @@ type PatternConfig struct {
 	MethodList  []string
 	KeywordList []string
 	RegExpList  []string
+	HeaderList  []string
 	Disabled    bool
 	Not         bool
 	And         bool
@@ -195,6 +198,12 @@ func (c *PatternConfig) CreatePattern() (Pattern, error) {
 	}
 	for k := range c.RegExpList {
 		err := p.RegExps.Add(c.RegExpList[k])
+		if err != nil {
+			return nil, err
+		}
+	}
+	for k := range c.HeaderList {
+		err := p.Headers.Add(c.HeaderList[k])
 		if err != nil {
 			return nil, err
 		}
