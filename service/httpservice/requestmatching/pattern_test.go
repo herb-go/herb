@@ -22,19 +22,20 @@ func TestPatternConfig(t *testing.T) {
 		t.Fatal(p, err)
 	}
 	c = PatternConfig{
-		IPList:      []string{"127.0.0.1/8", "127.0.0.2/24"},
-		URLList:     []string{"127.0.0.1/path", "path2", "path3"},
-		PrefixList:  []string{"127.0.0.1/path", "path2", "path3", "path4"},
-		MethodList:  []string{"get", "post", "3", "4", "5"},
-		ExtList:     []string{".html", "", ".3", ".4", ".5", ".6"},
-		SuffixList:  []string{"127.0.0.1/path", "path2", "path3", "path4", "path5", "path6", "path7"},
-		KeywordList: []string{"1", "2", "3", "4", "5", "6", "7", "8"},
-		RegExpList:  []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"},
-		HeaderList:  []string{"f:1", "f:2", "f:3", "f:4", "f:5", "f:6", "f:7", "f:8", "f:9", "f:10"},
-		Disabled:    true,
-		Not:         true,
-		And:         true,
-		Patterns:    []*PatternConfig{&PatternConfig{}},
+		IPList:          []string{"127.0.0.1/8", "127.0.0.2/24"},
+		URLList:         []string{"127.0.0.1/path", "path2", "path3"},
+		PrefixList:      []string{"127.0.0.1/path", "path2", "path3", "path4"},
+		MethodList:      []string{"get", "post", "3", "4", "5"},
+		ExtList:         []string{".html", "", ".3", ".4", ".5", ".6"},
+		SuffixList:      []string{"127.0.0.1/path", "path2", "path3", "path4", "path5", "path6", "path7"},
+		KeywordList:     []string{"1", "2", "3", "4", "5", "6", "7", "8"},
+		RegExpList:      []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"},
+		HeaderList:      []string{"f:1", "f:2", "f:3", "f:4", "f:5", "f:6", "f:7", "f:8", "f:9", "f:10"},
+		ContentTypeList: []string{"application/x-www-form-urlencoded", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"},
+		Disabled:        true,
+		Not:             true,
+		And:             true,
+		Patterns:        []*PatternConfig{&PatternConfig{}},
 	}
 	p, err = c.CreatePattern()
 	if p == nil || err != nil {
@@ -56,7 +57,8 @@ func TestPatternConfig(t *testing.T) {
 		len(*pattern.Suffixs) != 7 ||
 		len(*pattern.Keywords) != 8 ||
 		len(*pattern.RegExps) != 9 ||
-		len(*pattern.Headers) != 10 {
+		len(*pattern.Headers) != 10 ||
+		len(*pattern.ContentTypes) != 11 {
 		t.Fatal(pattern)
 	}
 }

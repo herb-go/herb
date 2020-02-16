@@ -85,33 +85,35 @@ func MustMatchAny(r *http.Request, p ...Pattern) bool {
 
 //PlainPattern plain pattern struct
 type PlainPattern struct {
-	IPNets   *IPNets
-	Methods  *Methods
-	Exts     *Exts
-	Paths    *Paths
-	Prefixs  *Prefixs
-	Suffixs  *Suffixs
-	Keywords *Keywords
-	RegExps  *RegExps
-	Headers  *Headers
-	Disabled bool
-	Not      bool
-	And      bool
-	Patterns []Pattern
+	IPNets       *IPNets
+	Methods      *Methods
+	Exts         *Exts
+	Paths        *Paths
+	Prefixs      *Prefixs
+	Suffixs      *Suffixs
+	Keywords     *Keywords
+	RegExps      *RegExps
+	Headers      *Headers
+	ContentTypes *ContentTypes
+	Disabled     bool
+	Not          bool
+	And          bool
+	Patterns     []Pattern
 }
 
 //NewPlainPattern create new pattern struct.
 func NewPlainPattern() *PlainPattern {
 	return &PlainPattern{
-		IPNets:   NewIPNets(),
-		Methods:  NewMethods(),
-		Exts:     NewExts(),
-		Paths:    NewPaths(),
-		Prefixs:  NewPrefixs(),
-		Suffixs:  NewSuffixs(),
-		Keywords: NewKeywords(),
-		Headers:  NewHeaders(),
-		RegExps:  NewRegExps(),
+		IPNets:       NewIPNets(),
+		Methods:      NewMethods(),
+		Exts:         NewExts(),
+		Paths:        NewPaths(),
+		Prefixs:      NewPrefixs(),
+		Suffixs:      NewSuffixs(),
+		Keywords:     NewKeywords(),
+		Headers:      NewHeaders(),
+		RegExps:      NewRegExps(),
+		ContentTypes: NewContentTypes(),
 	}
 }
 
@@ -153,19 +155,20 @@ func (p *PlainPattern) matchRequest(r *http.Request) (bool, error) {
 
 //PatternConfig plainpattern config struct
 type PatternConfig struct {
-	IPList      []string
-	URLList     []string
-	PrefixList  []string
-	SuffixList  []string
-	ExtList     []string
-	MethodList  []string
-	KeywordList []string
-	RegExpList  []string
-	HeaderList  []string
-	Disabled    bool
-	Not         bool
-	And         bool
-	Patterns    []*PatternConfig
+	IPList          []string
+	URLList         []string
+	PrefixList      []string
+	SuffixList      []string
+	ExtList         []string
+	MethodList      []string
+	KeywordList     []string
+	RegExpList      []string
+	HeaderList      []string
+	ContentTypeList []string
+	Disabled        bool
+	Not             bool
+	And             bool
+	Patterns        []*PatternConfig
 }
 
 //CreatePattern create plain pattern.
@@ -207,6 +210,9 @@ func (c *PatternConfig) CreatePattern() (Pattern, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+	for k := range c.ContentTypeList {
+		p.ContentTypes.Add(c.ContentTypeList[k])
 	}
 	p.Disabled = c.Disabled
 	p.Not = c.Not
