@@ -3,6 +3,8 @@ package errorpage
 import (
 	"context"
 	"net/http"
+
+	"github.com/herb-go/herb/middleware"
 )
 
 type contextName string
@@ -38,10 +40,10 @@ func (e *ErrorPage) MiddlewareDisable(w http.ResponseWriter, r *http.Request, ne
 
 //ServeMiddleware serve as middleware
 func (e *ErrorPage) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	newWriter := e.newResponseWriter(w, r)
-	next(&newWriter, r)
-	if newWriter.matched != nil {
-		newWriter.matched(w, r, newWriter.status)
+	ctx := e.NewContext(w, r)
+	next(ctx.NewWriter(), r)
+	if ctx.matched != nil {
+		ctx.matched(w, r, ctx.statusCode)
 		e.disable(r)
 	}
 }
@@ -77,50 +79,54 @@ func (e *ErrorPage) IgnoreStatus(status int) *ErrorPage {
 	return e
 }
 
-func (e *ErrorPage) newResponseWriter(w http.ResponseWriter, r *http.Request) errorResponseWriter {
-	writer := w.(Writer)
-	return errorResponseWriter{
-		Writer:    writer,
+//NewContext create new errorpage context with given writer and request
+func (e *ErrorPage) NewContext(w http.ResponseWriter, r *http.Request) *Context {
+	return &Context{
+		writer:    w,
 		req:       r,
-		status:    0,
-		ErrorPage: *e,
-		matched:   nil,
+		ErrorPage: e,
 	}
 }
 
-//Writer http response writer interface.
-type Writer interface {
-	http.ResponseWriter
-	http.Hijacker
+//Context errorpage context
+type Context struct {
+	writer     http.ResponseWriter
+	req        *http.Request
+	statusCode int
+	ErrorPage  *ErrorPage
+	matched    func(w http.ResponseWriter, r *http.Request, status int)
 }
 
-type errorResponseWriter struct {
-	Writer
-	req       *http.Request
-	status    int
-	ErrorPage ErrorPage
-	matched   func(w http.ResponseWriter, r *http.Request, status int)
-}
-
-func (w *errorResponseWriter) Write(bytes []byte) (int, error) {
-	if w.status == 0 {
-		w.WriteHeader(http.StatusOK)
+//Write Write response data
+func (c *Context) Write(bytes []byte) (int, error) {
+	if c.statusCode == 0 {
+		c.writer.WriteHeader(http.StatusOK)
 	}
-	if w.matched != nil {
+	if c.matched != nil {
 		return 0, nil
 	}
-	return w.Writer.Write(bytes)
+	return c.writer.Write(bytes)
 }
-func (w *errorResponseWriter) WriteHeader(status int) {
-	w.status = status
-	d := w.req.Context().Value(contextNameDisable)
+
+//WriteHeader writer header
+func (c *Context) WriteHeader(statusCode int) {
+	c.statusCode = statusCode
+	d := c.req.Context().Value(contextNameDisable)
 	disabled, ok := d.(bool)
 	if ok == false || disabled == false {
-		w.matched = w.ErrorPage.getStatusHandler(status)
-
-		if w.matched != nil {
+		c.matched = c.ErrorPage.getStatusHandler(statusCode)
+		if c.matched != nil {
 			return
 		}
 	}
-	w.Writer.WriteHeader(status)
+	c.writer.WriteHeader(statusCode)
+}
+
+//NewWriter create new response writer.
+func (c *Context) NewWriter() http.ResponseWriter {
+	w := middleware.WrapResponseWriter(c.writer)
+	f := w.Functions()
+	f.WriteFunc = c.Write
+	f.WriteHeaderFunc = c.WriteHeader
+	return w
 }

@@ -129,9 +129,10 @@ func FieldMiddleware(FieldGenerator func(r *http.Request) *cache.Field, ttl time
 }
 
 type cacheResponseWriter struct {
-	writer bytes.Buffer
-	header http.Header
-	status int
+	writer          bytes.Buffer
+	header          http.Header
+	statusValidator func(status int) bool
+	status          int
 }
 
 func (w *cacheResponseWriter) Write(data []byte) (int, error) {
