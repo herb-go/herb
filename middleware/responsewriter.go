@@ -15,7 +15,8 @@ type WriterFunctions struct {
 }
 
 type WrappedWriter struct {
-	functions *WriterFunctions
+	functions     *WriterFunctions
+	headerWritten bool
 }
 
 func (w *WrappedWriter) Functions() *WriterFunctions {
@@ -23,6 +24,9 @@ func (w *WrappedWriter) Functions() *WriterFunctions {
 }
 
 func (w *WrappedWriter) Write(b []byte) (int, error) {
+	if w.headerWritten == false {
+		w.WriteHeader(200)
+	}
 	return w.functions.WriteFunc(b)
 }
 
@@ -31,6 +35,7 @@ func (w *WrappedWriter) Header() http.Header {
 }
 
 func (w *WrappedWriter) WriteHeader(statusCode int) {
+	w.headerWritten = true
 	w.functions.WriteHeaderFunc(statusCode)
 }
 
