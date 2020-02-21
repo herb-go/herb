@@ -21,7 +21,7 @@ var (
 	//ErrFeatureNotSupported raised when calling feature on unsupported driver.
 	ErrFeatureNotSupported = errors.New("Feature is not supported")
 	//ErrPermanentCacheNotSupport raised when cache driver not support permanent ttl.
-	ErrPermanentCacheNotSupport = errors.New("Permanent cache is not supported.can use ttl <0 on this cache")
+	ErrPermanentCacheNotSupport = errors.New("Permanent cache is not supported.can not use ttl <0 on this cache")
 )
 
 //DefualtTTL means use cache default ttl setting.
