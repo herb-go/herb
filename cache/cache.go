@@ -273,7 +273,7 @@ func loadFromCache(c Cacheable, key string, v interface{}, ttl time.Duration, lo
 		return ErrKeyUnavailable
 	}
 	err = c.Get(key, v)
-	if err == ErrNotFound {
+	if err == ErrNotFound || err == ErrKeyTooLarge {
 		k, err := c.FinalKey(key)
 		if err != nil {
 			return err
@@ -283,7 +283,7 @@ func loadFromCache(c Cacheable, key string, v interface{}, ttl time.Duration, lo
 			locker.RLock()
 			defer locker.RUnlock()
 			err = c.Get(key, v)
-			if err == nil || err != ErrNotFound {
+			if err == nil || (err != ErrNotFound && err != ErrKeyTooLarge) {
 				return err
 			}
 		} else {
@@ -296,7 +296,7 @@ func loadFromCache(c Cacheable, key string, v interface{}, ttl time.Duration, lo
 		}
 		reflect.Indirect(reflect.ValueOf(v)).Set(reflect.Indirect(reflect.ValueOf(v2)))
 		err3 := c.Set(key, v, ttl)
-		if err3 == ErrNotCacheable || err3 == ErrEntryTooLarge {
+		if err3 == ErrNotCacheable || err3 == ErrEntryTooLarge || err3 == ErrKeyTooLarge {
 			return nil
 		} else if err3 != nil {
 			return err3
