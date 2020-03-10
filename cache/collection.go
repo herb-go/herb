@@ -1,7 +1,9 @@
 package cache
 
 import (
-	"strconv"
+	"bytes"
+	"encoding/binary"
+	"encoding/hex"
 	"time"
 )
 
@@ -37,8 +39,12 @@ func (c *Collection) GetCacheKey(key string) (string, error) {
 	err := c.Cache.Get(c.Prefix, &ts)
 	if err == ErrNotFound {
 		data = time.Now().UnixNano()
-		ts = strconv.FormatInt(data, 10)
-		err = nil
+		buf := bytes.NewBuffer(nil)
+		err = binary.Write(buf, binary.BigEndian, data)
+		if err != nil {
+			return "", err
+		}
+		ts = hex.EncodeToString(buf.Bytes())
 		ttl := c.TTL
 		if !c.persist() {
 			ttl = ttl * time.Duration(CollectionTTLMultiple)
