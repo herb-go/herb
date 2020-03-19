@@ -82,8 +82,8 @@ func getBase64ClientDriver(ttl time.Duration) *Store {
 	return s
 }
 func TestClientKey(t *testing.T) {
-	s := getClientDriver(-1)
-	s2 := getTimeoutClientDriver(-1, -1)
+	s := getClientDriver(time.Hour)
+	s2 := getTimeoutClientDriver(time.Hour, -1)
 	model := "123456"
 	var result string
 	testKey := "testkey"
@@ -122,7 +122,7 @@ func TestClientKey(t *testing.T) {
 }
 func TestClientTD(t *testing.T) {
 	var err error
-	s := getClientDriver(-1)
+	s := getClientDriver(time.Hour)
 	defer s.Close()
 	model := "123456"
 	var result string
@@ -322,7 +322,7 @@ func TestClientTD(t *testing.T) {
 
 func TestClientRequest(t *testing.T) {
 	var err error
-	s := getClientDriver(-1)
+	s := getClientDriver(time.Hour)
 	defer s.Close()
 	model := "123456"
 	modelAfterSet := "set"
@@ -357,7 +357,7 @@ func TestClientRequest(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if ex > 0 {
+		if ex <= 0 {
 			t.Errorf("Field ExpiredAt error %d", ex)
 		}
 		err = s.Set(r, testKey, modelAfterSet)
@@ -573,7 +573,7 @@ func TestClientRequest(t *testing.T) {
 }
 
 func TestClientTimeout(t *testing.T) {
-	sforever := getTimeoutClientDriver(-1, -1)
+	sforever := getTimeoutClientDriver(time.Hour, -1)
 	s3second := getTimeoutClientDriver(3*time.Second, -1)
 	s3secondwithAutoRefresh := getTimeoutClientDriver(3*time.Second, 1*time.Second)
 	testOwner := "testowner"

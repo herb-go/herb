@@ -9,7 +9,7 @@ import (
 )
 
 func TestMiddleware(t *testing.T) {
-	s := getStore(-1)
+	s := getStore(time.Hour)
 	defer s.Close()
 	var testHeaderName = "testheader"
 	s.Mode = StoreModeHeader
@@ -89,7 +89,7 @@ func TestMiddleware(t *testing.T) {
 }
 
 func TestCookieMiddleware(t *testing.T) {
-	s := getStore(-1)
+	s := getStore(3600)
 	defer s.Close()
 	var testCookieName = "testcookie"
 	s.Mode = StoreModeCookie
@@ -169,7 +169,7 @@ func TestCookieMiddleware(t *testing.T) {
 }
 
 func TestAutoGenerate(t *testing.T) {
-	s := getStore(-1)
+	s := getStore(3600)
 	defer s.Close()
 	var testHeaderName = "testheader"
 	s.Mode = StoreModeHeader
@@ -265,7 +265,7 @@ func TestMaxLifeTime(t *testing.T) {
 		}()
 	}
 
-	time.Sleep(900 * time.Millisecond)
+	time.Sleep(1900 * time.Millisecond)
 	session, err = s.GenerateSession("test")
 	if err != nil {
 		t.Fatal(err)

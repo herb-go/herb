@@ -10,7 +10,7 @@ import (
 )
 
 func TestCookieWriter(t *testing.T) {
-	s := getStore(-1)
+	s := getStore(time.Hour)
 	defer s.Close()
 	var testCookieName = "testcookie"
 	s.Mode = StoreModeCookie

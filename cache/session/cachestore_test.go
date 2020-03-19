@@ -66,7 +66,7 @@ func getTimeoutStore(ttl time.Duration, UpdateActiveInterval time.Duration) *Sto
 }
 func TestField(t *testing.T) {
 	var err error
-	s := getStore(-1)
+	s := getStore(time.Hour)
 	defer s.Close()
 	model := "123456"
 	model2 := "abcde"
@@ -282,7 +282,7 @@ func TestField(t *testing.T) {
 }
 func TestTD(t *testing.T) {
 	var err error
-	s := getStore(-1)
+	s := getStore(time.Hour)
 	defer s.Close()
 	model := "123456"
 	var result string
@@ -481,7 +481,7 @@ func TestTD(t *testing.T) {
 }
 
 func TestTimeout(t *testing.T) {
-	sforever := getTimeoutStore(-1, -1)
+	sforever := getTimeoutStore(time.Hour, -1)
 	s3second := getTimeoutStore(3*time.Second, -1)
 	s3secondwithAutoRefresh := getTimeoutStore(3*time.Second, 1*time.Second)
 	testOwner := "testowner"
@@ -603,7 +603,7 @@ func TestSessionMarshal(t *testing.T) {
 	testKey := "testkey"
 	testKey2 := "testkey2"
 	testToken := "testtoken"
-	s := getStore(-1)
+	s := getStore(time.Hour)
 	defer s.Close()
 	td, err := s.GenerateSession(testOwner)
 	if err != nil {
@@ -634,7 +634,7 @@ func TestSessionMarshal(t *testing.T) {
 
 func TestRequest(t *testing.T) {
 	var err error
-	s := getStore(-1)
+	s := getStore(time.Hour)
 	defer s.Close()
 	model := "123456"
 	modelAfterSet := "set"
@@ -669,7 +669,7 @@ func TestRequest(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if ex > 0 {
+		if ex <= 0 {
 			t.Errorf("Field ExpiredAt error %d", ex)
 		}
 		err = s.Set(r, testKey, modelAfterSet)
