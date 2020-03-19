@@ -40,7 +40,7 @@ func newNodeTestCache(ttl int64) *cache.Node {
 }
 
 func TestNodeMSetMGet(t *testing.T) {
-	c := newNodeTestCache(-1)
+	c := newNodeTestCache(3600)
 	var err error
 	var deletedkey = "deletedkey"
 
@@ -368,7 +368,7 @@ func TestNodeDefaulTTL(t *testing.T) {
 }
 func TestNodeTTL(t *testing.T) {
 	var err error
-	defaultTTL := int64(-1)
+	defaultTTL := int64(3600)
 	c := newNodeTestCache(defaultTTL)
 
 	testKeyTTLForver := "forever"

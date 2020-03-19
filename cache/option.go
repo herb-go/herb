@@ -25,6 +25,9 @@ type OptionConfig struct {
 //ApplyTo apply option to given cache.
 //Return any error if raised.
 func (o *OptionConfig) ApplyTo(cache *Cache) error {
+	if o.TTL < 0 {
+		return ErrTTLNotAvaliable
+	}
 	driver, err := NewDriver(o.Driver, o.Config)
 	if err != nil {
 		return err

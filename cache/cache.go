@@ -20,15 +20,12 @@ var (
 	ErrKeyUnavailable = errors.New("Key Unavailable")
 	//ErrFeatureNotSupported raised when calling feature on unsupported driver.
 	ErrFeatureNotSupported = errors.New("Feature is not supported")
-	//ErrPermanentCacheNotSupport raised when cache driver not support permanent ttl.
-	ErrPermanentCacheNotSupport = errors.New("Permanent cache is not supported.can not use ttl <0 on this cache")
+	//ErrTTLNotAvaliable raised when ttl not avaliable.
+	ErrTTLNotAvaliable = errors.New("TTL not avaliable")
 )
 
 //DefualtTTL means use cache default ttl setting.
 var DefualtTTL = time.Duration(0)
-
-//TTLForever When cache ttl sets to TTLForever,the cache will never expire.
-var TTLForever = time.Duration(-1)
 
 var (
 	//KeyPrefix default key prefix
@@ -115,7 +112,9 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 	if ttl == DefualtTTL {
 		ttl = c.TTL
 	}
-
+	if ttl < 0 {
+		return ErrTTLNotAvaliable
+	}
 	return c.Driver.SetBytesValue(c.getKey(key), bytes, ttl)
 }
 
@@ -129,7 +128,9 @@ func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) er
 	if ttl == DefualtTTL {
 		ttl = c.TTL
 	}
-
+	if ttl < 0 {
+		return ErrTTLNotAvaliable
+	}
 	return c.Driver.UpdateBytesValue(c.getKey(key), bytes, ttl)
 }
 
@@ -171,6 +172,9 @@ func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error 
 	if ttl == DefualtTTL {
 		ttl = c.TTL
 	}
+	if ttl < 0 {
+		return ErrTTLNotAvaliable
+	}
 	return c.Driver.MSetBytesValue(prefixed, ttl)
 }
 
@@ -190,6 +194,9 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 	}
 	if ttl == DefualtTTL {
 		ttl = c.TTL
+	}
+	if ttl < 0 {
+		return ErrTTLNotAvaliable
 	}
 	err := c.Driver.Expire(c.getKey(key), ttl)
 	if err == ErrNotFound {
@@ -225,6 +232,9 @@ func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 	if ttl == DefualtTTL {
 		ttl = c.TTL
 	}
+	if ttl < 0 {
+		return ErrTTLNotAvaliable
+	}
 	return c.Driver.SetCounter(c.getIntKey(key), v, ttl)
 }
 
@@ -254,6 +264,9 @@ func (c *Cache) DelCounter(key string) error {
 func (c *Cache) ExpireCounter(key string, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
+	}
+	if ttl < 0 {
+		return ErrTTLNotAvaliable
 	}
 	err := c.Driver.ExpireCounter(c.getIntKey(key), ttl)
 	if err == ErrNotFound {

@@ -12,7 +12,7 @@ func TestDummyCache(t *testing.T) {
 	testKey := "key"
 	testData := []string{"123"}
 	testBytes := []byte("123")
-	testTTL := time.Duration(-1)
+	testTTL := time.Hour
 	testIncrement := int64(1)
 	testIntValue := int64(2)
 	var model string

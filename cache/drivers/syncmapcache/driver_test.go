@@ -12,7 +12,7 @@ import (
 func BenchmarkCacheRead(b *testing.B) {
 	c := newTestCache(300)
 	var data = bytes.Repeat([]byte("12345"), 100)
-	c.SetBytesValue("test", data, -1)
+	c.SetBytesValue("test", data, 3600)
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
@@ -26,7 +26,7 @@ func BenchmarkCacheWrite(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			c.SetBytesValue("test", data, -1)
+			c.SetBytesValue("test", data, 3600)
 		}
 	})
 }
@@ -34,7 +34,7 @@ func BenchmarkCacheWrite(b *testing.B) {
 func newGCTestCache(ttl int64) *cache.Cache {
 
 	config := Config{
-		Size: 10000000,
+		Size:                    10000000,
 		CleanupIntervalInSecond: 2,
 	}
 	buf := bytes.NewBuffer(nil)

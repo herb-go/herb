@@ -17,9 +17,8 @@ const defaultCleanupIntervalInSecond = 60
 const defaultSize = 50000000
 
 type entry struct {
-	NeverExpired bool
-	Expired      time.Time
-	Data         []byte
+	Expired time.Time
+	Data    []byte
 }
 
 //Cache The gocache cache Driver.
@@ -73,7 +72,7 @@ func (c *Cache) gc() {
 	m := c.datamap()
 	m.Range(func(key interface{}, value interface{}) bool {
 		e := value.(*entry)
-		if !e.NeverExpired && e.Expired.Before(time.Now()) {
+		if e.Expired.Before(time.Now()) {
 			size := int64(len(e.Data))
 			c.used = c.used - size
 			m.Delete(key)
@@ -90,7 +89,7 @@ func (c *Cache) get(key string) ([]byte, bool) {
 		return nil, true
 	}
 	e := v.(*entry)
-	if e.NeverExpired || time.Now().Before(e.Expired) {
+	if time.Now().Before(e.Expired) {
 		return e.Data, true
 	}
 	return nil, false
@@ -127,9 +126,8 @@ func (c *Cache) set(key string, data []byte, ttl time.Duration) {
 	defer func() { c.used = c.used + delta }()
 	v, ok := c.datamap().Load(key)
 	e := &entry{
-		NeverExpired: ttl < 0,
-		Expired:      time.Now().Add(ttl),
-		Data:         data,
+		Expired: time.Now().Add(ttl),
+		Data:    data,
 	}
 	c.datamap().Store(key, e)
 	delta = int64(len(data))
@@ -149,9 +147,8 @@ func (c *Cache) replace(key string, data []byte, ttl time.Duration) {
 	}
 	c.makeRoom(int64(len(data)))
 	e := &entry{
-		NeverExpired: ttl < 0,
-		Expired:      time.Now().Add(ttl),
-		Data:         data,
+		Expired: time.Now().Add(ttl),
+		Data:    data,
 	}
 	c.datamap().Store(key, e)
 	size := int64(len(data)) - int64(len(e.Data))

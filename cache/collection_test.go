@@ -40,7 +40,7 @@ func newCollectionTestCache(ttl int64) *cache.Collection {
 }
 
 func TestCollectionMSetMGet(t *testing.T) {
-	c := newCollectionTestCache(-1)
+	c := newCollectionTestCache(3600)
 	var err error
 	var deletedkey = "deletedkey"
 
@@ -111,7 +111,7 @@ func TestCollectionMSetMGet(t *testing.T) {
 		t.Errorf("%s", d[unusedKey])
 	}
 	err = c.SetBytesValue(unusedKey, []byte{}, -1)
-	if err != cache.ErrPermanentCacheNotSupport {
+	if err != cache.ErrTTLNotAvaliable {
 		t.Fatal(err)
 	}
 }
@@ -376,12 +376,9 @@ func TestCollectionDefaulTTL(t *testing.T) {
 }
 func TestCollectionTTL(t *testing.T) {
 	var err error
-	defaultTTL := int64(-1)
+	defaultTTL := int64(3600)
 	c := newCollectionTestCache(defaultTTL)
 
-	testKeyTTLForver := "forever"
-	testKeyTTLForverBytes := "foreverbytes"
-	testKeyTTLForverCounter := "forevercounter"
 	testKeyTTL1Second := "1second"
 	testKeyTTL1SecondBytes := "1secondbytes"
 	testKeyTTL1SecondCounter := "1secondcounter"
@@ -399,18 +396,6 @@ func TestCollectionTTL(t *testing.T) {
 	testDataBytes := []byte("12345byte")
 	testDataInt := int64(99999)
 	var resultModelData string
-	err = c.Set(testKeyTTLForver, testDataModel, time.Hour)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = c.SetBytesValue(testKeyTTLForverBytes, testDataBytes, time.Hour)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = c.SetCounter(testKeyTTLForverCounter, testDataInt, time.Hour)
-	if err != nil {
-		t.Fatal(err)
-	}
 	err = c.Set(testKeyTTL1Second, testDataModel, 1*time.Second)
 	if err != nil {
 		t.Fatal(err)
@@ -461,19 +446,6 @@ func TestCollectionTTL(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.Get(testKeyTTLForver, &resultModelData)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = c.GetBytesValue(testKeyTTLForverBytes)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = c.GetCounter(testKeyTTLForverCounter)
-	if err != nil {
-		t.Fatal(err)
-	}
 	err = c.Get(testKeyTTL1Second, &resultModelData)
 	if err != nil {
 		t.Fatal(err)
@@ -524,18 +496,7 @@ func TestCollectionTTL(t *testing.T) {
 	}
 
 	time.Sleep(2000 * time.Millisecond)
-	err = c.Get(testKeyTTLForver, &resultModelData)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = c.GetBytesValue(testKeyTTLForverBytes)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = c.GetCounter(testKeyTTLForverCounter)
-	if err != nil {
-		t.Fatal(err)
-	}
+
 	err = c.Get(testKeyTTL1Second, &resultModelData)
 	if err != cache.ErrNotFound {
 		t.Fatal(err)
@@ -599,18 +560,6 @@ func TestCollectionTTL(t *testing.T) {
 	}
 
 	time.Sleep(2000 * time.Millisecond)
-	err = c.Get(testKeyTTLForver, &resultModelData)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = c.GetBytesValue(testKeyTTLForverBytes)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = c.GetCounter(testKeyTTLForverCounter)
-	if err != nil {
-		t.Fatal(err)
-	}
 	err = c.Get(testKeyTTL1Second, &resultModelData)
 	if err != cache.ErrNotFound {
 		t.Fatal(err)
@@ -733,39 +682,39 @@ func TestCollectionForever(t *testing.T) {
 	var result = []byte{}
 	c := newCollectionTestCache(3600)
 	err = c.Set("test", result, -1)
-	if err != cache.ErrPermanentCacheNotSupport {
+	if err != cache.ErrTTLNotAvaliable {
 		t.Fatal(err)
 	}
 	err = c.Update("test", result, -1)
-	if err != cache.ErrPermanentCacheNotSupport {
+	if err != cache.ErrTTLNotAvaliable {
 		t.Fatal(err)
 	}
 	err = c.SetBytesValue("test", result, -1)
-	if err != cache.ErrPermanentCacheNotSupport {
+	if err != cache.ErrTTLNotAvaliable {
 		t.Fatal(err)
 	}
 	err = c.UpdateBytesValue("test", result, -1)
-	if err != cache.ErrPermanentCacheNotSupport {
+	if err != cache.ErrTTLNotAvaliable {
 		t.Fatal(err)
 	}
 	err = c.Expire("test", -1)
-	if err != cache.ErrPermanentCacheNotSupport {
+	if err != cache.ErrTTLNotAvaliable {
 		t.Fatal(err)
 	}
 	err = c.SetCounter("test", 1, -1)
-	if err != cache.ErrPermanentCacheNotSupport {
+	if err != cache.ErrTTLNotAvaliable {
 		t.Fatal(err)
 	}
 	_, err = c.IncrCounter("test", 1, -1)
-	if err != cache.ErrPermanentCacheNotSupport {
+	if err != cache.ErrTTLNotAvaliable {
 		t.Fatal(err)
 	}
 	err = c.ExpireCounter("test", -1)
-	if err != cache.ErrPermanentCacheNotSupport {
+	if err != cache.ErrTTLNotAvaliable {
 		t.Fatal(err)
 	}
 	err = c.Load("test", &result, -1, testLoader)
-	if err != cache.ErrPermanentCacheNotSupport {
+	if err != cache.ErrTTLNotAvaliable {
 		t.Fatal(err)
 	}
 }

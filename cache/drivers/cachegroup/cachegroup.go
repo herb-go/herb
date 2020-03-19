@@ -26,11 +26,7 @@ func (e *entry) Set(bytes []byte, ttl time.Duration) int64 {
 	var buf = make([]byte, 8)
 	*e = make([]byte, len(bytes)+8)
 	copy((*e)[8:], bytes)
-	if ttl < 0 {
-		expired = -1
-	} else {
-		expired = time.Now().Add(ttl).Unix()
-	}
+	expired = time.Now().Add(ttl).Unix()
 	binary.BigEndian.PutUint64(buf, uint64(expired))
 	copy((*e)[0:8], buf)
 	return expired
@@ -44,7 +40,7 @@ func (e *entry) Get() ([]byte, int64, error) {
 		return buf, expired, cache.ErrNotFound
 	}
 	expired = int64(binary.BigEndian.Uint64(b[0:8]))
-	if expired >= 0 && expired < time.Now().Unix() {
+	if expired < time.Now().Unix() {
 		return buf, expired, cache.ErrNotFound
 	}
 	buf = make([]byte, len(b)-8)
@@ -66,11 +62,7 @@ func (c *Cache) setBytesCaches(key string, caches []*cache.Cache, bytes []byte, 
 	var finalErr error
 	var err error
 	var t time.Duration
-	if expired < 0 {
-		t = -1
-	} else {
-		t = time.Unix(expired, 0).Sub(time.Now())
-	}
+	t = time.Unix(expired, 0).Sub(time.Now())
 	for _, v := range caches {
 		var ttl time.Duration
 		if t < 0 {

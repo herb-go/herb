@@ -11,13 +11,13 @@ var testConfig = `
 					"Size": 10000000
 				},
 				"Marshaler": "json",
-				"TTL":-1
+				"TTL":3600
 			},{
 				"Driver":"syncmapcache",
 				"Config":{
 					"Size": 10000000
 				},
 				"Marshaler": "json",
-				"TTL":-1
+				"TTL":3600
 			}]
 }`

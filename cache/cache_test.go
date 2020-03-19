@@ -229,7 +229,7 @@ func TestFinalKey(t *testing.T) {
 }
 
 func TestMutliConcurrent(t *testing.T) {
-	c := newTestCache(-1)
+	c := newTestCache(3600)
 	wg := &sync.WaitGroup{}
 	for i := 0; i < 100000; i++ {
 		wg.Add(1)

@@ -6,10 +6,9 @@
 
 * 过期的数据一定不可被访问
 * 未过期的数据不保证在所有情况下的可用性
-* 支持永不过期的数据，但不代表数据永不丢失，也不建议使用永不过期的数据
 * 所有的数据通过[]byte保存，通用可序列化结构的数据可以直接序列化保存
 * 所有缓存取出的原始[]byte数据不应该被修改。需要修改请自行复制或者反序列化
-* 缓存的Flush方法和用不过期数据是否支持取决与具体驱动的实现
+* 缓存的Flush方法是否支持取决与具体驱动的实现
 
 ## 特性
 
@@ -24,7 +23,6 @@
 * dummpycache:空缓存。不缓存任何数据
 * [syncmapcache](drivers/syncmapcache): 基于sync.Map的本地缓存驱动
 * [freecache](drivers/freecache): 基于 github.com/coocood/freecache 的本地缓存驱动
-* [gocache](drivers/gocache) 基于 github.com/patrickmn/go-cache 实现的本地缓存驱动
 * [sqlcache](https://github.com/herb-go/providers/tree/master/sql/sqlcache) 基于sql的缓存
 * [rediscache](https://github.com/herb-go/providers/tree/master/redis/rediscache) 基于redis的缓存，需要独占db
 * [redisluacache](https://github.com/herb-go/providers/tree/master/redis/redisluacache) 基于redis和lua的缓存。多个缓存可以共用db
@@ -129,7 +127,7 @@
 * ErrKeyTooLarge:主键过长
 * ErrKeyUnavailable:主键无效
 * ErrFeatureNotSupported:驱动不支持该功能
-* ErrPermanentCacheNotSupport:不支持永不过期的缓存
+* ErrTTLNotAvaliable:TTL无效
 
 
 ## 缓存复用
@@ -138,8 +136,8 @@
 
 ### Collection
 Collection可以通过cacheable.Collection(Name)的方式创建。
-Collection支持flush数据，不支持永久储存。通过利用两个储存当前实际主键和实际数据的字段来实现。对于访问速度和内存占用有较大影响。请仅在需要对一系列数据进行flush操作时使用。
+Collection支持flush数据。通过利用两个储存当前实际主键和实际数据的字段来实现。对于访问速度和内存占用有较大影响。请仅在需要对一系列数据进行flush操作时使用。
 
 ### Node
 Node可以通过cacheable.Node(Name)的方式创建。
-Node支持永久储存，不支持flush数据。通过给主键加上固定的前缀实现，对于访问速度和内存占用影响较小，推荐一般情况下使用。
+Node不支持flush数据。通过给主键加上固定的前缀实现，对于访问速度和内存占用影响较小，推荐一般情况下使用。

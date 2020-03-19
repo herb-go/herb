@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/herb-go/herb/cache"
 	"github.com/herb-go/herb/cache/drivers/syncmapcache"
@@ -45,7 +46,7 @@ func TestFieldUpdate(t *testing.T) {
 	testDataModel := "test"
 	var resultDataModel string
 	testDataBytes := []byte("testbytes")
-	err = c.Set(testDataModel, cache.TTLForever)
+	err = c.Set(testDataModel, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +54,7 @@ func TestFieldUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.Update(testDataModel, cache.TTLForever)
+	err = c.Update(testDataModel, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +66,7 @@ func TestFieldUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.Update(testDataModel, cache.TTLForever)
+	err = c.Update(testDataModel, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +75,7 @@ func TestFieldUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.SetBytesValue(testDataBytes, cache.TTLForever)
+	err = c.SetBytesValue(testDataBytes, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +83,7 @@ func TestFieldUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.SetBytesValue(testDataBytes, cache.TTLForever)
+	err = c.SetBytesValue(testDataBytes, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +95,7 @@ func TestFieldUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.UpdateBytesValue(testDataBytes, cache.TTLForever)
+	err = c.UpdateBytesValue(testDataBytes, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}

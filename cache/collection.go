@@ -37,9 +37,7 @@ func (c *Collection) GetCacheKey(key string) (string, error) {
 	if err == ErrNotFound {
 		ts = strconv.FormatInt(time.Now().UnixNano(), 32)
 		ttl := c.TTL
-		if !c.persist() {
-			ttl = ttl * time.Duration(CollectionTTLMultiple)
-		}
+		ttl = ttl * time.Duration(CollectionTTLMultiple)
 		err = c.Cache.Set(c.Prefix, ts, ttl)
 		if err == ErrNotCacheable {
 			err = nil
@@ -50,16 +48,13 @@ func (c *Collection) GetCacheKey(key string) (string, error) {
 	}
 	return c.Prefix + KeyPrefix + ts + KeyPrefix + key, nil
 }
-func (c *Collection) persist() bool {
-	return c.TTL < 0 || (c.TTL == 0 && c.Cache.DefualtTTL() < 0)
-}
 
 //Set Set data model to cache by given key.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) Set(key string, v interface{}, TTL time.Duration) error {
-	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
-		return ErrPermanentCacheNotSupport
+	if TTL < 0 {
+		return ErrTTLNotAvaliable
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
@@ -72,8 +67,8 @@ func (c *Collection) Set(key string, v interface{}, TTL time.Duration) error {
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) Update(key string, v interface{}, TTL time.Duration) error {
-	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
-		return ErrPermanentCacheNotSupport
+	if TTL < 0 {
+		return ErrTTLNotAvaliable
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
@@ -97,8 +92,8 @@ func (c *Collection) Get(key string, v interface{}) error {
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) SetBytesValue(key string, bytes []byte, TTL time.Duration) error {
-	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
-		return ErrPermanentCacheNotSupport
+	if TTL < 0 {
+		return ErrTTLNotAvaliable
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
@@ -122,8 +117,8 @@ func (c *Collection) GetBytesValue(key string) ([]byte, error) {
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) UpdateBytesValue(key string, bytes []byte, TTL time.Duration) error {
-	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
-		return ErrPermanentCacheNotSupport
+	if TTL < 0 {
+		return ErrTTLNotAvaliable
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
@@ -181,8 +176,8 @@ func (c *Collection) Del(key string) error {
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return int data value and any error raised.
 func (c *Collection) IncrCounter(key string, increment int64, TTL time.Duration) (int64, error) {
-	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
-		return 0, ErrPermanentCacheNotSupport
+	if TTL < 0 {
+		return 0, ErrTTLNotAvaliable
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
@@ -196,8 +191,8 @@ func (c *Collection) IncrCounter(key string, increment int64, TTL time.Duration)
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) SetCounter(key string, v int64, TTL time.Duration) error {
-	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
-		return ErrPermanentCacheNotSupport
+	if TTL < 0 {
+		return ErrTTLNotAvaliable
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
@@ -232,8 +227,8 @@ func (c *Collection) GetCounter(key string) (int64, error) {
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) Load(key string, v interface{}, TTL time.Duration, loader Loader) error {
-	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
-		return ErrPermanentCacheNotSupport
+	if TTL < 0 {
+		return ErrTTLNotAvaliable
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
@@ -254,8 +249,8 @@ func (c *Collection) DefualtTTL() time.Duration {
 
 //Expire set cache value expire duration by given key and ttl
 func (c *Collection) Expire(key string, TTL time.Duration) error {
-	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
-		return ErrPermanentCacheNotSupport
+	if TTL < 0 {
+		return ErrTTLNotAvaliable
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
@@ -266,8 +261,8 @@ func (c *Collection) Expire(key string, TTL time.Duration) error {
 
 //ExpireCounter set cache counter  expire duration by given key and ttl
 func (c *Collection) ExpireCounter(key string, TTL time.Duration) error {
-	if TTL < 0 || (TTL == 0 && c.Cache.DefualtTTL() < 0) {
-		return ErrPermanentCacheNotSupport
+	if TTL < 0 {
+		return ErrTTLNotAvaliable
 	}
 	k, err := c.GetCacheKey(key)
 	if err != nil {
