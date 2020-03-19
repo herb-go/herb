@@ -98,7 +98,7 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 		copy(b[1:], bytes)
 		return c.Remote.SetBytesValue(key+cache.KeyPrefix, b, ttl)
 	}
-	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
+	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 32))
 	b := make([]byte, len(ts)+1)
 	b[0] = VersionTypeKey
 	copy(b[1:], ts)
@@ -120,7 +120,7 @@ func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) er
 		copy(b[1:], bytes)
 		return c.Remote.UpdateBytesValue(key+cache.KeyPrefix, b, ttl)
 	}
-	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
+	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 32))
 	b := make([]byte, len(ts)+1)
 	b[0] = VersionTypeKey
 	copy(b[1:], ts)
@@ -242,7 +242,7 @@ func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error {
 	var versions = make(map[string][]byte, len(data))
 	var RemoteData = make(map[string][]byte, len(data))
-	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
+	ts := []byte(strconv.FormatInt(time.Now().UnixNano(), 32))
 	for k := range data {
 		if len(data[k]) < VersionMinLength {
 			b := make([]byte, len(data[k])+1)

@@ -1,9 +1,7 @@
 package cache
 
 import (
-	"bytes"
-	"encoding/binary"
-	"encoding/hex"
+	"strconv"
 	"time"
 )
 
@@ -35,26 +33,16 @@ func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collectio
 //Return key and any error if raised.
 func (c *Collection) GetCacheKey(key string) (string, error) {
 	var ts string
-	var data int64
 	err := c.Cache.Get(c.Prefix, &ts)
 	if err == ErrNotFound {
-		data = time.Now().UnixNano()
-		buf := bytes.NewBuffer(nil)
-		err = binary.Write(buf, binary.BigEndian, data)
-		if err != nil {
-			return "", err
-		}
-		ts = hex.EncodeToString(buf.Bytes())
+		ts = strconv.FormatInt(time.Now().UnixNano(), 32)
 		ttl := c.TTL
 		if !c.persist() {
 			ttl = ttl * time.Duration(CollectionTTLMultiple)
 		}
-		err2 := c.Cache.Set(c.Prefix, ts, ttl)
-		if err2 == ErrNotCacheable {
-			err2 = nil
-		}
-		if err2 != nil {
-			return "", err2
+		err = c.Cache.Set(c.Prefix, ts, ttl)
+		if err == ErrNotCacheable {
+			err = nil
 		}
 	}
 	if err != nil {
