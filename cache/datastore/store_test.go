@@ -94,7 +94,7 @@ func TestMapLoad(t *testing.T) {
 		valueKeyAadditional: startValue,
 		valueKeyChanged:     startValue,
 	}
-	c := newTestCache(-1)
+	c := newTestCache(3600)
 	var err error
 	var tm = NewMapStore()
 	err = Load(tm, c, loader(), creator(), valueKey, valueKey, valueKeyAadditional, valueKeyNotexists)
@@ -159,7 +159,7 @@ func TestSyncMapLoad(t *testing.T) {
 		valueKeyAadditional: startValue,
 		valueKeyChanged:     startValue,
 	}
-	c := newTestCache(-1)
+	c := newTestCache(3600)
 	var err error
 	var tm = NewSyncMapStore()
 	err = Load(tm, c, loader(), creator(), valueKey, valueKeyAadditional)
@@ -363,7 +363,7 @@ func TestSyncLoader(t *testing.T) {
 		valueKeyAadditional: startValue,
 		valueKeyChanged:     startValue,
 	}
-	c := newTestCache(-1)
+	c := newTestCache(3600)
 	var err error
 	var datasource = &DataSource{
 		SourceLoader: loader(),
@@ -443,7 +443,7 @@ func TestSyncLoader(t *testing.T) {
 
 func TestConcurrent(t *testing.T) {
 	rawdata := sync.Map{}
-	c := newTestCache(-1)
+	c := newTestCache(3600)
 	loader := func(keys ...string) (map[string]interface{}, error) {
 		result := map[string]interface{}{}
 		time.Sleep(300 * time.Microsecond)
@@ -527,7 +527,7 @@ func TestConcurrent(t *testing.T) {
 
 func TestMutliConcurrent(t *testing.T) {
 	rawdata := sync.Map{}
-	c := newTestCache(-1)
+	c := newTestCache(3600)
 	loader := func(keys ...string) (map[string]interface{}, error) {
 		result := map[string]interface{}{}
 		time.Sleep(10 * time.Millisecond)
