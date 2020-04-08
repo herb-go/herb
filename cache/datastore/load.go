@@ -9,7 +9,7 @@ import (
 func unmarshalMapElement(s Store, creator func() interface{}, key string, data []byte, c cache.Cacheable) (err error) {
 	v := creator()
 	if len(data) != 0 {
-		err = c.Unmarshal(data, v)
+		err = c.Util().Unmarshal(data, v)
 		if err != nil {
 			return err
 		}
@@ -77,11 +77,9 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 	sort.Strings(uncachedKeys)
 	if c != nil {
 		for k := range uncachedKeys {
-			key, err := c.FinalKey(uncachedKeys[k])
-			if err != nil {
-				return err
-			}
-			locker, ok := c.Locker(key)
+			key := c.FinalKey(uncachedKeys[k])
+
+			locker, ok := c.Util().Locker(key)
 			if ok {
 				locker.RLock()
 				defer locker.RUnlock()
@@ -120,7 +118,7 @@ func Load(s Store, c cache.Cacheable, loader func(...string) (map[string]interfa
 		v := loaded[k]
 		s.Store(k, v)
 		if c != nil {
-			data[k], err = c.Marshal(v)
+			data[k], err = c.Util().Marshal(v)
 			if err != nil {
 				return err
 			}

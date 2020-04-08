@@ -4,6 +4,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/herb-go/herb/cache"
 )
 
 var testLaterLoader = func(key string) (interface{}, error) {
@@ -11,6 +13,16 @@ var testLaterLoader = func(key string) (interface{}, error) {
 	return key, nil
 }
 
+func TestCloneUtil(t *testing.T) {
+	u := cache.NewUtil()
+	uc := u.Clone()
+	uc.NodeFactory = func(cache.Cacheable, string) *cache.Node {
+		return nil
+	}
+	if u.NodeFactory != nil || uc.NodeFactory == nil {
+		t.Fatal(u, uc)
+	}
+}
 func TestLaterLoader(t *testing.T) {
 	var result string
 	var result2 string

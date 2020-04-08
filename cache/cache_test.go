@@ -219,10 +219,7 @@ func TestNotFound(t *testing.T) {
 
 func TestFinalKey(t *testing.T) {
 	c := newTestCache(3600)
-	k, err := c.FinalKey("key")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := c.FinalKey("key")
 	if k != cache.KeyPrefix+"key" {
 		t.Fatal(k)
 	}

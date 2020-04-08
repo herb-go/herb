@@ -33,6 +33,12 @@ var (
 	intKeyPrefix = string([]byte{69, 0})
 )
 
+//Key return cache key
+func Key(key string) string {
+	return KeyPrefix + key
+
+}
+
 //New :Create a empty cache.
 func New() *Cache {
 	return &Cache{}
@@ -45,7 +51,7 @@ type Cache struct {
 }
 
 func (c *Cache) getKey(key string) string {
-	return KeyPrefix + key
+	return Key(key)
 }
 
 //Init init cache with option
@@ -287,11 +293,8 @@ func loadFromCache(c Cacheable, key string, v interface{}, ttl time.Duration, lo
 	}
 	err = c.Get(key, v)
 	if err == ErrNotFound || err == ErrKeyTooLarge {
-		k, err := c.FinalKey(key)
-		if err != nil {
-			return err
-		}
-		locker, ok := c.Locker(k)
+		k := c.FinalKey(key)
+		locker, ok := c.Util().Locker(k)
 		if ok {
 			locker.RLock()
 			defer locker.RUnlock()
@@ -328,8 +331,8 @@ func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader Loader
 }
 
 //FinalKey get final key which passed to cache driver .
-func (c *Cache) FinalKey(key string) (string, error) {
-	return c.getKey(key), nil
+func (c *Cache) FinalKey(key string) string {
+	return c.getKey(key)
 }
 
 //Field retuan a cache field with given field name

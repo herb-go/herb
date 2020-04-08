@@ -11,13 +11,22 @@ type Node struct {
 	Prefix string
 }
 
-//NewNode create new cache node with given cacheable and prefix.
-//Return node created.
-func NewNode(c Cacheable, prefix string) *Node {
+//DefaultNodeFactory default cache node factory
+func DefaultNodeFactory(c Cacheable, prefix string) *Node {
 	return &Node{
 		Cache:  c,
 		Prefix: prefix,
 	}
+
+}
+
+//NewNode create new cache node with given cacheable and prefix.
+//Return node created.
+func NewNode(c Cacheable, prefix string) *Node {
+	if c.Util().NodeFactory == nil {
+		return DefaultNodeFactory(c, prefix)
+	}
+	return c.Util().NodeFactory(c, prefix)
 }
 
 //GetCacheKey return raw cache key by given key.
@@ -189,23 +198,8 @@ func (n *Node) ExpireCounter(key string, ttl time.Duration) error {
 	return n.Cache.ExpireCounter(k, ttl)
 }
 
-//Locker create new locker with given key.
-//return locker and if locker aleady locked
-func (n *Node) Locker(key string) (*Locker, bool) {
-	return n.Cache.Locker(key)
-}
-
-//Marshal Marshal data model to  bytes.
-//Return marshaled bytes and any error rasied.
-func (n *Node) Marshal(v interface{}) ([]byte, error) {
-	return n.Cache.Marshal(v)
-}
-
-//Unmarshal Unmarshal bytes to data model.
-//Parameter v should be pointer to empty data model which data filled in.
-//Return any error raseid.
-func (n *Node) Unmarshal(bytes []byte, v interface{}) error {
-	return n.Cache.Unmarshal(bytes, v)
+func (n *Node) Util() *Util {
+	return n.Cache.Util()
 }
 
 //Collection get a cache colletion with given prefix
@@ -227,6 +221,6 @@ func (n *Node) Field(fieldname string) *Field {
 }
 
 //FinalKey get final key which passed to cache driver .
-func (n *Node) FinalKey(key string) (string, error) {
+func (n *Node) FinalKey(key string) string {
 	return n.Cache.FinalKey(n.Prefix + KeyPrefix + key)
 }

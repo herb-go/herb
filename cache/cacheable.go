@@ -59,18 +59,12 @@ type Cacheable interface {
 	//Return  any error if raised.
 	MSetBytesValue(map[string][]byte, time.Duration) error
 	//FinalKey get final key which passed to cache driver .
-	FinalKey(string) (string, error)
+	FinalKey(string) string
 	//Flush Delete all data in cache.
 	Flush() error
 	//DefualtTTL return cache default ttl
 	DefualtTTL() time.Duration
-	// Locker return locker by given key
-	Locker(key string) (*Locker, bool)
-	//Marshal Marshal data model to  bytes.
-	//Return marshaled bytes and any error rasied.
-	Marshal(v interface{}) ([]byte, error)
-	//Unmarshal Unmarshal bytes to data model.
-	//Parameter v should be pointer to empty data model which data filled in.
-	//Return any error raseid.
-	Unmarshal(bytes []byte, v interface{}) error
+	Util() *Util
+	// // Locker return locker by given key
+	// Locker(key string) (*Locker, bool)
 }

@@ -111,7 +111,7 @@
     err=c.Close()
 
     //获取绝对主键
-    key,err=c.FinalKey(string)
+    key=c.FinalKey(string)
 
    //序列化数据
    bs,err=c.Marshal(v)

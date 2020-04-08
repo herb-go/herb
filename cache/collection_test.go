@@ -645,21 +645,18 @@ func TestCollectionMisc(t *testing.T) {
 	var result string
 	c := newCollectionTestCache(3600)
 	result = ""
-	bs, err := c.Marshal("test")
+	bs, err := c.Util().Marshal("test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.Unmarshal(bs, &result)
+	err = c.Util().Unmarshal(bs, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if result != "test" {
 		t.Fatal(result)
 	}
-	k, err := c.FinalKey("testkey")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := c.FinalKey("testkey")
 
 	if k != cache.KeyPrefix+c.Prefix+cache.KeyPrefix+"testkey" {
 		t.Fatal(k)

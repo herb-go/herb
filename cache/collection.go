@@ -19,14 +19,22 @@ type Collection struct {
 //CollectionTTLMultiple default collection ttl multiple
 var CollectionTTLMultiple = 10
 
-//NewCollection create new cache collection with given cache,prefix and ttl.
-//Return collection created.
-func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collection {
+//DefaultCollectionFactory default collection factory
+func DefaultCollectionFactory(cache Cacheable, prefix string, TTL time.Duration) *Collection {
 	return &Collection{
 		Cache:  cache,
 		Prefix: prefix,
 		TTL:    TTL,
 	}
+}
+
+//NewCollection create new cache collection with given cache,prefix and ttl.
+//Return collection created.
+func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collection {
+	if cache.Util().CollectionFactory == nil {
+		return DefaultCollectionFactory(cache, prefix, TTL)
+	}
+	return cache.Util().CollectionFactory(cache, prefix, TTL)
 }
 
 //GetCacheKey return raw cache key by given key.
@@ -271,23 +279,8 @@ func (c *Collection) ExpireCounter(key string, TTL time.Duration) error {
 	return c.Cache.ExpireCounter(k, TTL)
 }
 
-//Locker create new locker with given key.
-//return locker and if locker aleady locked
-func (c *Collection) Locker(key string) (*Locker, bool) {
-	return c.Cache.Locker(key)
-}
-
-//Marshal Marshal data model to  bytes.
-//Return marshaled bytes and any error rasied.
-func (c *Collection) Marshal(v interface{}) ([]byte, error) {
-	return c.Cache.Marshal(v)
-}
-
-//Unmarshal Unmarshal bytes to data model.
-//Parameter v should be pointer to empty data model which data filled in.
-//Return any error raseid.
-func (c *Collection) Unmarshal(bytes []byte, v interface{}) error {
-	return c.Cache.Unmarshal(bytes, v)
+func (c *Collection) Util() *Util {
+	return c.Cache.Util()
 }
 
 //Collection get a cache colletion with given prefix
@@ -309,6 +302,6 @@ func (c *Collection) Field(fieldname string) *Field {
 }
 
 //FinalKey get final key which passed to cache driver .
-func (c *Collection) FinalKey(key string) (string, error) {
+func (c *Collection) FinalKey(key string) string {
 	return c.Cache.FinalKey(c.Prefix + KeyPrefix + key)
 }
