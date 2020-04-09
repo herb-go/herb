@@ -96,6 +96,16 @@ func (c *Collection) Get(key string, v interface{}) error {
 	return c.Cache.Get(k, v)
 }
 
+//Hit return cache hit count
+func (c *Collection) Hit() int64 {
+	return c.Cache.Hit()
+}
+
+//Miss return cache miss count
+func (c *Collection) Miss() int64 {
+	return c.Cache.Miss()
+}
+
 //SetBytesValue Set bytes data to cache by given key.
 //If ttl is DefualtTTL(0),use default ttl in config instead.
 //Return any error raised.

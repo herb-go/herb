@@ -65,6 +65,8 @@ type Cacheable interface {
 	//DefualtTTL return cache default ttl
 	DefualtTTL() time.Duration
 	Util() *Util
+	Hit() int64
+	Miss() int64
 	// // Locker return locker by given key
 	// Locker(key string) (*Locker, bool)
 }

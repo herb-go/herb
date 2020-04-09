@@ -4,6 +4,7 @@ package cache
 import (
 	"errors"
 	"reflect"
+	"sync/atomic"
 	"time"
 )
 
@@ -41,13 +42,30 @@ func Key(key string) string {
 
 //New :Create a empty cache.
 func New() *Cache {
-	return &Cache{}
+	hit := int64(0)
+	miss := int64(0)
+	return &Cache{
+		hit:  &hit,
+		miss: &miss,
+	}
 }
 
 //Cache Cache stores the cache Driver and default ttl.
 type Cache struct {
 	Driver
-	TTL time.Duration
+	TTL  time.Duration
+	hit  *int64
+	miss *int64
+}
+
+//Hit return cache hit count
+func (c *Cache) Hit() int64 {
+	return atomic.LoadInt64(c.hit)
+}
+
+//Miss return cache miss count
+func (c *Cache) Miss() int64 {
+	return atomic.LoadInt64(c.miss)
 }
 
 func (c *Cache) getKey(key string) string {
@@ -73,7 +91,6 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	if err != nil {
 		return err
 	}
-
 	return c.Driver.SetBytesValue(c.getKey(key), bs, ttl)
 }
 
@@ -146,7 +163,13 @@ func (c *Cache) GetBytesValue(key string) ([]byte, error) {
 	if key == "" {
 		return nil, ErrKeyUnavailable
 	}
-	return c.Driver.GetBytesValue(c.getKey(key))
+	bs, err := c.Driver.GetBytesValue(c.getKey(key))
+	if err != nil {
+		atomic.AddInt64(c.hit, 1)
+	} else if err == ErrNotFound {
+		atomic.AddInt64(c.miss, 1)
+	}
+	return bs, err
 }
 
 //MGetBytesValue get multiple bytes data from cache by given keys.
@@ -165,6 +188,8 @@ func (c *Cache) MGetBytesValue(keys ...string) (map[string][]byte, error) {
 	for k := range data {
 		result[k[len(KeyPrefix):]] = data[k]
 	}
+	atomic.AddInt64(c.hit, int64(len(data)))
+	atomic.AddInt64(c.miss, int64(len(keys)-len(data)))
 	return result, nil
 }
 

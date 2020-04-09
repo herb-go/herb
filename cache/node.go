@@ -29,6 +29,16 @@ func NewNode(c Cacheable, prefix string) *Node {
 	return c.Util().NodeFactory(c, prefix)
 }
 
+//Hit return cache hit count
+func (c *Node) Hit() int64 {
+	return c.Cache.Hit()
+}
+
+//Miss return cache miss count
+func (c *Node) Miss() int64 {
+	return c.Cache.Miss()
+}
+
 //GetCacheKey return raw cache key by given key.
 //Return key and any error if raised.
 func (n *Node) GetCacheKey(key string) (string, error) {
