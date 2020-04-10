@@ -22,3 +22,8 @@ func (a *Action) SetHandler(f func(w http.ResponseWriter, r *http.Request)) *Act
 func (a *Action) Handler() func(w http.ResponseWriter, r *http.Request) {
 	return a.handler
 }
+
+//New create new cation
+func New() *Action {
+	return &Action{}
+}
