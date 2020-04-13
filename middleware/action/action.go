@@ -4,12 +4,17 @@ import "net/http"
 
 //Action action struct
 type Action struct {
-	handler func(w http.ResponseWriter, r *http.Request)
+	middleware func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
+	handler    func(w http.ResponseWriter, r *http.Request)
 }
 
 //ServeHTTP serve as http server
 func (a *Action) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	a.handler(w, r)
+	if a.middleware == nil {
+		a.handler(w, r)
+		return
+	}
+	a.middleware(w, r, a.handler)
 }
 
 //SetHandler set action handler
