@@ -18,11 +18,13 @@ func (c *TimeCondition) CheckRequest(*http.Request) (bool, error) {
 	return false, nil
 }
 
-var TimeConditionFactory = ConditionFactoryFunc(func(loader func(v interface{}) error) (Condition, error) {
-	c := &TimeCondition{}
-	err := loader(c)
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
-})
+func NewTimeConditionFactory() ConditionFactory {
+	return ConditionFactoryFunc(func(loader func(v interface{}) error) (Condition, error) {
+		c := &TimeCondition{}
+		err := loader(c)
+		if err != nil {
+			return nil, err
+		}
+		return c, nil
+	})
+}
