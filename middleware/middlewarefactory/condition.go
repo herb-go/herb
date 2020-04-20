@@ -6,6 +6,16 @@ type Condition interface {
 	CheckRequest(*http.Request) (bool, error)
 }
 
+type ConditionFactory interface {
+	CreateCondition(func(v interface{}) error) (Condition, error)
+}
+
+type ConditionFactoryFunc func(func(v interface{}) error) (Condition, error)
+
+func (f ConditionFactoryFunc) CreateCondition(loader func(v interface{}) error) (Condition, error) {
+	return f(loader)
+}
+
 func Not(r *http.Request, c Condition) (bool, error) {
 	ok, err := c.CheckRequest(r)
 	if err != nil {
