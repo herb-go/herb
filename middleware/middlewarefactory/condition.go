@@ -78,7 +78,12 @@ func (c *PlainCondition) CheckRequest(r *http.Request) (bool, error) {
 			result, err = And(r, conditions...)
 		}
 	} else {
-		result, err = c.Condition.CheckRequest(r)
+		if c.Condition != nil {
+			result, err = c.Condition.CheckRequest(r)
+		} else {
+			result = true
+			err = nil
+		}
 	}
 	if err != nil {
 		return false, err
