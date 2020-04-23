@@ -5,6 +5,15 @@ import "net/http"
 type Condition interface {
 	CheckRequest(*http.Request) (bool, error)
 }
+type ConditionFunc func(*http.Request) (bool, error)
+
+func (f ConditionFunc) CheckRequest(r *http.Request) (bool, error) {
+	return f(r)
+}
+
+var EmptyCondition = ConditionFunc(func(*http.Request) (bool, error) {
+	return true, nil
+})
 
 type ConditionFactory interface {
 	CreateCondition(func(v interface{}) error) (Condition, error)
@@ -69,7 +78,9 @@ func (c *PlainCondition) CheckRequest(r *http.Request) (bool, error) {
 	if c.Disabled {
 		return false, nil
 	}
-
+	if c.Condition == nil {
+		c.Condition = EmptyCondition
+	}
 	if len(c.Conditions) != 0 {
 		conditions := append([]Condition{c.Condition}, c.Conditions...)
 		if c.Or {
@@ -78,12 +89,7 @@ func (c *PlainCondition) CheckRequest(r *http.Request) (bool, error) {
 			result, err = And(r, conditions...)
 		}
 	} else {
-		if c.Condition != nil {
-			result, err = c.Condition.CheckRequest(r)
-		} else {
-			result = true
-			err = nil
-		}
+		result, err = c.Condition.CheckRequest(r)
 	}
 	if err != nil {
 		return false, err

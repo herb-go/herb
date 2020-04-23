@@ -21,11 +21,10 @@ func (w *responsewriter) WriteHeader(statusCode int) {
 	w.StatusCode = statusCode
 }
 
-type responsewriterflusher struct{
+type responsewriterflusher struct {
 	responsewriter
 }
 
-func 
 func TestResponsewriter(t *testing.T) {
 	rw := &responsewriter{}
 	w := WrapResponseWriter(rw)
@@ -38,7 +37,7 @@ func TestResponsewriter(t *testing.T) {
 	if p, err := w.Write(nil); p != 11 || err != nil {
 		t.Fatal(w)
 	}
-	if rw.StatusCode != 0 {
+	if rw.StatusCode != 200 {
 		t.Fatal(rw)
 	}
 	rw.WriteHeader(22)

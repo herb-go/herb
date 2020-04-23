@@ -83,3 +83,17 @@ func (c *Config) Middleware(ctx *Context) (middleware.Middleware, error) {
 	}
 	return m, nil
 }
+
+type ConfigList []*Config
+
+func (c *ConfigList) Middleware(ctx *Context) (middleware.Middleware, error) {
+	result := middleware.Middlewares{}
+	for k := range *c {
+		m, err := (*c)[k].Middleware(ctx)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, m)
+	}
+	return result.ServeMiddleware, nil
+}
