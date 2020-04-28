@@ -18,9 +18,11 @@ type ConditionConfig struct {
 func (c *ConditionConfig) Create(creator ConditionCreator) (Condition, error) {
 	var err error
 	pc := NewPlainCondition()
-	pc.Condition, err = creator.CreateCondition(c.Type, c.Config)
-	if err != nil {
-		return nil, err
+	if c.Type != "" {
+		pc.Condition, err = creator.CreateCondition(c.Type, c.Config)
+		if err != nil {
+			return nil, err
+		}
 	}
 	pc.Not = c.Not
 	pc.Or = c.Or
