@@ -2,7 +2,6 @@ package cache
 
 import (
 	"sync"
-	"time"
 )
 
 //NewUtil create new util
@@ -27,19 +26,15 @@ func (l *Locker) Unlock() {
 
 //Util cache util
 type Util struct {
-	Marshaler         Marshaler
-	locks             *sync.Map
-	CollectionFactory func(Cacheable, string, time.Duration) *Collection
-	NodeFactory       func(Cacheable, string) *Node
+	Marshaler Marshaler
+	locks     *sync.Map
 }
 
 //Clone clone util
 func (u *Util) Clone() *Util {
 	return &Util{
-		Marshaler:         u.Marshaler,
-		locks:             u.locks,
-		CollectionFactory: u.CollectionFactory,
-		NodeFactory:       u.NodeFactory,
+		Marshaler: u.Marshaler,
+		locks:     u.locks,
 	}
 }
 

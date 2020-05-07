@@ -16,10 +16,8 @@ var testLaterLoader = func(key string) (interface{}, error) {
 func TestCloneUtil(t *testing.T) {
 	u := cache.NewUtil()
 	uc := u.Clone()
-	uc.NodeFactory = func(cache.Cacheable, string) *cache.Node {
-		return nil
-	}
-	if u.NodeFactory != nil || uc.NodeFactory == nil {
+	uc.Marshaler = &cache.JSONMarshaler{}
+	if u.Marshaler != nil || uc.Marshaler == nil {
 		t.Fatal(u, uc)
 	}
 }

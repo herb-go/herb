@@ -19,22 +19,15 @@ type Collection struct {
 //CollectionTTLMultiple default collection ttl multiple
 var CollectionTTLMultiple = 10
 
-//DefaultCollectionFactory default collection factory
-func DefaultCollectionFactory(cache Cacheable, prefix string, TTL time.Duration) *Collection {
+//NewCollection create new cache collection with given cache,prefix and ttl.
+//Return collection created.
+func NewCollection(cache Cacheable, prefix string, TTL time.Duration) Cacheable {
 	return &Collection{
 		Cache:  cache,
 		Prefix: prefix,
 		TTL:    TTL,
 	}
-}
 
-//NewCollection create new cache collection with given cache,prefix and ttl.
-//Return collection created.
-func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collection {
-	if cache.Util().CollectionFactory == nil {
-		return DefaultCollectionFactory(cache, prefix, TTL)
-	}
-	return cache.Util().CollectionFactory(cache, prefix, TTL)
 }
 
 //GetCacheKey return raw cache key by given key.
@@ -294,13 +287,8 @@ func (c *Collection) Util() *Util {
 }
 
 //Collection get a cache colletion with given prefix
-func (c *Collection) Collection(prefix string) *Collection {
+func (c *Collection) Collection(prefix string) Cacheable {
 	return NewCollection(c, prefix, c.TTL)
-}
-
-//Node get a cache node with given prefix
-func (c *Collection) Node(prefix string) *Node {
-	return NewNode(c, prefix)
 }
 
 //Field retuan a cache field with given field name

@@ -374,13 +374,8 @@ func (c *Cache) DefualtTTL() time.Duration {
 }
 
 //Collection get a cache colletion with given prefix
-func (c *Cache) Collection(prefix string) *Collection {
+func (c *Cache) Collection(prefix string) Cacheable {
 	return NewCollection(c, prefix, c.TTL)
-}
-
-//Node get a cache node with given prefix
-func (c *Cache) Node(prefix string) *Node {
-	return NewNode(c, prefix)
 }
 
 //Marshal Marshal data model to  bytes.

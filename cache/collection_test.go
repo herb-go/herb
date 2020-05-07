@@ -36,7 +36,7 @@ func newCollectionTestCache(ttl int64) *cache.Collection {
 	if err != nil {
 		panic(err)
 	}
-	return c.Collection("testcollectiont")
+	return c.Collection("testcollectiont").(*cache.Collection)
 }
 
 func TestCollectionMSetMGet(t *testing.T) {
@@ -664,10 +664,6 @@ func TestCollectionMisc(t *testing.T) {
 	sc := c.Collection("c")
 	if sc == nil {
 		t.Fatal(sc)
-	}
-	sn := c.Node("n")
-	if sn == nil {
-		t.Fatal(sn)
 	}
 	sf := c.Field("n")
 	if sf == nil {
