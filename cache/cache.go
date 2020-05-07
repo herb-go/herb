@@ -25,8 +25,8 @@ var (
 	ErrTTLNotAvaliable = errors.New("TTL not avaliable")
 )
 
-//DefualtTTL means use cache default ttl setting.
-var DefualtTTL = time.Duration(0)
+//DefaultTTL means use cache default ttl setting.
+var DefaultTTL = time.Duration(0)
 
 var (
 	//KeyPrefix default key prefix
@@ -373,9 +373,9 @@ func (c *Cache) DefualtTTL() time.Duration {
 	return c.TTL
 }
 
-//Collection get a cache colletion with given prefix
-func (c *Cache) Collection(prefix string) Cacheable {
-	return NewCollection(c, prefix, c.TTL)
+//Proxy get a cache proxy with given prefix
+func (c *Cache) Proxy(prefix string) *Proxy {
+	return NewProxy(NewCollection(c, prefix, c.TTL))
 }
 
 //Marshal Marshal data model to  bytes.

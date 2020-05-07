@@ -21,7 +21,7 @@ var CollectionTTLMultiple = 10
 
 //NewCollection create new cache collection with given cache,prefix and ttl.
 //Return collection created.
-func NewCollection(cache Cacheable, prefix string, TTL time.Duration) Cacheable {
+func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collection {
 	return &Collection{
 		Cache:  cache,
 		Prefix: prefix,
@@ -286,9 +286,9 @@ func (c *Collection) Util() *Util {
 	return c.Cache.Util()
 }
 
-//Collection get a cache colletion with given prefix
-func (c *Collection) Collection(prefix string) Cacheable {
-	return NewCollection(c, prefix, c.TTL)
+//Proxy get a cache proxy with given prefix
+func (c *Collection) Proxy(prefix string) *Proxy {
+	return NewProxy(NewCollection(c, prefix, c.TTL))
 }
 
 //Field retuan a cache field with given field name
