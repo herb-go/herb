@@ -78,13 +78,13 @@ func (c *Cache) Init(option Option) error {
 }
 
 //Set Set data model to cache by given key.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	if ttl == DefualtTTL {
+	if ttl == DefaultTTL {
 		ttl = c.TTL
 	}
 	bs, err := c.Driver.Util().Marshaler.Marshal(v)
@@ -95,13 +95,13 @@ func (c *Cache) Set(key string, v interface{}, ttl time.Duration) error {
 }
 
 //Update Update data model to cache by given key only if the cache exist.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Cache) Update(key string, v interface{}, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	if ttl == DefualtTTL {
+	if ttl == DefaultTTL {
 		ttl = c.TTL
 	}
 	bs, err := c.Driver.Util().Marshaler.Marshal(v)
@@ -126,13 +126,13 @@ func (c *Cache) Get(key string, v interface{}) error {
 }
 
 //SetBytesValue Set bytes data to cache by given key.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	if ttl == DefualtTTL {
+	if ttl == DefaultTTL {
 		ttl = c.TTL
 	}
 	if ttl < 0 {
@@ -142,13 +142,13 @@ func (c *Cache) SetBytesValue(key string, bytes []byte, ttl time.Duration) error
 }
 
 //UpdateBytesValue Update bytes data to cache by given key only if the cache exist.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Cache) UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	if ttl == DefualtTTL {
+	if ttl == DefaultTTL {
 		ttl = c.TTL
 	}
 	if ttl < 0 {
@@ -200,7 +200,7 @@ func (c *Cache) MSetBytesValue(data map[string][]byte, ttl time.Duration) error 
 	for k := range data {
 		prefixed[c.getKey(k)] = data[k]
 	}
-	if ttl == DefualtTTL {
+	if ttl == DefaultTTL {
 		ttl = c.TTL
 	}
 	if ttl < 0 {
@@ -223,7 +223,7 @@ func (c *Cache) Expire(key string, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	if ttl == DefualtTTL {
+	if ttl == DefaultTTL {
 		ttl = c.TTL
 	}
 	if ttl < 0 {
@@ -241,26 +241,26 @@ func (c *Cache) getIntKey(key string) string {
 }
 
 //IncrCounter Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return int data value and any error raised.
 func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
 	if key == "" {
 		return 0, ErrKeyUnavailable
 	}
-	if ttl == DefualtTTL {
+	if ttl == DefaultTTL {
 		ttl = c.TTL
 	}
 	return c.Driver.IncrCounter(c.getIntKey(key), increment, ttl)
 }
 
 //SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 	if key == "" {
 		return ErrKeyUnavailable
 	}
-	if ttl == DefualtTTL {
+	if ttl == DefaultTTL {
 		ttl = c.TTL
 	}
 	if ttl < 0 {
@@ -349,7 +349,7 @@ func loadFromCache(c Cacheable, key string, v interface{}, ttl time.Duration, lo
 }
 
 //Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Cache) Load(key string, v interface{}, ttl time.Duration, loader Loader) error {
 	return loadFromCache(c, key, v, ttl, loader)
@@ -368,8 +368,8 @@ func (c *Cache) Field(fieldname string) *Field {
 	}
 }
 
-//DefualtTTL return cache default ttl
-func (c *Cache) DefualtTTL() time.Duration {
+//DefaultTTL return cache default ttl
+func (c *Cache) DefaultTTL() time.Duration {
 	return c.TTL
 }
 

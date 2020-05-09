@@ -112,7 +112,7 @@ func TestFieldCounter(t *testing.T) {
 	testTargetResultInt := int64(3)
 	var resultDataInt int64
 	c := newFieldTestCache(defaultTTL)
-	err := c.SetCounter(testInitVal, cache.DefualtTTL)
+	err := c.SetCounter(testInitVal, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +123,7 @@ func TestFieldCounter(t *testing.T) {
 	if resultDataInt != testInitVal {
 		t.Errorf("GetCounter error %d ", resultDataInt)
 	}
-	resultDataInt, err = c.IncrCounter(testIncremeant, cache.DefualtTTL)
+	resultDataInt, err = c.IncrCounter(testIncremeant, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,82 +1,31 @@
-package hashed
+package cache_test
 
 import (
 	"bytes"
-	"encoding/binary"
-	"sync"
+	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/herb-go/herb/cache"
+	"github.com/herb-go/herb/cache/drivers/syncmapcache"
 )
 
-func TestInt64(t *testing.T) {
-	var v int64
-	v = v - 1
-	var bytes = make([]byte, 8)
-	binary.BigEndian.PutUint64(bytes, uint64(v))
-	if int64(binary.BigEndian.Uint64(bytes)) != -1 {
-		t.Fatal(bytes)
+func newNodeTestCache(ttl int64) *cache.Node {
+	config := syncmapcache.Config{
+		Size: 10000000,
 	}
-}
-
-type testStore struct {
-	data map[string]*Hashed
-}
-
-func (s *testStore) Open() error {
-	return nil
-}
-func (s *testStore) Close() error {
-	return nil
-}
-func (s *testStore) Flush() error {
-	s.data = map[string]*Hashed{}
-	return nil
-}
-func (s *testStore) Hash(key string) (string, error) {
-	return key[:1], nil
-}
-func (s *testStore) Lock(string) (func(), error) {
-	l := sync.Mutex{}
-	l.Lock()
-	return func() {
-		l.Unlock()
-	}, nil
-}
-func (s *testStore) Load(hash string) (*Hashed, error) {
-	d := s.data[hash]
-	if d == nil {
-		return New(), nil
+	buf := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buf)
+	decoder := json.NewDecoder(buf)
+	err := encoder.Encode(config)
+	if err != nil {
+		panic(err)
 	}
-	return d, nil
-}
-func (s *testStore) Delete(hash string) error {
-	delete(s.data, hash)
-	return nil
-}
-func (s *testStore) Save(hash string, status *Status, data *Hashed) error {
-	s.data[hash] = data
-	return nil
-}
-
-func newTestStore() Store {
-	return &testStore{
-		data: map[string]*Hashed{},
-	}
-}
-
-func newTestDriver() *Driver {
-	return NewDriver(newTestStore())
-}
-
-func newTestCache(ttl int64) *cache.Cache {
-	var err error
 	c := cache.New()
 	oc := cache.NewOptionConfig()
-	oc.Driver = "testhash"
+	oc.Driver = "syncmapcache"
 	oc.TTL = int64(ttl)
-	oc.Config = nil
+	oc.Config = decoder.Decode
 	oc.Marshaler = "json"
 
 	err = c.Init(oc)
@@ -87,11 +36,11 @@ func newTestCache(ttl int64) *cache.Cache {
 	if err != nil {
 		panic(err)
 	}
-	return c
+	return cache.NewNode(c, "testNodet")
 }
 
-func TestMSetMGet(t *testing.T) {
-	c := newTestCache(3600)
+func TestNodeMSetMGet(t *testing.T) {
+	c := newNodeTestCache(3600)
 	var err error
 	var deletedkey = "deletedkey"
 
@@ -163,7 +112,7 @@ func TestMSetMGet(t *testing.T) {
 	}
 }
 
-func TestNameConflict(t *testing.T) {
+func TestNodeNameConflict(t *testing.T) {
 	var err error
 	defaultTTL := int64(1)
 	testKey := "testKey"
@@ -173,7 +122,7 @@ func TestNameConflict(t *testing.T) {
 	var resultDataModel string
 	var resultDataBytes []byte
 	var resultInt int64
-	c := newTestCache(defaultTTL)
+	c := newNodeTestCache(defaultTTL)
 	err = c.Set(testKey, testDataModel, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
@@ -228,12 +177,12 @@ func TestNameConflict(t *testing.T) {
 
 }
 
-func TestCloseAndFlush(t *testing.T) {
+func TestNodeCloseAndFlush(t *testing.T) {
 	defaultTTL := int64(1)
 	testKey := "testKey"
 	testDataModel := "test"
 	var resultDataModel string
-	c := newTestCache(defaultTTL)
+	c := newNodeTestCache(defaultTTL)
 	err := c.Set(testKey, testDataModel, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
@@ -246,24 +195,18 @@ func TestCloseAndFlush(t *testing.T) {
 		t.Errorf("Cache get result error %s", resultDataModel)
 	}
 	err = c.Flush()
-	if err != nil {
+	if err != cache.ErrFeatureNotSupported {
 		t.Fatal(err)
 	}
-	err = c.Get(testKey, &resultDataModel)
-	if err != cache.ErrNotFound {
-		t.Fatal(err)
-	}
-
-	err = c.Close()
-	if err != nil {
-		t.Fatal(err)
+	ttl := c.DefaultTTL()
+	if ttl != time.Duration(defaultTTL)*time.Second {
+		t.Fatal(ttl)
 	}
 }
-func TestSearchUpdate(t *testing.T) {
+func TestNodeUpdate(t *testing.T) {
 	var err error
 	defaultTTL := int64(1)
-	c := newTestCache(defaultTTL)
-	defer c.Close()
+	c := newNodeTestCache(defaultTTL)
 	testKey := "testkey"
 	testKeyUpdate := "testkeyupdate"
 	testKeyBytes := "testkeybytes"
@@ -330,19 +273,18 @@ func TestSearchUpdate(t *testing.T) {
 	}
 }
 
-func TestCounter(t *testing.T) {
+func TestNodeCounter(t *testing.T) {
 	defaultTTL := int64(1)
 	testKey := "testKey"
 	testInitVal := int64(1)
 	testIncremeant := int64(2)
 	testTargetResultInt := int64(3)
 	var resultDataInt int64
-	c := newTestCache(defaultTTL)
+	c := newNodeTestCache(defaultTTL)
 	err := c.SetCounter(testKey, testInitVal, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
 	resultDataInt, err = c.GetCounter(testKey)
 	if err != nil {
 		t.Fatal(err)
@@ -364,16 +306,8 @@ func TestCounter(t *testing.T) {
 	if resultDataInt != testTargetResultInt {
 		t.Errorf("GetCounter error %d ", resultDataInt)
 	}
-	err = c.DelCounter(testKey)
-	if err != nil {
-		t.Fatal(err)
-	}
-	resultDataInt, err = c.GetCounter(testKey)
-	if err != cache.ErrNotFound {
-		t.Fatal(err)
-	}
 }
-func TestDefaulTTL(t *testing.T) {
+func TestNodeDefaulTTL(t *testing.T) {
 	defaultTTL := int64(1)
 	testKey := "testKey"
 	testKey2 := "testKey2"
@@ -384,8 +318,7 @@ func TestDefaulTTL(t *testing.T) {
 	var resultDataBytes []byte
 	testDataInt := int64(1)
 	var resultDataInt int64
-	c := newTestCache(defaultTTL)
-	defer c.Close()
+	c := newNodeTestCache(defaultTTL)
 	err := c.Set(testKey, testDataModel, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
@@ -433,12 +366,14 @@ func TestDefaulTTL(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-func TestTTL(t *testing.T) {
+func TestNodeTTL(t *testing.T) {
 	var err error
 	defaultTTL := int64(3600)
-	c := newTestCache(defaultTTL)
-	defer c.Close()
+	c := newNodeTestCache(defaultTTL)
 
+	testKeyTTLForver := "forever"
+	testKeyTTLForverBytes := "foreverbytes"
+	testKeyTTLForverCounter := "forevercounter"
 	testKeyTTL1Second := "1second"
 	testKeyTTL1SecondBytes := "1secondbytes"
 	testKeyTTL1SecondCounter := "1secondcounter"
@@ -456,6 +391,18 @@ func TestTTL(t *testing.T) {
 	testDataBytes := []byte("12345byte")
 	testDataInt := int64(99999)
 	var resultModelData string
+	err = c.Set(testKeyTTLForver, testDataModel, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.SetBytesValue(testKeyTTLForverBytes, testDataBytes, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.SetCounter(testKeyTTLForverCounter, testDataInt, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = c.Set(testKeyTTL1Second, testDataModel, 1*time.Second)
 	if err != nil {
 		t.Fatal(err)
@@ -506,6 +453,19 @@ func TestTTL(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	err = c.Get(testKeyTTLForver, &resultModelData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = c.GetBytesValue(testKeyTTLForverBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetCounter(testKeyTTLForverCounter)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = c.Get(testKeyTTL1Second, &resultModelData)
 	if err != nil {
 		t.Fatal(err)
@@ -556,6 +516,18 @@ func TestTTL(t *testing.T) {
 	}
 
 	time.Sleep(2000 * time.Millisecond)
+	err = c.Get(testKeyTTLForver, &resultModelData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetBytesValue(testKeyTTLForverBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetCounter(testKeyTTLForverCounter)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = c.Get(testKeyTTL1Second, &resultModelData)
 	if err != cache.ErrNotFound {
 		t.Fatal(err)
@@ -619,6 +591,18 @@ func TestTTL(t *testing.T) {
 	}
 
 	time.Sleep(2000 * time.Millisecond)
+	err = c.Get(testKeyTTLForver, &resultModelData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetBytesValue(testKeyTTLForverBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetCounter(testKeyTTLForverCounter)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = c.Get(testKeyTTL1Second, &resultModelData)
 	if err != cache.ErrNotFound {
 		t.Fatal(err)
@@ -668,12 +652,68 @@ func TestTTL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	err = c.DelCounter(testKeyTTLExpireCounter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.GetCounter(testKeyTTLExpireCounter)
+	if err != cache.ErrNotFound {
+		t.Fatal(err)
+	}
 }
 
-func init() {
-	cache.Register("testhash", func(loader func(interface{}) error) (cache.Driver, error) {
-		return newTestDriver(), nil
-	})
+func TestNodeLoader(t *testing.T) {
+	var err error
+	var result string
+	c := newNodeTestCache(3600)
+	result = ""
+	err = c.Load("test", &result, 0, testLoader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	k, err := c.GetCacheKey("test")
+	if result != k {
+		t.Fatal(result)
+	}
+	err = c.Load("test", &result, 0, testLoader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != k {
+		t.Fatal(result)
+	}
+}
+func TestNodeMisc(t *testing.T) {
+	var err error
+	var result string
+	c := newNodeTestCache(3600)
+	result = ""
+	bs, err := c.Util().Marshal("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Util().Unmarshal(bs, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != "test" {
+		t.Fatal(result)
+	}
+	k := c.FinalKey("testkey")
 
+	if k != cache.KeyPrefix+c.Prefix+cache.KeyPrefix+"testkey" {
+		t.Fatal(k)
+	}
+	sc := c.Collection("c")
+	if sc == nil {
+		t.Fatal(sc)
+	}
+	sn := c.Node("n")
+	if sn == nil {
+		t.Fatal(sn)
+	}
+	sf := c.Field("n")
+	if sf == nil {
+		t.Fatal(sf)
+	}
 }

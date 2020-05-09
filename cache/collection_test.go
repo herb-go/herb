@@ -36,7 +36,7 @@ func newCollectionTestCache(ttl int64) *cache.Collection {
 	if err != nil {
 		panic(err)
 	}
-	return c.Collection("testcollectiont").(*cache.Collection)
+	return cache.NewCollection(c, "testcollectiont", cache.DefaultTTL)
 }
 
 func TestCollectionMSetMGet(t *testing.T) {
@@ -127,7 +127,7 @@ func TestCollectionNameConflict(t *testing.T) {
 	var resultDataBytes []byte
 	var resultInt int64
 	c := newCollectionTestCache(defaultTTL)
-	err = c.Set(testKey, testDataModel, cache.DefualtTTL)
+	err = c.Set(testKey, testDataModel, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func TestCollectionNameConflict(t *testing.T) {
 	if resultDataModel != testDataModel {
 		t.Errorf("Cache get result error %s", resultDataModel)
 	}
-	err = c.SetCounter(testKey, testDataInt, cache.DefualtTTL)
+	err = c.SetCounter(testKey, testDataInt, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +156,7 @@ func TestCollectionNameConflict(t *testing.T) {
 	if resultInt != testDataInt {
 		t.Errorf("Cache getCounter result error %d", testDataInt)
 	}
-	err = c.SetBytesValue(testKey, testDataBytes, cache.DefualtTTL)
+	err = c.SetBytesValue(testKey, testDataBytes, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +187,7 @@ func TestCollectionCloseAndFlush(t *testing.T) {
 	testDataModel := "test"
 	var resultDataModel string
 	c := newCollectionTestCache(defaultTTL)
-	err := c.Set(testKey, testDataModel, cache.DefualtTTL)
+	err := c.Set(testKey, testDataModel, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -206,7 +206,7 @@ func TestCollectionCloseAndFlush(t *testing.T) {
 	if err != cache.ErrNotFound {
 		t.Fatal(err)
 	}
-	ttl := c.DefualtTTL()
+	ttl := c.DefaultTTL()
 	if ttl != time.Duration(defaultTTL)*time.Second {
 		t.Fatal(ttl)
 	}
@@ -289,7 +289,7 @@ func TestCollectionCounter(t *testing.T) {
 	testTargetResultInt := int64(3)
 	var resultDataInt int64
 	c := newCollectionTestCache(defaultTTL)
-	err := c.SetCounter(testKey, testInitVal, cache.DefualtTTL)
+	err := c.SetCounter(testKey, testInitVal, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -300,7 +300,7 @@ func TestCollectionCounter(t *testing.T) {
 	if resultDataInt != testInitVal {
 		t.Errorf("GetCounter error %d ", resultDataInt)
 	}
-	resultDataInt, err = c.IncrCounter(testKey, testIncremeant, cache.DefualtTTL)
+	resultDataInt, err = c.IncrCounter(testKey, testIncremeant, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -327,15 +327,15 @@ func TestCollectionDefaulTTL(t *testing.T) {
 	testDataInt := int64(1)
 	var resultDataInt int64
 	c := newCollectionTestCache(defaultTTL)
-	err := c.Set(testKey, testDataModel, cache.DefualtTTL)
+	err := c.Set(testKey, testDataModel, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.SetBytesValue(testKey2, testDataBytes, cache.DefualtTTL)
+	err = c.SetBytesValue(testKey2, testDataBytes, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = c.SetCounter(testKey3, testDataInt, cache.DefualtTTL)
+	err = c.SetCounter(testKey3, testDataInt, cache.DefaultTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -661,7 +661,7 @@ func TestCollectionMisc(t *testing.T) {
 	if k != cache.KeyPrefix+c.Prefix+cache.KeyPrefix+"testkey" {
 		t.Fatal(k)
 	}
-	sc := c.Collection("c")
+	sc := cache.NewCollection(c, "c", cache.DefaultTTL)
 	if sc == nil {
 		t.Fatal(sc)
 	}

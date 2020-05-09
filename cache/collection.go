@@ -51,7 +51,7 @@ func (c *Collection) GetCacheKey(key string) (string, error) {
 }
 
 //Set Set data model to cache by given key.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) Set(key string, v interface{}, TTL time.Duration) error {
 	if TTL < 0 {
@@ -65,7 +65,7 @@ func (c *Collection) Set(key string, v interface{}, TTL time.Duration) error {
 }
 
 //Update Update data model to cache by given key only if the cache exist.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) Update(key string, v interface{}, TTL time.Duration) error {
 	if TTL < 0 {
@@ -100,7 +100,7 @@ func (c *Collection) Miss() int64 {
 }
 
 //SetBytesValue Set bytes data to cache by given key.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) SetBytesValue(key string, bytes []byte, TTL time.Duration) error {
 	if TTL < 0 {
@@ -125,7 +125,7 @@ func (c *Collection) GetBytesValue(key string) ([]byte, error) {
 }
 
 //UpdateBytesValue Update bytes data to cache by given key only if the cache exist.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) UpdateBytesValue(key string, bytes []byte, TTL time.Duration) error {
 	if TTL < 0 {
@@ -184,7 +184,7 @@ func (c *Collection) Del(key string) error {
 }
 
 //IncrCounter Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return int data value and any error raised.
 func (c *Collection) IncrCounter(key string, increment int64, TTL time.Duration) (int64, error) {
 	if TTL < 0 {
@@ -199,7 +199,7 @@ func (c *Collection) IncrCounter(key string, increment int64, TTL time.Duration)
 }
 
 //SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) SetCounter(key string, v int64, TTL time.Duration) error {
 	if TTL < 0 {
@@ -235,7 +235,7 @@ func (c *Collection) GetCounter(key string) (int64, error) {
 }
 
 //Load Get data model from cache by given key.If data not found,call loader to get current data value and save to cache.
-//If ttl is DefualtTTL(0),use default ttl in config instead.
+//If ttl is DefaultTTL(0),use default ttl in config instead.
 //Return any error raised.
 func (c *Collection) Load(key string, v interface{}, TTL time.Duration, loader Loader) error {
 	if TTL < 0 {
@@ -253,9 +253,9 @@ func (c *Collection) Flush() error {
 	return c.Cache.Del(c.Prefix)
 }
 
-//DefualtTTL return cache default ttl
-func (c *Collection) DefualtTTL() time.Duration {
-	return c.Cache.DefualtTTL()
+//DefaultTTL return cache default ttl
+func (c *Collection) DefaultTTL() time.Duration {
+	return c.Cache.DefaultTTL()
 }
 
 //Expire set cache value expire duration by given key and ttl
