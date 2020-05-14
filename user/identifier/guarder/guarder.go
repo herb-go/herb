@@ -3,7 +3,7 @@ package guarder
 import (
 	"net/http"
 
-	"github.com/herb-go/herb/user/credential"
+	"github.com/herb-go/herb/user/identifier"
 )
 
 func DefaultOnFail(g *Guarder) func(w http.ResponseWriter, r *http.Request) {
@@ -12,22 +12,22 @@ func DefaultOnFail(g *Guarder) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var DefaultVerifier = credential.FixedVerifier("")
+var DefaultIdentifier = identifier.FixedIdentifier("")
 
 type Guarder struct {
 	Key            Key
-	Credentials    []CredentialFactory
-	Verifier       credential.Verifier
+	Credentialers  []Credentialer
+	Identifier     identifier.Identifier
 	OnFail         http.HandlerFunc
 	FailStatusCode int
 }
 
 func (g *Guarder) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	loaders := make([]credential.Loader, len(g.Credentials))
-	for k := range g.Credentials {
-		loaders[k] = g.Credentials[k].CreateLoader(r)
+	credentials := make([]identifier.Credential, len(g.Credentialers))
+	for k := range g.Credentialers {
+		credentials[k] = g.Credentialers[k].Credential(r)
 	}
-	id, err := credential.VerifyLoaders(g.Verifier, loaders...)
+	id, err := identifier.Identify(g.Identifier, credentials...)
 	if err != nil {
 		panic(err)
 	}
@@ -46,7 +46,7 @@ func (g *Guarder) IdentifyRequest(r *http.Request) (string, error) {
 
 func New() *Guarder {
 	g := &Guarder{
-		Verifier:       DefaultVerifier,
+		Identifier:     DefaultIdentifier,
 		FailStatusCode: 403,
 	}
 	g.OnFail = DefaultOnFail(g)
