@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"sync"
-	"time"
 )
 
 var dummoyLoader = func(v interface{}) error {
@@ -18,23 +17,9 @@ type Factory func(loader func(v interface{}) error) (Driver, error)
 
 //Driver : Cache driver interface.Should Never used directly
 type Driver interface {
-	Util() *Util
-	SetUtil(*Util)
-	SetBytesValue(key string, bytes []byte, ttl time.Duration) error           //Set bytes data to cache by given key.
-	UpdateBytesValue(key string, bytes []byte, ttl time.Duration) error        //Update bytes data to cache by given key only if the cache exist.
-	GetBytesValue(key string) ([]byte, error)                                  //Get bytes data from cache by given key.
-	Del(key string) error                                                      //Delete data in cache by given key.
-	IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) //Increase int val in cache by given key.Count cache and data cache are in two independent namespace.
-	SetCounter(key string, v int64, ttl time.Duration) error                   //Set int val in cache by given key.Count cache and data cache are in two independent namespace.
-	GetCounter(key string) (int64, error)                                      //Get int val from cache by given key.Count cache and data cache are in two independent namespace.
-	DelCounter(key string) error                                               //Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
-	SetGCErrHandler(f func(err error))                                         //Set callback to handler error raised when gc.
-	Expire(key string, ttl time.Duration) error
-	ExpireCounter(key string, ttl time.Duration) error
-	MGetBytesValue(keys ...string) (map[string][]byte, error)
-	MSetBytesValue(map[string][]byte, time.Duration) error
-	Close() error //Close cache.
-	Flush() error //Delete all data in cache.
+	MinimumOperation
+	//Set callback to handler error raised when gc.
+	SetGCErrHandler(f func(err error))
 }
 
 var (

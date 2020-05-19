@@ -285,6 +285,14 @@ func (c *Collection) ExpireCounter(key string, TTL time.Duration) error {
 func (c *Collection) Util() *Util {
 	return c.Cache.Util()
 }
+func (c *Collection) SetUtil(u *Util) {
+	c.Cache.SetUtil(u)
+}
+
+//Close cache.
+func (c *Collection) Close() error {
+	return nil
+}
 
 //Proxy get a cache proxy with given prefix
 func (c *Collection) Proxy(prefix string) *Proxy {

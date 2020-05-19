@@ -202,6 +202,14 @@ func (n *Node) ExpireCounter(key string, ttl time.Duration) error {
 func (n *Node) Util() *Util {
 	return n.Cache.Util()
 }
+func (n *Node) SetUtil(u *Util) {
+	n.Cache.SetUtil(u)
+}
+
+//Close close cache.
+func (n *Node) Close() error {
+	return nil
+}
 
 //Collection get a cache colletion with given prefix
 func (n *Node) Collection(prefix string) *Collection {
