@@ -55,6 +55,13 @@ type PlainDB struct {
 	prefix string
 }
 
+//Copy copy src plain db to dsc plain db
+func Copy(src *PlainDB, dsc *PlainDB) {
+	dsc.db = src.db
+	dsc.driver = src.driver
+	dsc.prefix = src.prefix
+}
+
 //Init init plain database with given option.
 func (d *PlainDB) Init(o PlainDBOption) error {
 	return o.ApplyTo(d)

@@ -8,7 +8,9 @@ import (
 )
 
 //Driver plain db driver
-type Driver func(*PlainDB) error
+type Driver interface {
+	ApplyTo(*PlainDB) error
+}
 
 // Factory sql db driver create factory.
 type Factory func(*Config) (Driver, error)

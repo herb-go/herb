@@ -41,7 +41,7 @@ func (c *Config) ApplyTo(d *PlainDB) error {
 			if err != nil {
 				return err
 			}
-			return driver(d)
+			return driver.ApplyTo(d)
 		}
 	}
 	db, err := sql.Open(c.Driver, c.DataSource)
