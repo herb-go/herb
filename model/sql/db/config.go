@@ -34,6 +34,16 @@ type Config struct {
 
 //ApplyTo init plain database with config
 func (c *Config) ApplyTo(d *PlainDB) error {
+	factories := Factories()
+	for _, f := range factories {
+		if f == c.Driver {
+			driver, err := NewDriver(c.Driver, c)
+			if err != nil {
+				return err
+			}
+			return driver(d)
+		}
+	}
 	db, err := sql.Open(c.Driver, c.DataSource)
 	if err != nil {
 		return err
