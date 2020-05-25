@@ -17,7 +17,7 @@ func newTimeCondition(start, end int64) *middlewarefactory.TimeCondition {
 }
 func TestTimeCondition(t *testing.T) {
 	f := middlewarefactory.NewTimeConditionFactory()
-	c, err := f.CreateCondition(mustNewLoader(emptyTimeCondition))
+	c, err := f(mustNewLoader(emptyTimeCondition))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestTimeCondition(t *testing.T) {
 	successEnd := now.Add(time.Hour).Unix()
 	failEnd := now.Add(-time.Hour).Unix()
 
-	c, err = f.CreateCondition(mustNewLoader(newTimeCondition(failStart, failEnd)))
+	c, err = f(mustNewLoader(newTimeCondition(failStart, failEnd)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func TestTimeCondition(t *testing.T) {
 	if result {
 		t.Fatal(c)
 	}
-	c, err = f.CreateCondition(mustNewLoader(newTimeCondition(successStart, failEnd)))
+	c, err = f(mustNewLoader(newTimeCondition(successStart, failEnd)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestTimeCondition(t *testing.T) {
 	if result {
 		t.Fatal(c)
 	}
-	c, err = f.CreateCondition(mustNewLoader(newTimeCondition(failStart, successEnd)))
+	c, err = f(mustNewLoader(newTimeCondition(failStart, successEnd)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestTimeCondition(t *testing.T) {
 	if result {
 		t.Fatal(c)
 	}
-	c, err = f.CreateCondition(mustNewLoader(newTimeCondition(successStart, successEnd)))
+	c, err = f(mustNewLoader(newTimeCondition(successStart, successEnd)))
 	if err != nil {
 		t.Fatal(err)
 	}

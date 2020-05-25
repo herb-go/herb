@@ -64,7 +64,7 @@ func TestResponse(t *testing.T) {
 		t.Fatal(resp)
 	}
 	resp.Body.Close()
-	m, err = f.CreateMiddleware("", l)
+	m, err = f(l)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +76,7 @@ func TestResponse(t *testing.T) {
 		t.Fatal(resp)
 	}
 	resp.Body.Close()
-	m, err = f.CreateMiddleware("", mustNewLoader(emptyBodyConfig))
+	m, err = f(mustNewLoader(emptyBodyConfig))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +92,7 @@ func TestResponse(t *testing.T) {
 		t.Fatal(resp)
 	}
 	resp.Body.Close()
-	m, err = f.CreateMiddleware("", mustNewLoader(fullConfig))
+	m, err = f(mustNewLoader(fullConfig))
 	if err != nil {
 		t.Fatal(err)
 	}

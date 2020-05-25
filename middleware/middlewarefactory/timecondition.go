@@ -19,12 +19,12 @@ func (c *TimeCondition) CheckRequest(*http.Request) (bool, error) {
 }
 
 func NewTimeConditionFactory() ConditionFactory {
-	return ConditionFactoryFunc(func(loader func(v interface{}) error) (Condition, error) {
+	return func(loader func(v interface{}) error) (Condition, error) {
 		c := &TimeCondition{}
 		err := loader(c)
 		if err != nil {
 			return nil, err
 		}
 		return c, nil
-	})
+	}
 }

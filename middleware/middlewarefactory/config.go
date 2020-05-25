@@ -50,23 +50,19 @@ type MiddlewareCreator interface {
 	CreateMiddleware(string, func(interface{}) error) (middleware.Middleware, error)
 }
 
-type Context struct {
-	ConditionCreator  ConditionCreator
-	MiddlewareCreator MiddlewareCreator
-}
 type Config struct {
 	Condition   *ConditionConfig
 	Middlewares []*MiddlewareConfig
 }
 
-func (c *Config) Middleware(ctx *Context) (middleware.Middleware, error) {
-	condition, err := c.Condition.Create(ctx.ConditionCreator)
+func (c *Config) Middleware(ctx Context) (middleware.Middleware, error) {
+	condition, err := c.Condition.Create(ctx)
 	if err != nil {
 		return nil, err
 	}
 	middlewares := make(middleware.Middlewares, len(c.Middlewares))
 	for k := range c.Middlewares {
-		m, err := ctx.MiddlewareCreator.CreateMiddleware(c.Middlewares[k].Type, c.Middlewares[k].Config)
+		m, err := ctx.CreateMiddleware(c.Middlewares[k].Type, c.Middlewares[k].Config)
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +84,7 @@ func (c *Config) Middleware(ctx *Context) (middleware.Middleware, error) {
 
 type ConfigList []*Config
 
-func (c *ConfigList) Middleware(ctx *Context) (middleware.Middleware, error) {
+func (c *ConfigList) Middleware(ctx Context) (middleware.Middleware, error) {
 	result := middleware.Middlewares{}
 	for k := range *c {
 		m, err := (*c)[k].Middleware(ctx)

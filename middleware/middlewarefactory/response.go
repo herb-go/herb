@@ -46,12 +46,12 @@ func (m *ResponseMiddleware) ServeMiddleware(w http.ResponseWriter, r *http.Requ
 
 //NewResponseFactory create new response factory
 var NewResponseFactory = func() Factory {
-	return FactoryFunc(func(name string, loader func(v interface{}) error) (middleware.Middleware, error) {
+	return func(loader func(v interface{}) error) (middleware.Middleware, error) {
 		m := &ResponseMiddleware{}
 		err := loader(m)
 		if err != nil {
 			return nil, err
 		}
 		return m.ServeMiddleware, nil
-	})
+	}
 }

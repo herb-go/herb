@@ -15,15 +15,7 @@ var EmptyCondition = ConditionFunc(func(*http.Request) (bool, error) {
 	return true, nil
 })
 
-type ConditionFactory interface {
-	CreateCondition(func(v interface{}) error) (Condition, error)
-}
-
-type ConditionFactoryFunc func(func(v interface{}) error) (Condition, error)
-
-func (f ConditionFactoryFunc) CreateCondition(loader func(v interface{}) error) (Condition, error) {
-	return f(loader)
-}
+type ConditionFactory func(func(v interface{}) error) (Condition, error)
 
 func Not(r *http.Request, c Condition) (bool, error) {
 	ok, err := c.CheckRequest(r)
