@@ -39,6 +39,11 @@ func (r *Router) Handle(method, path string) *middleware.App {
 	return app
 }
 
+//Middlewares return router middlewares.
+func (r *Router) Middlewares() *middleware.App {
+	return r.app
+}
+
 //ServeHTTP serve router as http.handler.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.app.ServeMiddleware(w, req, r.router.ServeHTTP)
