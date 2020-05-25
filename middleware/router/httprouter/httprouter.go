@@ -10,6 +10,7 @@ import (
 
 //Router router main struct.
 type Router struct {
+	app    *middleware.App
 	router *httprouter.Router
 }
 
@@ -19,6 +20,7 @@ func New() *Router {
 	r.RedirectTrailingSlash = false
 	r.RedirectFixedPath = false
 	router := Router{
+		app:    middleware.New(),
 		router: r,
 	}
 	return &router
@@ -39,7 +41,7 @@ func (r *Router) Handle(method, path string) *middleware.App {
 
 //ServeHTTP serve router as http.handler.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	r.router.ServeHTTP(w, req)
+	r.app.ServeMiddleware(w, req, r.router.ServeHTTP)
 }
 
 //GetParams get router params from request.

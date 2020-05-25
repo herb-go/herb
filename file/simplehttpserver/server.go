@@ -25,6 +25,7 @@ func ServeFolder(root string) http.HandlerFunc {
 				ii, err := os.Stat(path.Join(file, "index.html"))
 				if err != nil || ii.IsDir() {
 					http.Error(w, http.StatusText(403), 403)
+					return
 				}
 			}
 		}

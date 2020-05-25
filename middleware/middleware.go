@@ -3,7 +3,6 @@
 package middleware
 
 import (
-	"errors"
 	"net/http"
 )
 
@@ -22,9 +21,6 @@ func ServeHTTP(app HandlerSlice, w http.ResponseWriter, r *http.Request) {
 // ServeMiddleware : Serve  app as middleware.
 func ServeMiddleware(app HandlerSlice, w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	handlers := app.Handlers()
-	if len(handlers) == 0 {
-		panic(errors.New("handlers can't be nil"))
-	}
 	s := serveWorker{
 		handlers: handlers,
 		final:    next,

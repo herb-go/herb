@@ -17,8 +17,8 @@ func (a *Action) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.app.ServeMiddleware(w, r, a.handler)
 }
 
-//App return a pp of aciton
-func (a *Action) App() *middleware.App {
+//Middlewares return middlewares of aciton
+func (a *Action) Middlewares() *middleware.App {
 	return a.app
 }
 

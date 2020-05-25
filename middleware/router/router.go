@@ -15,6 +15,7 @@ const ContextNameRouterParams = ContextName("routerParams")
 
 //Router router interface
 type Router interface {
+	Middlewares() *middleware.App
 	//ServeHTTP serve as http handler
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
 	//StripPrefix strip request prefix and server as a middleware app
