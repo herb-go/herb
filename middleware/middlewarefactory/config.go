@@ -8,7 +8,7 @@ import (
 
 type ConditionConfig struct {
 	Type       string
-	Config     func(v interface{}) error
+	Config     func(v interface{}) error `config:", lazyload"`
 	Not        bool
 	Or         bool
 	Disabled   bool
@@ -43,7 +43,7 @@ type ConditionCreator interface {
 
 type MiddlewareConfig struct {
 	Type   string
-	Config func(v interface{}) error
+	Config func(v interface{}) error `config:", lazyload"`
 }
 
 type MiddlewareCreator interface {
@@ -55,7 +55,7 @@ type Config struct {
 	Middlewares []*MiddlewareConfig
 }
 
-func (c *Config) Middleware(ctx Context) (middleware.Middleware, error) {
+func (c *Config) Middleware(ctx *Context) (middleware.Middleware, error) {
 	condition, err := c.Condition.Create(ctx)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (c *Config) Middleware(ctx Context) (middleware.Middleware, error) {
 
 type ConfigList []*Config
 
-func (c *ConfigList) Middleware(ctx Context) (middleware.Middleware, error) {
+func (c *ConfigList) Middleware(ctx *Context) (middleware.Middleware, error) {
 	result := middleware.Middlewares{}
 	for k := range *c {
 		m, err := (*c)[k].Middleware(ctx)
