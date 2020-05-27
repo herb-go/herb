@@ -50,9 +50,10 @@ func New() *PlainDB {
 
 //PlainDB plain database struct.
 type PlainDB struct {
-	db     *sql.DB
-	driver string
-	prefix string
+	db        *sql.DB
+	driver    string
+	prefix    string
+	Optimizer Optimizer
 }
 
 //Copy copy src plain db to dsc plain db
@@ -99,18 +100,39 @@ func (d *PlainDB) Prefix() string {
 
 //Exec exec query with args.
 func (d *PlainDB) Exec(query string, args ...interface{}) (sql.Result, error) {
+	var err error
+	if d.Optimizer != nil {
+		query, args, err = d.Optimizer.Optimize(query, args)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return d.db.Exec(query, args...)
 }
 
 //Query exec query with args .
 //Return rows.
 func (d *PlainDB) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	var err error
+	if d.Optimizer != nil {
+		query, args, err = d.Optimizer.Optimize(query, args)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return d.db.Query(query, args...)
 }
 
 //QueryRow exec query with args and rows.
 //Return row.
 func (d *PlainDB) QueryRow(query string, args ...interface{}) *sql.Row {
+	var err error
+	if d.Optimizer != nil {
+		query, args, err = d.Optimizer.Optimize(query, args)
+		if err != nil {
+			panic(err)
+		}
+	}
 	return d.db.QueryRow(query, args...)
 }
 

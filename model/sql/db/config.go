@@ -30,6 +30,11 @@ type Config struct {
 	ConnMaxLifetimeInSecond int64
 	//MaxOpenConns max open conns.
 	MaxOpenConns int
+	Optimizer    *OptimizerConfig
+}
+type OptimizerConfig struct {
+	Type   string
+	Config func(v interface{}) error
 }
 
 //ApplyTo init plain database with config
