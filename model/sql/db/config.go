@@ -30,11 +30,7 @@ type Config struct {
 	ConnMaxLifetimeInSecond int64
 	//MaxOpenConns max open conns.
 	MaxOpenConns int
-	Optimizer    *OptimizerConfig
-}
-type OptimizerConfig struct {
-	Type   string
-	Config func(v interface{}) error
+	Optimizer    func(v interface{}) error `config:", lazyload"`
 }
 
 //ApplyTo init plain database with config
@@ -49,6 +45,15 @@ func (c *Config) ApplyTo(d *PlainDB) error {
 			return driver.ApplyTo(d)
 		}
 	}
+	f := d.OptimizerFactory
+	if f == nil {
+		f = DefaultOptimizerFactory
+	}
+	o, err := f(c.Optimizer)
+	if err != nil {
+		return err
+	}
+	d.Optimizer = o
 	db, err := sql.Open(c.Driver, c.DataSource)
 	if err != nil {
 		return err

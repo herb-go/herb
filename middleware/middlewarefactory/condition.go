@@ -3,11 +3,11 @@ package middlewarefactory
 import "net/http"
 
 type Condition interface {
-	CheckRequest(*http.Request) (bool, error)
+	MatchRequest(*http.Request) (bool, error)
 }
 type ConditionFunc func(*http.Request) (bool, error)
 
-func (f ConditionFunc) CheckRequest(r *http.Request) (bool, error) {
+func (f ConditionFunc) MatchRequest(r *http.Request) (bool, error) {
 	return f(r)
 }
 
@@ -18,7 +18,7 @@ var EmptyCondition = ConditionFunc(func(*http.Request) (bool, error) {
 type ConditionFactory func(func(v interface{}) error) (Condition, error)
 
 func Not(r *http.Request, c Condition) (bool, error) {
-	ok, err := c.CheckRequest(r)
+	ok, err := c.MatchRequest(r)
 	if err != nil {
 		return false, err
 	}
@@ -27,7 +27,7 @@ func Not(r *http.Request, c Condition) (bool, error) {
 
 func And(r *http.Request, c ...Condition) (bool, error) {
 	for k := range c {
-		ok, err := c[k].CheckRequest(r)
+		ok, err := c[k].MatchRequest(r)
 		if err != nil {
 			return false, err
 		}
@@ -40,7 +40,7 @@ func And(r *http.Request, c ...Condition) (bool, error) {
 
 func Or(r *http.Request, c ...Condition) (bool, error) {
 	for k := range c {
-		ok, err := c[k].CheckRequest(r)
+		ok, err := c[k].MatchRequest(r)
 		if err != nil {
 			return false, err
 		}
@@ -64,7 +64,7 @@ func NewPlainCondition() *PlainCondition {
 		Conditions: []Condition{},
 	}
 }
-func (c *PlainCondition) CheckRequest(r *http.Request) (bool, error) {
+func (c *PlainCondition) MatchRequest(r *http.Request) (bool, error) {
 	var result bool
 	var err error
 	if c.Disabled {
@@ -81,7 +81,7 @@ func (c *PlainCondition) CheckRequest(r *http.Request) (bool, error) {
 			result, err = And(r, conditions...)
 		}
 	} else {
-		result, err = c.Condition.CheckRequest(r)
+		result, err = c.Condition.MatchRequest(r)
 	}
 	if err != nil {
 		return false, err

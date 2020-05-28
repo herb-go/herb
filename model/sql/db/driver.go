@@ -27,7 +27,7 @@ func Register(name string, f Factory) {
 	factorysMu.Lock()
 	defer factorysMu.Unlock()
 	if f == nil {
-		panic(errors.New("db: Register uniqueid factory is nil"))
+		panic(errors.New("db: Register db factory is nil"))
 	}
 	if _, dup := factories[name]; dup {
 		panic(errors.New("db: Register called twice for factory " + name))

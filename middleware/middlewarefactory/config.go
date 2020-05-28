@@ -69,7 +69,7 @@ func (c *Config) Middleware(ctx *Context) (middleware.Middleware, error) {
 		middlewares[k] = m
 	}
 	m := func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		result, err := condition.CheckRequest(r)
+		result, err := condition.MatchRequest(r)
 		if err != nil {
 			panic(err)
 		}

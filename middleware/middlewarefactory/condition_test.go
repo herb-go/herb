@@ -11,7 +11,7 @@ type fixedCondition struct {
 	Value bool
 }
 
-func (c *fixedCondition) CheckRequest(*http.Request) (bool, error) {
+func (c *fixedCondition) MatchRequest(*http.Request) (bool, error) {
 	return c.Value, nil
 }
 
@@ -30,7 +30,7 @@ func mustCheck(result bool, err error) bool {
 	return result
 }
 func mustCheckCondition(c middlewarefactory.Condition) bool {
-	return mustCheck(c.CheckRequest(nil))
+	return mustCheck(c.MatchRequest(nil))
 }
 func TestCondition(t *testing.T) {
 	if !mustCheck(middlewarefactory.Not(nil, fixedFailCondition)) {

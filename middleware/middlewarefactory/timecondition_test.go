@@ -21,7 +21,7 @@ func TestTimeCondition(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result, err := c.CheckRequest(nil)
+	result, err := c.MatchRequest(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestTimeCondition(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result, err = c.CheckRequest(nil)
+	result, err = c.MatchRequest(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestTimeCondition(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result, err = c.CheckRequest(nil)
+	result, err = c.MatchRequest(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func TestTimeCondition(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result, err = c.CheckRequest(nil)
+	result, err = c.MatchRequest(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func TestTimeCondition(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result, err = c.CheckRequest(nil)
+	result, err = c.MatchRequest(nil)
 	if err != nil {
 		t.Fatal(err)
 	}

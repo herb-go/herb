@@ -10,7 +10,7 @@ type TimeCondition struct {
 	End   int64
 }
 
-func (c *TimeCondition) CheckRequest(*http.Request) (bool, error) {
+func (c *TimeCondition) MatchRequest(*http.Request) (bool, error) {
 	now := time.Now().Unix()
 	if (c.Start <= 0 || now >= c.Start) && (c.End <= 0 || now <= c.End) {
 		return true, nil
