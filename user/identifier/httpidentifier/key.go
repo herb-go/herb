@@ -1,4 +1,4 @@
-package guarder
+package httpidentifier
 
 import (
 	"context"
@@ -18,4 +18,4 @@ func (f Key) LoadID(r *http.Request) string {
 	return v.(string)
 }
 
-var DefaultKey = Key("guarder")
+var DefaultKey = Key("identifier")
