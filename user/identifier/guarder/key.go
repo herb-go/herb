@@ -17,3 +17,5 @@ func (f Key) LoadID(r *http.Request) string {
 	v := r.Context().Value(f)
 	return v.(string)
 }
+
+var DefaultKey = Key("guarder")

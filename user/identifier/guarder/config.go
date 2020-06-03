@@ -5,7 +5,6 @@ import (
 )
 
 type Config struct {
-	Key            Key
 	FailStatusCode int
 	Credentialers  []*CredentialerConfig
 	Identifier     *identifier.Config

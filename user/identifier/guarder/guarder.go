@@ -15,7 +15,6 @@ func DefaultOnFail(g *Guarder) func(w http.ResponseWriter, r *http.Request) {
 var DefaultIdentifier = identifier.FixedIdentifier("")
 
 type Guarder struct {
-	Key            Key
 	Credentialers  []Credentialer
 	Identifier     identifier.Identifier
 	OnFail         http.HandlerFunc
@@ -35,13 +34,13 @@ func (g *Guarder) ServeMiddleware(w http.ResponseWriter, r *http.Request, next h
 		g.OnFail(w, r)
 		return
 	}
-	g.Key.StoreID(r, id)
+	DefaultKey.StoreID(r, id)
 	next(w, r)
 
 }
 
 func (g *Guarder) IdentifyRequest(r *http.Request) (string, error) {
-	return g.Key.LoadID(r), nil
+	return DefaultKey.LoadID(r), nil
 }
 
 func New() *Guarder {
