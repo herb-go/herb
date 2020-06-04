@@ -1,4 +1,4 @@
-package httpidentifier
+package protecter
 
 import (
 	"net/http"
@@ -6,16 +6,16 @@ import (
 	"github.com/herb-go/herb/user/identifier"
 )
 
-var DefaultOnFail = func(w http.ResponseWriter, r *http.Request) {
+var DefaultOnFail = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, http.StatusText(403), 403)
-}
+})
 
 var DefaultIdentifier = identifier.FixedIdentifier("")
 
 type Protecter struct {
 	Credentialers []Credentialer
 	Identifier    identifier.Identifier
-	OnFail        http.HandlerFunc
+	OnFail        http.Handler
 }
 
 func (g *Protecter) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -28,7 +28,7 @@ func (g *Protecter) ServeMiddleware(w http.ResponseWriter, r *http.Request, next
 		panic(err)
 	}
 	if id == "" {
-		g.OnFail(w, r)
+		g.OnFail.ServeHTTP(w, r)
 		return
 	}
 	DefaultKey.StoreID(r, id)
@@ -40,10 +40,10 @@ func (g *Protecter) IdentifyRequest(r *http.Request) (string, error) {
 	return DefaultKey.LoadID(r), nil
 }
 
-func NewProtecter() *Protecter {
-	g := &Protecter{
+func New() *Protecter {
+	p := &Protecter{
 		Identifier: DefaultIdentifier,
+		OnFail:     DefaultOnFail,
 	}
-	g.OnFail = DefaultOnFail
-	return g
+	return p
 }

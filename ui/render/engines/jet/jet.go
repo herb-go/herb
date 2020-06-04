@@ -34,7 +34,7 @@ type RenderEngine struct {
 	ViewRoot string
 }
 
-//AddGlobal add buildin func.
+//AddGlobal add builtin func.
 func (e *RenderEngine) AddGlobal(Name string, fn interface{}) {
 	(*e.Set).AddGlobal(Name, fn)
 }

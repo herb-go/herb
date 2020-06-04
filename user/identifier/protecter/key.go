@@ -1,4 +1,4 @@
-package httpidentifier
+package protecter
 
 import (
 	"context"

@@ -39,7 +39,7 @@ func (v *View) Execute(data interface{}) ([]byte, error) {
 
 //RenderEngine render engine main struct
 type RenderEngine struct {
-	//FuncMap buildin func map
+	//FuncMap builtin func map
 	FuncMap template.FuncMap
 	//ViewRoot view root path
 	ViewRoot string
