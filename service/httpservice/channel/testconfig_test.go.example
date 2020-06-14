@@ -1,8 +1,0 @@
-package channel
-
-import "github.com/herb-go/herb/service"
-
-var testListener = service.ListenerConfig{
-	Net:  "tcp",
-	Addr: "127.0.0.1:10101",
-}
