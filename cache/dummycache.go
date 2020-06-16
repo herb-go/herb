@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"sync"
 	"time"
 )
 
@@ -97,8 +98,29 @@ func (c *DummyCache) ExpireCounter(key string, ttl time.Duration) error {
 	return nil
 }
 
+var dummy *Cache
+var dummylock sync.Mutex
+
+func Dummy() Cacheable {
+	dummylock.Lock()
+	defer dummylock.Unlock()
+	if dummy == nil {
+		dummy = New()
+	}
+	c := OptionConfig{
+		Driver:    "dummycache",
+		Marshaler: "json",
+	}
+	err := c.ApplyTo(dummy)
+	if err != nil {
+		panic(err)
+	}
+	return dummy
+}
+
 func init() {
 	Register("dummycache", func(loader func(interface{}) error) (Driver, error) {
 		return &DummyCache{}, nil
 	})
+
 }
