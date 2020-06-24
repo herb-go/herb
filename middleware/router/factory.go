@@ -26,7 +26,9 @@ func (f *Factory) CreateRouter() Router {
 		App:    f.app,
 	}
 }
-
+func (f *Factory) Middlewares() *middleware.App {
+	return f.app
+}
 func NewFactory(creator func() Router) *Factory {
 	return &Factory{
 		creator: creator,
