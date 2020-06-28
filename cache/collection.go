@@ -30,6 +30,15 @@ func NewCollection(cache Cacheable, prefix string, TTL time.Duration) *Collectio
 
 }
 
+//NewNestedCollection create new nested cache collection with given cache,prefix.
+//Return collection created.
+func NewNestedCollection(cache Cacheable, path ...string) Cacheable {
+	if len(path) != 0 {
+		return NewNestedCollection(NewCollection(cache, path[0], DefaultTTL))
+	}
+	return cache
+}
+
 //GetCacheKey return raw cache key by given key.
 //Return key and any error if raised.
 func (c *Collection) GetCacheKey(key string) (string, error) {
