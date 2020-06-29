@@ -20,12 +20,6 @@ type FieldError struct {
 	Msg string
 }
 
-//ValidatedResult result of  validation.
-// type ValidatedResult struct {
-// 	Validated bool
-// 	Validator Fields
-// }
-
 //Validator model struct.
 type Validator struct {
 	ui.Language
