@@ -121,3 +121,7 @@ func WrapResponseWriter(rw http.ResponseWriter) ResponseWriter {
 		ResponseWriter: w,
 	}
 }
+
+type WriterWrapper interface {
+	WrapWriter(http.ResponseWriter) ResponseWriter
+}
