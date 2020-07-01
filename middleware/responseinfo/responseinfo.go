@@ -9,6 +9,7 @@ import (
 type Info struct {
 	StatusCode    int
 	ContentLength int
+	Written       bool
 	writer        http.ResponseWriter
 }
 
@@ -23,6 +24,7 @@ func (i *Info) writeHeaderFunc(statusCode int) {
 }
 
 func (i *Info) writeFunc(data []byte) (int, error) {
+	i.Written = true
 	i.ContentLength = i.ContentLength + len(data)
 	return i.writer.Write(data)
 }
