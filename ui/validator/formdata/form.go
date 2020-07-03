@@ -11,6 +11,17 @@ import (
 //MsgBadRequest field error msg used in unmarshaler request form fail.
 const MsgBadRequest = "Bad request."
 
+//MustValidate init form with request and validate it.
+//You should set form value manually or set form value in form.InitWithRequest method.
+func MustValidate(r *http.Request, m RequestValidator) bool {
+	m.SetHTTPRequest(r)
+	err := m.InitWithRequest(r)
+	if err != nil {
+		panic(err)
+	}
+	return validator.MustValidate(m)
+}
+
 //MustValidateRequestBody unmarshal form with request body with given Unmarshaler, then init form with request and  validate it.
 //Return validate result.
 //Add bad request error to form empty field if unmarshal form fail.
@@ -20,7 +31,7 @@ func MustValidateRequestBody(r *http.Request, Unmarshaler func([]byte, interface
 	if err != nil {
 		panic(err)
 	}
-	if len(body) > 0 {
+	if len(body) > 0 && Unmarshaler != nil {
 		err = Unmarshaler(body, &m)
 		if err != nil {
 			m.SetBadRequest(true)
@@ -28,12 +39,7 @@ func MustValidateRequestBody(r *http.Request, Unmarshaler func([]byte, interface
 			return false
 		}
 	}
-	m.SetHTTPRequest(r)
-	err = m.InitWithRequest(r)
-	if err != nil {
-		panic(err)
-	}
-	return validator.MustValidate(m)
+	return MustValidate(r, m)
 }
 
 //MustValidateJSONRequest unmarshal form with request body with json.unmarshal, then init form with request and  validate it.
@@ -84,6 +90,11 @@ type Form struct {
 	httprequest *http.Request
 }
 
+//NewForm create new form
+func NewForm() *Form {
+	return &Form{}
+}
+
 //InitWithRequest init model with given request.
 //Return any error if rasied.
 //You can override this methon in your own form.
@@ -98,6 +109,7 @@ func (model *Form) BadRequest() bool {
 
 //SetBadRequest set whether form has a bad request error.
 func (model *Form) SetBadRequest(hasError bool) {
+
 	model.badRequest = hasError
 }
 
