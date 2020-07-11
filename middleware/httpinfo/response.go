@@ -13,7 +13,7 @@ type Response struct {
 	ContentLength int  //ContentLength response content length.
 	Written       bool //Content written
 	writer        http.ResponseWriter
-	buffer        *ResponseBuffer
+	buffer        *Buffer
 }
 
 //NewResponse create new response
@@ -73,10 +73,10 @@ func (resp *Response) BuildBufferWith(r *http.Request, v Validator, writer io.Wr
 	if resp.buffer != nil {
 		return false
 	}
-	resp.buffer = NewResponseBuffer()
+	resp.buffer = NewBuffer()
 	resp.buffer.request = r
 	if v != nil {
-		resp.buffer.validator = v
+		resp.buffer.checker = v
 	}
 	if writer != nil {
 		resp.buffer.writer = writer

@@ -6,28 +6,33 @@ import (
 	"net/http"
 )
 
-type ResponseBuffer struct {
+type Buffer struct {
 	request   *http.Request
 	Error     error
-	validator Validator
+	checker   Validator
 	discarded bool
 	writer    io.Writer
 	buffer    *bytes.Buffer
 }
 
-func (b *ResponseBuffer) Write([]byte) {
+func (b *Buffer) Write(data []byte) {
 	if b.discarded != false {
 		return
 	}
+	_, err := b.writer.Write(data)
+	if err != nil {
+		b.Error = err
+		b.Discard()
+	}
 }
-func (b *ResponseBuffer) Discard() {
+func (b *Buffer) Discard() {
 	b.discarded = true
 }
-func (b *ResponseBuffer) Check(resp *Response) {
+func (b *Buffer) Check(resp *Response) {
 	if b.discarded != false {
 		return
 	}
-	ok, err := b.validator.Validate(b.request, resp)
+	ok, err := b.checker.Validate(b.request, resp)
 	if err != nil {
 		b.Error = err
 		b.Discard()
@@ -38,11 +43,11 @@ func (b *ResponseBuffer) Check(resp *Response) {
 	}
 }
 
-func NewResponseBuffer() *ResponseBuffer {
+func NewBuffer() *Buffer {
 	buf := bytes.NewBuffer(nil)
-	return &ResponseBuffer{
-		validator: ValidatorAlways,
-		writer:    buf,
-		buffer:    buf,
+	return &Buffer{
+		checker: ValidatorAlways,
+		writer:  buf,
+		buffer:  buf,
 	}
 }
