@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestPipe(t *testing.T) {
+func TestBuffer(t *testing.T) {
 	resp := NewResponse()
 	c := NewBufferController(nil, resp)
 	success := resp.UpdateController(c)
