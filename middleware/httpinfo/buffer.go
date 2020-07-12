@@ -1,53 +1,65 @@
 package httpinfo
 
 import (
-	"bytes"
 	"io"
 	"net/http"
 )
 
-type Buffer struct {
+type BufferPipe struct {
 	request   *http.Request
-	Error     error
+	response  *Response
+	lasterror error
 	checker   Validator
 	discarded bool
 	writer    io.Writer
-	buffer    *bytes.Buffer
 }
 
-func (b *Buffer) Write(data []byte) {
-	if b.discarded != false {
+func (p *BufferPipe) Error() error {
+	return p.lasterror
+}
+func (p *BufferPipe) Write(data []byte) {
+	if p.discarded != false {
 		return
 	}
-	_, err := b.writer.Write(data)
+	_, err := p.writer.Write(data)
 	if err != nil {
-		b.Error = err
-		b.Discard()
+		p.lasterror = err
+		p.Discard()
 	}
 }
-func (b *Buffer) Discard() {
-	b.discarded = true
+func (p *BufferPipe) Discard() {
+	p.discarded = true
 }
-func (b *Buffer) Check(resp *Response) {
-	if b.discarded != false {
+func (p *BufferPipe) Discarded() bool {
+	return p.discarded
+}
+func (p *BufferPipe) Check() {
+	if p.discarded != false {
 		return
 	}
-	ok, err := b.checker.Validate(b.request, resp)
+	ok, err := p.checker.Validate(p.request, p.response)
 	if err != nil {
-		b.Error = err
-		b.Discard()
+		p.lasterror = err
+		p.Discard()
 		return
 	}
 	if !ok {
-		b.Discard()
+		p.Discard()
 	}
 }
-
-func NewBuffer() *Buffer {
-	buf := bytes.NewBuffer(nil)
-	return &Buffer{
-		checker: ValidatorAlways,
-		writer:  buf,
-		buffer:  buf,
+func (p *BufferPipe) WithChecker(v Validator) *BufferPipe {
+	p.checker = v
+	return p
+}
+func (p *BufferPipe) WithWriter(w io.Writer) *BufferPipe {
+	p.writer = w
+	return p
+}
+func NewBufferPipe(req *http.Request, resp *Response) *BufferPipe {
+	return &BufferPipe{
+		checker:  ValidatorAlways,
+		writer:   resp.Buffer,
+		request:  req,
+		response: resp,
 	}
 }

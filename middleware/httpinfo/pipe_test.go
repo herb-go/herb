@@ -5,20 +5,18 @@ import (
 	"testing"
 )
 
-func TestBuffer(t *testing.T) {
+func TestPipe(t *testing.T) {
 	resp := NewResponse()
-	success := resp.BuildBuffer(nil, nil)
+	p := NewBufferPipe(nil, resp)
+	success := resp.UpdatePipe(p)
 	if success != true {
-		t.Fatal(success)
-	}
-	success = resp.BuildBuffer(nil, nil)
-	if success != false {
 		t.Fatal(success)
 	}
 	resp = NewResponse()
 	writer := httptest.NewRecorder()
+	p = NewBufferPipe(nil, resp)
 	resp.WrapWriter(writer).Write([]byte{1})
-	success = resp.BuildBuffer(nil, nil)
+	success = resp.UpdatePipe(p)
 	if success != false {
 		t.Fatal(success)
 	}
