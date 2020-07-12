@@ -94,10 +94,38 @@ func writerbufferMiddleware(w http.ResponseWriter, r *http.Request, next http.Ha
 	)
 	next(lastresp.WrapWriter(w), r)
 }
+
+var validatorCommit = ValidatorFunc(func(req *http.Request, resp *Response) (bool, error) {
+	return req.Header.Get("commit") != "", nil
+})
+
+func commitMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	lastresp = NewResponse()
+
+	lastresp.UpdateController(NewCommitController(r, lastresp).WithChecker(validatorCommit))
+	lastresp.UpdateAutocommit(false)
+	defer func() {
+		err := lastresp.Commit()
+		if err != nil {
+			panic(err)
+		}
+	}()
+	next(lastresp.WrapWriter(w), r)
+	if !lastresp.Autocommit() {
+		data := lastresp.UncommittedData()
+		s := string(data)
+		if s == "uncommitted" {
+			lastresp.SetUncommittedData([]byte("committed"))
+		}
+
+	}
+}
 func echoAction(w http.ResponseWriter, r *http.Request) {
 	for field := range r.Header {
 		for k := range r.Header[field] {
-			w.Header().Set(field, r.Header[field][k])
+			if field != "Content-Length" {
+				w.Header().Set(field, r.Header[field][k])
+			}
 		}
 	}
 	status := r.Header.Get("status")
@@ -143,6 +171,7 @@ func TestResponse(t *testing.T) {
 	mux.Handle("/errvalidator", middleware.New().Use(finishMiddleware, errvalidatorMiddleware).HandleFunc(echoAction))
 	mux.Handle("/notwritten", middleware.New().Use(finishMiddleware, notwrittenvalidatorMiddleware).HandleFunc(echoAction))
 	mux.Handle("/writerbuffer", middleware.New().Use(finishMiddleware, writerbufferMiddleware).HandleFunc(echoAction))
+	mux.Handle("/commit", middleware.New().Use(finishMiddleware, commitMiddleware).HandleFunc(echoAction))
 
 	finishchan = make(chan int, 10)
 	defer close(finishchan)
@@ -282,4 +311,70 @@ func TestResponse(t *testing.T) {
 		t.Fatal(data)
 	}
 
+	req, err = http.NewRequest("POST", s.URL+"/commit", bytes.NewBufferString("testcontent"))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("status", "401")
+	req.Header.Set("testfield", "testvalue")
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	<-finishchan
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") {
+		t.Fatal(lastresp)
+	}
+
+	req, err = http.NewRequest("POST", s.URL+"/commit", bytes.NewBufferString("testcontent"))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("status", "401")
+	req.Header.Set("testfield", "testvalue")
+	req.Header.Set("commit", "commit")
+	httpresp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	<-finishchan
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") {
+		t.Fatal(lastresp)
+	}
+	data, err = ioutil.ReadAll(httpresp.Body)
+	if err != nil {
+		panic(err)
+	}
+	httpresp.Body.Close()
+	if string(data) != "testcontent" {
+		t.Fatal(string(data))
+	}
+
+	req, err = http.NewRequest("POST", s.URL+"/commit", bytes.NewBufferString("uncommitted"))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("status", "401")
+	req.Header.Set("testfield", "testvalue")
+	req.Header.Set("commit", "commit")
+	httpresp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	<-finishchan
+	err = lastresp.LastError()
+	if err != nil {
+		panic(err)
+	}
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("uncommitted") {
+		t.Fatal(lastresp)
+	}
+	data, err = ioutil.ReadAll(httpresp.Body)
+	if err != nil {
+		panic(err)
+	}
+	httpresp.Body.Close()
+	if string(data) != "committed" {
+		t.Fatal(string(data))
+	}
 }

@@ -26,7 +26,9 @@ type responsewriterflusher struct {
 }
 
 func TestResponsewriter(t *testing.T) {
-	rw := &responsewriter{}
+	rw := &responsewriter{
+		StatusCode: 200,
+	}
 	w := WrapResponseWriter(rw)
 	if w.(*WrappedResponseWriter) == nil {
 		t.Fatal(w)

@@ -40,10 +40,8 @@ func (resp *Response) flushHeader() {
 func (resp *Response) writeHeaderFunc(statusCode int) {
 	resp.locked = true
 	resp.StatusCode = statusCode
-	if resp.autocommit {
-		resp.flushHeader()
-		resp.writer.WriteHeader(statusCode)
-	}
+	resp.controller.BeforeWriteHeader()
+
 }
 
 func (resp *Response) writeFunc(data []byte) (int, error) {
@@ -51,8 +49,11 @@ func (resp *Response) writeFunc(data []byte) (int, error) {
 	var length int
 	resp.locked = true
 	if !resp.Written {
-		resp.controller.BeforeWriteHeader()
 		resp.Written = true
+		if resp.autocommit {
+			resp.flushHeader()
+			resp.writer.WriteHeader(resp.StatusCode)
+		}
 	}
 	resp.controller.BeforeWrite()
 	if resp.autocommit {
@@ -86,23 +87,23 @@ func (resp *Response) WrapWriter(rw http.ResponseWriter) middleware.ResponseWrit
 	return w
 }
 
-func (resp *Response) UncommitedData() []byte {
+func (resp *Response) UncommittedData() []byte {
 	return resp.buffer.Bytes()
 }
-func (resp *Response) SetUncommitedData(data []byte) {
+func (resp *Response) SetUncommittedData(data []byte) {
 	resp.buffer = bytes.NewBuffer(data)
 }
 func (resp *Response) Commit() error {
 	if resp.autocommit {
 		return nil
 	}
+	resp.autocommit = true
 	resp.flushHeader()
 	if !resp.Written {
 		return nil
 	}
 	resp.writer.WriteHeader(resp.StatusCode)
 	_, err := resp.writer.Write(resp.buffer.Bytes())
-	resp.autocommit = true
 	return err
 }
 
@@ -119,4 +120,16 @@ func (resp *Response) UpdateController(c Controller) bool {
 	}
 	resp.controller = c
 	return true
+}
+
+func (resp *Response) UpdateAutocommit(autocommit bool) bool {
+	if resp.Locked() {
+		return false
+	}
+	resp.autocommit = autocommit
+	return true
+}
+
+func (resp *Response) LastError() error {
+	return resp.controller.Error()
 }
