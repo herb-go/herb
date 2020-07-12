@@ -7,9 +7,8 @@ import (
 )
 
 type Hook struct {
-	handler         Handler
-	validator       httpinfo.Validator
-	bufferValidator httpinfo.Validator
+	handler   Handler
+	validator httpinfo.Validator
 }
 
 func (hook *Hook) Clone() *Hook {
@@ -33,9 +32,6 @@ func (hook *Hook) WithValidator(v httpinfo.Validator) *Hook {
 func (hook *Hook) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	resp := httpinfo.NewResponse()
 	writer := resp.WrapWriter(w)
-	if hook.bufferValidator != nil {
-		resp.BuildBuffer(r, hook.bufferValidator)
-	}
 	next(writer, r)
 	ok, err := hook.validator.Validate(r, resp)
 	if err != nil {

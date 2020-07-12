@@ -86,11 +86,16 @@ func (resp *Response) WrapWriter(rw http.ResponseWriter) middleware.ResponseWrit
 	return w
 }
 
-func (resp *Response) Uncommited() []byte {
+func (resp *Response) UncommitedData() []byte {
 	return resp.buffer.Bytes()
 }
-
+func (resp *Response) SetUncommitedData(data []byte) {
+	resp.buffer = bytes.NewBuffer(data)
+}
 func (resp *Response) Commit() error {
+	if resp.autocommit {
+		return nil
+	}
 	resp.flushHeader()
 	if !resp.Written {
 		return nil
@@ -99,6 +104,10 @@ func (resp *Response) Commit() error {
 	_, err := resp.writer.Write(resp.buffer.Bytes())
 	resp.autocommit = true
 	return err
+}
+
+func (resp *Response) Autocommit() bool {
+	return resp.autocommit
 }
 
 func (resp *Response) Locked() bool {
