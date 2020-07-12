@@ -2,6 +2,7 @@ package httpinfo
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -32,6 +33,49 @@ func bufferMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerF
 func neverMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	lastresp = NewResponse()
 	lastresp.BuildBuffer(r, ValidatorNever)
+	next(lastresp.WrapWriter(w), r)
+}
+
+var errtest = errors.New("errtest")
+
+type errwriter struct {
+}
+
+func (w *errwriter) Write([]byte) (int, error) {
+	return 0, errtest
+}
+func errwriterMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	lastresp = NewResponse()
+	lastresp.BuildBufferWith(r, nil, &errwriter{})
+	next(lastresp.WrapWriter(w), r)
+}
+
+var validatorError = ValidatorFunc(func(*http.Request, *Response) (bool, error) {
+	return true, errtest
+})
+
+func errvalidatorMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	lastresp = NewResponse()
+	lastresp.BuildBuffer(r, validatorError)
+	next(lastresp.WrapWriter(w), r)
+}
+
+var validatorNotWritten = ValidatorFunc(func(req *http.Request, resp *Response) (bool, error) {
+	return !resp.Written, nil
+})
+
+func notwrittenvalidatorMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	lastresp = NewResponse()
+	lastresp.BuildBuffer(r, validatorNotWritten)
+	next(lastresp.WrapWriter(w), r)
+}
+
+var writerbuffer *bytes.Buffer
+
+func writerbufferMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	lastresp = NewResponse()
+	writerbuffer = bytes.NewBuffer(nil)
+	lastresp.BuildBufferWith(r, ValidatorAlways, writerbuffer)
 	next(lastresp.WrapWriter(w), r)
 }
 func echoAction(w http.ResponseWriter, r *http.Request) {
@@ -66,6 +110,10 @@ func TestResponse(t *testing.T) {
 	mux.Handle("/test", middleware.New().Use(finishMiddleware, respMiddleware).HandleFunc(echoAction))
 	mux.Handle("/buffer", middleware.New().Use(finishMiddleware, bufferMiddleware).HandleFunc(echoAction))
 	mux.Handle("/never", middleware.New().Use(finishMiddleware, neverMiddleware).HandleFunc(echoAction))
+	mux.Handle("/errwriter", middleware.New().Use(finishMiddleware, errwriterMiddleware).HandleFunc(echoAction))
+	mux.Handle("/errvalidator", middleware.New().Use(finishMiddleware, errvalidatorMiddleware).HandleFunc(echoAction))
+	mux.Handle("/notwritten", middleware.New().Use(finishMiddleware, notwrittenvalidatorMiddleware).HandleFunc(echoAction))
+	mux.Handle("/writerbuffer", middleware.New().Use(finishMiddleware, writerbufferMiddleware).HandleFunc(echoAction))
 
 	finishchan = make(chan int, 10)
 	defer close(finishchan)
@@ -124,4 +172,85 @@ func TestResponse(t *testing.T) {
 	if len(data) != 0 || err != nil {
 		t.Fatal(data, err)
 	}
+
+	req, err = http.NewRequest("POST", s.URL+"/errwriter", bytes.NewBufferString("testcontent"))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("status", "401")
+	req.Header.Set("testfield", "testvalue")
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	<-finishchan
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.BufferDiscarded() != true {
+		t.Fatal(lastresp)
+	}
+	data, err = lastresp.ReadAllBuffer()
+	if len(data) != 0 || err != errtest {
+		t.Fatal(data, err)
+	}
+
+	req, err = http.NewRequest("POST", s.URL+"/errvalidator", bytes.NewBufferString("testcontent"))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("status", "401")
+	req.Header.Set("testfield", "testvalue")
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	<-finishchan
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.BufferDiscarded() != true {
+		t.Fatal(lastresp)
+	}
+	data, err = lastresp.ReadAllBuffer()
+	if len(data) != 0 || err != errtest {
+		t.Fatal(data, err)
+	}
+
+	req, err = http.NewRequest("POST", s.URL+"/notwritten", bytes.NewBufferString("testcontent"))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("status", "401")
+	req.Header.Set("testfield", "testvalue")
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	<-finishchan
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.BufferDiscarded() != true {
+		t.Fatal(lastresp)
+	}
+	data, err = lastresp.ReadAllBuffer()
+	if len(data) != 0 || err != nil {
+		t.Fatal(data, err)
+	}
+
+	req, err = http.NewRequest("POST", s.URL+"/writerbuffer", bytes.NewBufferString("testcontent"))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("status", "401")
+	req.Header.Set("testfield", "testvalue")
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	<-finishchan
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.BufferDiscarded() != false {
+		t.Fatal(lastresp)
+	}
+	data, err = lastresp.ReadAllBuffer()
+	if len(data) != 0 || err != nil {
+		t.Fatal(data, err)
+	}
+	data = writerbuffer.Bytes()
+	if string(data) != "testcontent" {
+		t.Fatal(data)
+	}
+
 }

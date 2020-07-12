@@ -68,9 +68,7 @@ func (resp *Response) BufferDiscarded() bool {
 	}
 	return resp.buffer.discarded
 }
-func (resp *Response) BuildBuffer(r *http.Request, v Validator) bool {
-	return resp.BuildBufferWith(r, v, nil)
-}
+
 func (resp *Response) ReadAllBuffer() ([]byte, error) {
 	if resp.buffer == nil {
 		return nil, nil
@@ -78,8 +76,16 @@ func (resp *Response) ReadAllBuffer() ([]byte, error) {
 	if resp.buffer.Error != nil {
 		return nil, resp.buffer.Error
 	}
+	if resp.buffer.discarded {
+		return nil, nil
+	}
 	return resp.buffer.buffer.Bytes(), nil
 }
+
+func (resp *Response) BuildBuffer(r *http.Request, v Validator) bool {
+	return resp.BuildBufferWith(r, v, nil)
+}
+
 func (resp *Response) BuildBufferWith(r *http.Request, v Validator, writer io.Writer) bool {
 	if resp.Written == true {
 		return false
