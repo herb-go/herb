@@ -27,13 +27,13 @@ func respMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 }
 func bufferMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	lastresp = NewResponse()
-	lastresp.UpdatePipe(NewBufferPipe(r, lastresp))
+	lastresp.UpdateController(NewBufferController(r, lastresp))
 	next(lastresp.WrapWriter(w), r)
 }
 func neverMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	lastresp = NewResponse()
-	lastresp.UpdatePipe(
-		NewBufferPipe(r, lastresp).
+	lastresp.UpdateController(
+		NewBufferController(r, lastresp).
 			WithChecker(ValidatorNever),
 	)
 	next(lastresp.WrapWriter(w), r)
@@ -49,8 +49,8 @@ func (w *errwriter) Write([]byte) (int, error) {
 }
 func errwriterMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	lastresp = NewResponse()
-	lastresp.UpdatePipe(
-		NewBufferPipe(r, lastresp).
+	lastresp.UpdateController(
+		NewBufferController(r, lastresp).
 			WithWriter(&errwriter{}),
 	)
 	next(lastresp.WrapWriter(w), r)
@@ -62,8 +62,8 @@ var validatorError = ValidatorFunc(func(*http.Request, *Response) (bool, error) 
 
 func errvalidatorMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	lastresp = NewResponse()
-	lastresp.UpdatePipe(
-		NewBufferPipe(r, lastresp).
+	lastresp.UpdateController(
+		NewBufferController(r, lastresp).
 			WithChecker(validatorError),
 	)
 	next(lastresp.WrapWriter(w), r)
@@ -75,8 +75,8 @@ var validatorNotWritten = ValidatorFunc(func(req *http.Request, resp *Response) 
 
 func notwrittenvalidatorMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	lastresp = NewResponse()
-	lastresp.UpdatePipe(
-		NewBufferPipe(r, lastresp).
+	lastresp.UpdateController(
+		NewBufferController(r, lastresp).
 			WithChecker(validatorNotWritten),
 	)
 	next(lastresp.WrapWriter(w), r)
@@ -87,8 +87,8 @@ var writerbuffer *bytes.Buffer
 func writerbufferMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	lastresp = NewResponse()
 	writerbuffer = bytes.NewBuffer(nil)
-	lastresp.UpdatePipe(
-		NewBufferPipe(r, lastresp).
+	lastresp.UpdateController(
+		NewBufferController(r, lastresp).
 			WithChecker(ValidatorAlways).
 			WithWriter(writerbuffer),
 	)
@@ -113,6 +113,19 @@ func echoAction(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	w.Write(data)
+}
+
+func readAllBuffer() ([]byte, error) {
+	err := lastresp.controller.Error()
+	if err != nil {
+		return nil, err
+	}
+	c := lastresp.controller
+	b, ok := c.(*BufferController)
+	if !ok {
+		return nil, nil
+	}
+	return b.buffer.Bytes(), nil
 }
 func TestResponse(t *testing.T) {
 	var data []byte
@@ -144,10 +157,10 @@ func TestResponse(t *testing.T) {
 		panic(err)
 	}
 	<-finishchan
-	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.PipeDiscarded() != true {
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") {
 		t.Fatal(lastresp)
 	}
-	data, err = lastresp.ReadAllBuffer()
+	data, err = readAllBuffer()
 	if len(data) != 0 || err != nil {
 		t.Fatal(data, err)
 	}
@@ -163,10 +176,10 @@ func TestResponse(t *testing.T) {
 		panic(err)
 	}
 	<-finishchan
-	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.PipeDiscarded() != false {
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") {
 		t.Fatal(lastresp)
 	}
-	data, err = lastresp.ReadAllBuffer()
+	data, err = readAllBuffer()
 	if string(data) != "testcontent" || err != nil {
 		t.Fatal(data, err)
 	}
@@ -181,10 +194,10 @@ func TestResponse(t *testing.T) {
 		panic(err)
 	}
 	<-finishchan
-	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.PipeDiscarded() != true {
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") {
 		t.Fatal(lastresp)
 	}
-	data, err = lastresp.ReadAllBuffer()
+	data, err = readAllBuffer()
 	if len(data) != 0 || err != nil {
 		t.Fatal(data, err)
 	}
@@ -200,10 +213,10 @@ func TestResponse(t *testing.T) {
 		panic(err)
 	}
 	<-finishchan
-	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.PipeDiscarded() != true {
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") {
 		t.Fatal(lastresp)
 	}
-	data, err = lastresp.ReadAllBuffer()
+	data, err = readAllBuffer()
 	if len(data) != 0 || err != errtest {
 		t.Fatal(data, err)
 	}
@@ -219,10 +232,10 @@ func TestResponse(t *testing.T) {
 		panic(err)
 	}
 	<-finishchan
-	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.PipeDiscarded() != true {
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") {
 		t.Fatal(lastresp)
 	}
-	data, err = lastresp.ReadAllBuffer()
+	data, err = readAllBuffer()
 	if len(data) != 0 || err != errtest {
 		t.Fatal(data, err)
 	}
@@ -238,10 +251,10 @@ func TestResponse(t *testing.T) {
 		panic(err)
 	}
 	<-finishchan
-	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.PipeDiscarded() != true {
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") {
 		t.Fatal(lastresp)
 	}
-	data, err = lastresp.ReadAllBuffer()
+	data, err = readAllBuffer()
 	if len(data) != 0 || err != nil {
 		t.Fatal(data, err)
 	}
@@ -257,10 +270,10 @@ func TestResponse(t *testing.T) {
 		panic(err)
 	}
 	<-finishchan
-	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") || lastresp.PipeDiscarded() != false {
+	if lastresp.StatusCode != 401 || lastresp.Header().Get("testfield") != "testvalue" || lastresp.ContentLength != len("testcontent") {
 		t.Fatal(lastresp)
 	}
-	data, err = lastresp.ReadAllBuffer()
+	data, err = readAllBuffer()
 	if len(data) != 0 || err != nil {
 		t.Fatal(data, err)
 	}

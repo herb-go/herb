@@ -1,64 +1,77 @@
 package httpinfo
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 )
 
-type BufferPipe struct {
+type BufferController struct {
 	request   *http.Request
 	response  *Response
 	lasterror error
 	checker   Validator
+	buffer    *bytes.Buffer
 	discarded bool
 	writer    io.Writer
+	NopController
 }
 
-func (p *BufferPipe) Error() error {
-	return p.lasterror
+func (c *BufferController) Error() error {
+	return c.lasterror
 }
-func (p *BufferPipe) Write(data []byte) {
-	if p.discarded != false {
+func (c *BufferController) Write(data []byte) {
+	if c.discarded != false {
 		return
 	}
-	_, err := p.writer.Write(data)
+	_, err := c.writer.Write(data)
 	if err != nil {
-		p.lasterror = err
-		p.Discard()
+		c.lasterror = err
+		c.Discard()
 	}
 }
-func (p *BufferPipe) Discard() {
-	p.discarded = true
+func (c *BufferController) Discard() {
+	c.discarded = true
 }
-func (p *BufferPipe) Discarded() bool {
-	return p.discarded
+func (c *BufferController) Discarded() bool {
+	return c.discarded
 }
-func (p *BufferPipe) Check() {
-	if p.discarded != false {
+func (c *BufferController) BeforeWriteHeader() {
+	c.check()
+}
+
+func (c *BufferController) BeforeWrite() {
+	c.check()
+}
+
+func (c *BufferController) check() {
+	if c.discarded != false {
 		return
 	}
-	ok, err := p.checker.Validate(p.request, p.response)
+	ok, err := c.checker.Validate(c.request, c.response)
 	if err != nil {
-		p.lasterror = err
-		p.Discard()
+		c.lasterror = err
+		c.Discard()
 		return
 	}
 	if !ok {
-		p.Discard()
+		c.Discard()
 	}
 }
-func (p *BufferPipe) WithChecker(v Validator) *BufferPipe {
-	p.checker = v
-	return p
+func (c *BufferController) WithChecker(v Validator) *BufferController {
+	c.checker = v
+	return c
 }
-func (p *BufferPipe) WithWriter(w io.Writer) *BufferPipe {
-	p.writer = w
-	return p
+func (c *BufferController) WithWriter(w io.Writer) *BufferController {
+	c.writer = w
+	return c
 }
-func NewBufferPipe(req *http.Request, resp *Response) *BufferPipe {
-	return &BufferPipe{
+func NewBufferController(req *http.Request, resp *Response) *BufferController {
+	buf := bytes.NewBuffer(nil)
+	return &BufferController{
 		checker:  ValidatorAlways,
-		writer:   resp.Buffer,
+		writer:   buf,
+		buffer:   buf,
 		request:  req,
 		response: resp,
 	}

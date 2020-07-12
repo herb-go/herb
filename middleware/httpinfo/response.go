@@ -14,9 +14,9 @@ type Response struct {
 	header        http.Header
 	Written       bool //Content written
 	writer        http.ResponseWriter
-	async         bool
-	Buffer        *bytes.Buffer
-	pipe          Pipe
+	autocommit    bool
+	buffer        *bytes.Buffer
+	controller    Controller
 	locked        bool
 }
 
@@ -24,9 +24,10 @@ type Response struct {
 func NewResponse() *Response {
 	return &Response{
 		StatusCode: 200,
-		pipe:       DefaultPipe,
+		controller: DefaultController,
+		autocommit: true,
 		header:     http.Header{},
-		Buffer:     bytes.NewBuffer(nil),
+		buffer:     bytes.NewBuffer(nil),
 	}
 }
 func (resp *Response) flushHeader() {
@@ -39,24 +40,32 @@ func (resp *Response) flushHeader() {
 func (resp *Response) writeHeaderFunc(statusCode int) {
 	resp.locked = true
 	resp.StatusCode = statusCode
-	resp.flushHeader()
-	resp.writer.WriteHeader(statusCode)
+	if resp.autocommit {
+		resp.flushHeader()
+		resp.writer.WriteHeader(statusCode)
+	}
 }
 
 func (resp *Response) writeFunc(data []byte) (int, error) {
+	var err error
+	var length int
 	resp.locked = true
 	if !resp.Written {
-		resp.pipe.Check()
+		resp.controller.BeforeWriteHeader()
 		resp.Written = true
 	}
-	resp.locked = true
-	length, err := resp.writer.Write(data)
+	resp.controller.BeforeWrite()
+	if resp.autocommit {
+		length, err = resp.writer.Write(data)
+
+	} else {
+		length, err = resp.buffer.Write(data)
+	}
 	if err != nil {
 		return 0, err
 	}
 	resp.ContentLength = resp.ContentLength + length
-	resp.pipe.Check()
-	resp.pipe.Write(data)
+	resp.controller.Write(data)
 	return length, nil
 }
 
@@ -77,56 +86,28 @@ func (resp *Response) WrapWriter(rw http.ResponseWriter) middleware.ResponseWrit
 	return w
 }
 
-func (resp *Response) PipeDiscarded() bool {
-	return resp.pipe.Discarded()
+func (resp *Response) Uncommited() []byte {
+	return resp.buffer.Bytes()
 }
 
-func (resp *Response) ReadAllBuffer() ([]byte, error) {
-	if resp.Buffer == nil {
-		return nil, nil
+func (resp *Response) Commit() error {
+	resp.flushHeader()
+	if !resp.Written {
+		return nil
 	}
-	err := resp.pipe.Error()
-	if err != nil {
-		return nil, err
-	}
-	if resp.pipe.Discarded() {
-		return nil, nil
-	}
-	return resp.Buffer.Bytes(), nil
+	resp.writer.WriteHeader(resp.StatusCode)
+	_, err := resp.writer.Write(resp.buffer.Bytes())
+	resp.autocommit = true
+	return err
 }
 
 func (resp *Response) Locked() bool {
 	return resp.locked
 }
-func (resp *Response) UpdatePipe(p Pipe) bool {
+func (resp *Response) UpdateController(c Controller) bool {
 	if resp.Locked() {
 		return false
 	}
-	resp.pipe = p
+	resp.controller = c
 	return true
 }
-
-// func (resp *Response) BuildBuffer(r *http.Request, v Validator) bool {
-// 	if resp.Written == true {
-// 		return false
-// 	}
-// 	if resp.buffer != nil {
-// 		return false
-// 	}
-// 	resp.buffer = NewBuffer()
-// 	resp.buffer.request = r
-// 	if v != nil {
-// 		resp.buffer.checker = v
-// 	}
-// 	return true
-// }
-
-// func (resp *Response) UpdateBufferWriter(writer io.Writer) bool {
-// 	if !resp.bufferChangeable() {
-// 		return false
-// 	}
-// 	if writer != nil {
-// 		resp.buffer.writer = writer
-// 	}
-// 	return true
-// }

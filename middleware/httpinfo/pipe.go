@@ -1,27 +1,26 @@
 package httpinfo
 
-type Pipe interface {
+type Controller interface {
 	Write([]byte)
-	Check()
-	Discarded() bool
+	BeforeWriteHeader()
+	BeforeWrite()
 	Error() error
 }
 
-type NopPipe struct {
+type NopController struct {
 }
 
-func (p *NopPipe) Write([]byte) {
+func (p *NopController) Write([]byte) {
 }
 
-func (p *NopPipe) Check() {
+func (p *NopController) BeforeWriteHeader() {
 }
 
-func (p *NopPipe) Discarded() bool {
-	return true
+func (p *NopController) BeforeWrite() {
 }
 
-func (p *NopPipe) Error() error {
+func (p *NopController) Error() error {
 	return nil
 }
 
-var DefaultPipe Pipe = &NopPipe{}
+var DefaultController Controller = &NopController{}
