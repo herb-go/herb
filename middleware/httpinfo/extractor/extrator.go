@@ -7,6 +7,12 @@ type Extractor interface {
 	Extract(r *http.Request) ([]byte, error)
 }
 
+type ExtractorFunc func(r *http.Request) ([]byte, error)
+
+func (f ExtractorFunc) Extract(r *http.Request) ([]byte, error) {
+	return f(r)
+}
+
 type ExtratorField struct {
 	Extrator   Extractor
 	Formatters []httpinfo.Formatter
