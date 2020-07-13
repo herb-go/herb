@@ -1,25 +1,22 @@
-package requestextrator
+package extractor
 
 import "net/http"
+import "github.com/herb-go/herb/middleware/httpinfo"
 
-type RequestExtractor interface {
-	ExtractRequest(r *http.Request) ([]byte, error)
-}
-
-type Formatter interface {
-	Format([]byte) ([]byte, bool, error)
+type Extractor interface {
+	Extract(r *http.Request) ([]byte, error)
 }
 
 type ExtratorField struct {
-	Extrator   RequestExtractor
-	Formatters []Formatter
+	Extrator   Extractor
+	Formatters []httpinfo.Formatter
 }
 
 func (i *ExtratorField) Load(r *http.Request) ([]byte, bool, error) {
 	var info []byte
 	var ok bool
 	var err error
-	info, err = i.Extrator.ExtractRequest(r)
+	info, err = i.Extrator.Extract(r)
 	if err != nil {
 		return nil, false, err
 	}
