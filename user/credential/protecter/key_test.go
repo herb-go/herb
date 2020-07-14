@@ -43,7 +43,7 @@ var testProtecter = New().
 	)
 
 func TestForbidden(t *testing.T) {
-	s := httptest.NewServer(DefaultKey.ProtectWith(ForbiddenProtecter, testHandler))
+	s := httptest.NewServer(ProtectWith(ForbiddenProtecter, testHandler))
 	defer s.Close()
 	req, err := http.NewRequest("GET", s.URL, nil)
 	if err != nil {
@@ -63,7 +63,7 @@ func TestForbidden(t *testing.T) {
 }
 
 func TestSuccess(t *testing.T) {
-	s := httptest.NewServer(DefaultKey.ProtectWith(NotWorkingProtecter, testHandler))
+	s := httptest.NewServer(ProtectWith(NotWorkingProtecter, testHandler))
 	defer s.Close()
 	req, err := http.NewRequest("GET", s.URL, nil)
 	if err != nil {
@@ -90,7 +90,7 @@ func TestSuccess(t *testing.T) {
 }
 
 func TestNil(t *testing.T) {
-	s := httptest.NewServer(DefaultKey.ProtectWith(nil, testHandler))
+	s := httptest.NewServer(ProtectWith(nil, testHandler))
 	defer s.Close()
 	req, err := http.NewRequest("GET", s.URL, nil)
 	if err != nil {
@@ -110,7 +110,7 @@ func TestNil(t *testing.T) {
 }
 
 func TestVerifyFail(t *testing.T) {
-	s := httptest.NewServer(DefaultKey.ProtectWith(testProtecter, testHandler))
+	s := httptest.NewServer(ProtectWith(testProtecter, testHandler))
 	defer s.Close()
 	req, err := http.NewRequest("GET", s.URL, nil)
 	if err != nil {
@@ -131,7 +131,7 @@ func TestVerifyFail(t *testing.T) {
 }
 
 func TestVerifySuccess(t *testing.T) {
-	s := httptest.NewServer(DefaultKey.ProtectWith(testProtecter, testHandler))
+	s := httptest.NewServer(ProtectWith(testProtecter, testHandler))
 	defer s.Close()
 	req, err := http.NewRequest("GET", s.URL, nil)
 	if err != nil {
