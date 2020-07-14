@@ -46,7 +46,12 @@ func (p *Protected) Reset() {
 		return true
 	})
 }
+func (p *Protected) ResetProtecters() {
+	p.locker.Lock()
+	defer p.locker.Unlock()
+	p.protecters = map[string]*protecter.Protecter{}
 
+}
 func (p *Protected) SetProtecter(name string, protecter *protecter.Protecter) {
 	p.locker.Lock()
 	defer p.locker.Unlock()

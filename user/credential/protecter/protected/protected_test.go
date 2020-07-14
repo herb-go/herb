@@ -148,5 +148,19 @@ func TestChannel(t *testing.T) {
 	if resp.StatusCode != 200 {
 		t.Fatal(resp)
 	}
+	Channels.ResetProtecters()
+	Channels.Handle("testchannel", testHanlder)
+	req, err = http.NewRequest("GET", s.URL+DefaultCannelsPrefix+"/testchannel", nil)
+	if err != nil {
+		panic(err)
+	}
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 403 {
+		t.Fatal(resp)
+	}
 
 }
