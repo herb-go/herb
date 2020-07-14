@@ -15,7 +15,7 @@ func Verify(v Verifier, c ...Credential) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			d.Append(t, val)
+			d.Set(t, val)
 		}
 	}
 	return v.Verify(d)
