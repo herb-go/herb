@@ -18,26 +18,19 @@ type Protecter struct {
 	OnFail        http.Handler
 }
 
-func (p *Protecter) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	credentials := make([]credential.Credential, len(p.Credentialers))
-	for k := range p.Credentialers {
-		credentials[k] = p.Credentialers[k].CredentialRequest(r)
-	}
-	id, err := credential.Verify(p.Verifier, credentials...)
-	if err != nil {
-		panic(err)
-	}
-	if id == "" {
-		p.OnFail.ServeHTTP(w, r)
-		return
-	}
-	DefaultKey.StoreID(r, id)
-	next(w, r)
-
+func (p *Protecter) WithOnFail(h http.Handler) *Protecter {
+	p.OnFail = h
+	return p
 }
 
-func (g *Protecter) IdentifyRequest(r *http.Request) (string, error) {
-	return DefaultKey.LoadID(r), nil
+func (p *Protecter) WithCredentialers(c ...Credentialer) *Protecter {
+	p.Credentialers = c
+	return p
+}
+
+func (p *Protecter) WithVerifier(v credential.Verifier) *Protecter {
+	p.Verifier = v
+	return p
 }
 
 func New() *Protecter {
