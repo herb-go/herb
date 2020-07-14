@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/herb-go/herb/user/identifier/protecter"
+	"github.com/herb-go/herb/user/credential/protecter"
 )
 
 var testHanlder = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

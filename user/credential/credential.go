@@ -1,4 +1,4 @@
-package identifier
+package credential
 
 type Credential interface {
 	Type() CredentialType

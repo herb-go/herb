@@ -3,11 +3,11 @@ package protecter
 import (
 	"net/http"
 
-	"github.com/herb-go/herb/user/identifier"
+	"github.com/herb-go/herb/user/credential"
 )
 
 type Credentialer interface {
-	Credential(r *http.Request) identifier.Credential
+	Credential(r *http.Request) credential.Credential
 }
 
 type CredentialerFactory interface {
@@ -19,19 +19,19 @@ type Credential struct {
 	Loader  *CredentialLoader
 }
 
-func (c *Credential) Type() identifier.CredentialType {
+func (c *Credential) Type() credential.CredentialType {
 	return c.Loader.CredentialType
 }
-func (c *Credential) Load() (identifier.CredentialData, error) {
+func (c *Credential) Load() (credential.CredentialData, error) {
 	return c.Loader.LoaderFunc(c.Request)
 }
 
 type CredentialLoader struct {
-	CredentialType identifier.CredentialType
-	LoaderFunc     func(*http.Request) (identifier.CredentialData, error)
+	CredentialType credential.CredentialType
+	LoaderFunc     func(*http.Request) (credential.CredentialData, error)
 }
 
-func (c *CredentialLoader) Credential(r *http.Request) identifier.Credential {
+func (c *CredentialLoader) Credential(r *http.Request) credential.Credential {
 	return &Credential{
 		Request: r,
 		Loader:  c,

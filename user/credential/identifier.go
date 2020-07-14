@@ -1,4 +1,4 @@
-package identifier
+package credential
 
 type Identifier interface {
 	IdentifyCretentials(*CredentialDataCollection) (string, error)

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/herb-go/herb/user/identifier/protecter"
+	"github.com/herb-go/herb/user/credential/protecter"
 )
 
 type Protected struct {
