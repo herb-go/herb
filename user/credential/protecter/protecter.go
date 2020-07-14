@@ -10,25 +10,25 @@ var DefaultOnFail = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 	http.Error(w, http.StatusText(403), 403)
 })
 
-var DefaultIdentifier = credential.ForbiddenIdentifier
+var DefaultVerifier = credential.ForbiddenVerifier
 
 type Protecter struct {
 	Credentialers []Credentialer
-	Identifier    credential.Identifier
+	Verifier      credential.Verifier
 	OnFail        http.Handler
 }
 
-func (g *Protecter) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	credentials := make([]credential.Credential, len(g.Credentialers))
-	for k := range g.Credentialers {
-		credentials[k] = g.Credentialers[k].Credential(r)
+func (p *Protecter) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	credentials := make([]credential.Credential, len(p.Credentialers))
+	for k := range p.Credentialers {
+		credentials[k] = p.Credentialers[k].Credential(r)
 	}
-	id, err := credential.Identify(g.Identifier, credentials...)
+	id, err := credential.Verify(p.Verifier, credentials...)
 	if err != nil {
 		panic(err)
 	}
 	if id == "" {
-		g.OnFail.ServeHTTP(w, r)
+		p.OnFail.ServeHTTP(w, r)
 		return
 	}
 	DefaultKey.StoreID(r, id)
@@ -42,8 +42,8 @@ func (g *Protecter) IdentifyRequest(r *http.Request) (string, error) {
 
 func New() *Protecter {
 	p := &Protecter{
-		Identifier: DefaultIdentifier,
-		OnFail:     DefaultOnFail,
+		Verifier: DefaultVerifier,
+		OnFail:   DefaultOnFail,
 	}
 	return p
 }
@@ -52,6 +52,6 @@ var ForbiddenProtecter = New()
 var DefaultProtecter = ForbiddenProtecter
 
 var NotWorkingProtecter = &Protecter{
-	Identifier: credential.FixedIdentifier("notworking"),
-	OnFail:     DefaultOnFail,
+	Verifier: credential.FixedVerifier("notworking"),
+	OnFail:   DefaultOnFail,
 }
