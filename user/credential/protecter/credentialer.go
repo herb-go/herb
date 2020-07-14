@@ -10,10 +10,6 @@ type Credentialer interface {
 	Credential(r *http.Request) credential.Credential
 }
 
-type CredentialerFactory interface {
-	CreateCredentialer(func(v interface{}) error) (Credentialer, error)
-}
-
 type Credential struct {
 	Request *http.Request
 	Loader  *CredentialLoader
