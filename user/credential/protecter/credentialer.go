@@ -19,16 +19,16 @@ type Credential struct {
 	Loader  *CredentialLoader
 }
 
-func (c *Credential) Type() credential.CredentialType {
+func (c *Credential) Type() credential.Type {
 	return c.Loader.CredentialType
 }
-func (c *Credential) Load() (credential.CredentialData, error) {
+func (c *Credential) Load() (credential.Data, error) {
 	return c.Loader.LoaderFunc(c.Request)
 }
 
 type CredentialLoader struct {
-	CredentialType credential.CredentialType
-	LoaderFunc     func(*http.Request) (credential.CredentialData, error)
+	CredentialType credential.Type
+	LoaderFunc     func(*http.Request) (credential.Data, error)
 }
 
 func (c *CredentialLoader) Credential(r *http.Request) credential.Credential {

@@ -1,34 +1,31 @@
 package credential
 
 type Credential interface {
-	Type() CredentialType
-	Load() (CredentialData, error)
+	Type() Type
+	Load() (Data, error)
 }
 
-type CredentialType string
+type Type string
 
-var CredentialTypeUID = CredentialType("uid")
-var CredentialTypePassword = CredentialType("password")
-var CredentialTypeAppID = CredentialType("appid")
-var CredentialTypeToken = CredentialType("token")
-var CredentialTypeTimestamp = CredentialType("timestamp")
-var CredentialTypeSign = CredentialType("sign")
-var CredentialTypeSession = CredentialType("session")
+var TypeUID = Type("uid")
+var TypePassword = Type("password")
+var TypeAppID = Type("appid")
+var TypeToken = Type("token")
+var TypeTimestamp = Type("timestamp")
+var TypeSign = Type("sign")
+var TypeSession = Type("session")
 
-type CredentialData []byte
+type Data []byte
 
-type CredentialDataCollection map[CredentialType]CredentialData
+type Collection map[Type]Data
 
-func (d *CredentialDataCollection) Set(t CredentialType, v CredentialData) {
-	(*d)[t] = v
+func (c *Collection) Set(t Type, v Data) {
+	(*c)[t] = v
 }
-func (d *CredentialDataCollection) Get(t CredentialType) CredentialData {
-	if len((*d)[t]) == 0 {
-		return nil
-	}
-	return (*d)[t]
+func (c *Collection) Get(t Type) Data {
+	return (*c)[t]
 }
 
-func NewDataCollection() *CredentialDataCollection {
-	return &CredentialDataCollection{}
+func NewCollection() *Collection {
+	return &Collection{}
 }

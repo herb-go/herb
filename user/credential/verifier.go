@@ -1,12 +1,12 @@
 package credential
 
 type Verifier interface {
-	Verify(*CredentialDataCollection) (string, error)
-	Depenencies() map[CredentialType]bool
+	Verify(*Collection) (string, error)
+	Depenencies() map[Type]bool
 }
 
 func Verify(v Verifier, c ...Credential) (string, error) {
-	d := NewDataCollection()
+	d := NewCollection()
 	availableTypes := v.Depenencies()
 	for k := range c {
 		t := c[k].Type()
@@ -24,11 +24,11 @@ func Verify(v Verifier, c ...Credential) (string, error) {
 
 type FixedVerifier string
 
-func (v FixedVerifier) Verify(*CredentialDataCollection) (string, error) {
+func (v FixedVerifier) Verify(*Collection) (string, error) {
 	return string(v), nil
 }
-func (v FixedVerifier) Depenencies() map[CredentialType]bool {
-	return map[CredentialType]bool{}
+func (v FixedVerifier) Depenencies() map[Type]bool {
+	return map[Type]bool{}
 }
 
 type VerifierFactory interface {
