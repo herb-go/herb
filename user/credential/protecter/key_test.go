@@ -16,7 +16,9 @@ var testHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 	}
 	w.Write([]byte(id))
 })
-
+var testIDHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(LoadID(r)))
+})
 var credentialerAppID = CredentialerFunc(func(r *http.Request) credential.Credential {
 	return credential.New().WithType(credential.TypeAppID).WithData([]byte(r.Header.Get("appid")))
 })
@@ -131,7 +133,7 @@ func TestVerifyFail(t *testing.T) {
 }
 
 func TestVerifySuccess(t *testing.T) {
-	s := httptest.NewServer(ProtectWith(testProtecter, testHandler))
+	s := httptest.NewServer(ProtectWith(testProtecter, testIDHandler))
 	defer s.Close()
 	req, err := http.NewRequest("GET", s.URL, nil)
 	if err != nil {
