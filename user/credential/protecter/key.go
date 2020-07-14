@@ -63,7 +63,7 @@ func (k Key) StoreProtecterMiddleware(p *Protecter) func(w http.ResponseWriter, 
 	}
 }
 func (k Key) ServerMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	k.NewProtectMiddleware(k.LoadProtecter(r))(w, r, next)
+	k.ProtectMiddleware(k.LoadProtecter(r))(w, r, next)
 }
 func (k Key) Protect(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,8 +76,12 @@ func (k Key) ProtectWith(p *Protecter, h http.Handler) http.Handler {
 	})
 }
 
-func (k Key) NewProtectMiddleware(p *Protecter) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (k Key) ProtectMiddleware(p *Protecter) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		if p == nil {
+			DefaultOnFail(w, r)
+			return
+		}
 		credentials := make([]credential.Credential, len(p.Credentialers))
 		for k := range p.Credentialers {
 			credentials[k] = p.Credentialers[k].CredentialRequest(r)
@@ -103,4 +107,8 @@ func ProtectWith(p *Protecter, h http.Handler) http.Handler {
 
 func LoadID(r *http.Request) string {
 	return DefaultKey.LoadID(r)
+}
+
+func ProtectMiddleware(p *Protecter) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return DefaultKey.ProtectMiddleware(p)
 }

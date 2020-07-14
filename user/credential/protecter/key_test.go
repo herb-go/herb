@@ -52,9 +52,7 @@ func TestForbidden(t *testing.T) {
 		panic(err)
 	}
 	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -72,9 +70,7 @@ func TestSuccess(t *testing.T) {
 		panic(err)
 	}
 	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -99,9 +95,7 @@ func TestNil(t *testing.T) {
 		panic(err)
 	}
 	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -119,9 +113,7 @@ func TestVerifyFail(t *testing.T) {
 		panic(err)
 	}
 	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -145,9 +137,7 @@ func TestVerifySuccess(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	if err != nil {
-		panic(err)
-	}
+
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
@@ -158,5 +148,37 @@ func TestVerifySuccess(t *testing.T) {
 	}
 	if string(data) != "testappid" {
 		t.Fatal(string(data))
+	}
+}
+
+func TestMiddlewareFail(t *testing.T) {
+	m := ProtectMiddleware(nil)
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		m(w, r, testHandler)
+	}))
+	defer s.Close()
+	resp, err := http.Get(s.URL)
+	if err != nil {
+		panic(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 403 {
+		t.Fatal(resp)
+	}
+}
+
+func TestMiddlewareSuccess(t *testing.T) {
+	m := ProtectMiddleware(NotWorkingProtecter)
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		m(w, r, testHandler)
+	}))
+	defer s.Close()
+	resp, err := http.Get(s.URL)
+	if err != nil {
+		panic(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Fatal(resp)
 	}
 }
