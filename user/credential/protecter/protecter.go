@@ -21,7 +21,7 @@ type Protecter struct {
 func (p *Protecter) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	credentials := make([]credential.Credential, len(p.Credentialers))
 	for k := range p.Credentialers {
-		credentials[k] = p.Credentialers[k].Credential(r)
+		credentials[k] = p.Credentialers[k].CredentialRequest(r)
 	}
 	id, err := credential.Verify(p.Verifier, credentials...)
 	if err != nil {
@@ -49,6 +49,7 @@ func New() *Protecter {
 }
 
 var ForbiddenProtecter = New()
+
 var DefaultProtecter = ForbiddenProtecter
 
 var NotWorkingProtecter = &Protecter{

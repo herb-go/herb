@@ -7,29 +7,11 @@ import (
 )
 
 type Credentialer interface {
-	Credential(r *http.Request) credential.Credential
+	CredentialRequest(r *http.Request) credential.Credential
 }
 
-type Credential struct {
-	Request *http.Request
-	Loader  *CredentialLoader
-}
+type CredentialerFunc func(r *http.Request) credential.Credential
 
-func (c *Credential) Type() credential.Type {
-	return c.Loader.CredentialType
-}
-func (c *Credential) Data() ([]byte, error) {
-	return c.Loader.LoaderFunc(c.Request)
-}
-
-type CredentialLoader struct {
-	CredentialType credential.Type
-	LoaderFunc     func(*http.Request) ([]byte, error)
-}
-
-func (c *CredentialLoader) Credential(r *http.Request) credential.Credential {
-	return &Credential{
-		Request: r,
-		Loader:  c,
-	}
+func (f CredentialerFunc) CredentialRequest(r *http.Request) credential.Credential {
+	return f(r)
 }
