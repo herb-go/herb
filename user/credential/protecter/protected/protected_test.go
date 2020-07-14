@@ -19,6 +19,8 @@ func TestChannel(t *testing.T) {
 	var err error
 	p.Reset()
 	defer p.Reset()
+	Channels.Reset()
+	defer Channels.Reset()
 	p.SetProtecter("never", protecter.ForbiddenProtecter)
 	p.SetProtecter("/always", protecter.NotWorkingProtecter)
 	p.Handle("/never", testHanlder)
@@ -128,6 +130,22 @@ func TestChannel(t *testing.T) {
 	}
 	resp.Body.Close()
 	if resp.StatusCode != 404 {
+		t.Fatal(resp)
+	}
+	Channels.SetProtecter("/testchannel", protecter.NotWorkingProtecter)
+	Channels.Handle("testchannel", testHanlder)
+	p.HandleProtected(DefaultCannelsPrefix, Channels)
+
+	req, err = http.NewRequest("GET", s.URL+DefaultCannelsPrefix+"/testchannel", nil)
+	if err != nil {
+		panic(err)
+	}
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 200 {
 		t.Fatal(resp)
 	}
 

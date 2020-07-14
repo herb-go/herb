@@ -57,21 +57,32 @@ func (p *Protected) SetProtecter(name string, protecter *protecter.Protecter) {
 	}
 	p.protecters[name] = protecter
 }
-func (p *Protected) Handle(name string, h http.HandlerFunc) {
-	p.locker.Lock()
-	defer p.locker.Unlock()
+
+func (p *Protected) handle(name string, h http.HandlerFunc) {
 	if name != "" {
 		if name[0] == '/' {
 			name = name[1:]
 		}
 	}
-	p.handlers.Store(
+	p.handlers.Store(name, h)
+
+}
+func (p *Protected) Handle(name string, h http.HandlerFunc) {
+	p.locker.Lock()
+	defer p.locker.Unlock()
+	p.handle(
 		name,
 		p.Key.ProtectWith(
 			p.protecters[name],
 			h,
-		),
+		).ServeHTTP,
 	)
+}
+
+func (p *Protected) HandleProtected(name string, protected *Protected) {
+	p.locker.Lock()
+	defer p.locker.Unlock()
+	p.handle(name, protected.ServeHTTP)
 }
 
 func (p *Protected) Unhandle(name string) {
