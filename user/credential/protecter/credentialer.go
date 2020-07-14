@@ -22,13 +22,13 @@ type Credential struct {
 func (c *Credential) Type() credential.Type {
 	return c.Loader.CredentialType
 }
-func (c *Credential) Load() (credential.Data, error) {
+func (c *Credential) Data() ([]byte, error) {
 	return c.Loader.LoaderFunc(c.Request)
 }
 
 type CredentialLoader struct {
 	CredentialType credential.Type
-	LoaderFunc     func(*http.Request) (credential.Data, error)
+	LoaderFunc     func(*http.Request) ([]byte, error)
 }
 
 func (c *CredentialLoader) Credential(r *http.Request) credential.Credential {
