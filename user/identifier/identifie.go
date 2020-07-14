@@ -32,5 +32,7 @@ func (v FixedIdentifier) Depenencies() map[CredentialType]bool {
 }
 
 type IdentifierFactory interface {
-	CreateVerifier(func(v interface{}) error) (Identifier, error)
+	CreateIdentifier(func(v interface{}) error) (Identifier, error)
 }
+
+var ForbiddenIdentifier = FixedIdentifier("")

@@ -10,7 +10,7 @@ var DefaultOnFail = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 	http.Error(w, http.StatusText(403), 403)
 })
 
-var DefaultIdentifier = identifier.FixedIdentifier("")
+var DefaultIdentifier = identifier.ForbiddenIdentifier
 
 type Protecter struct {
 	Credentialers []Credentialer
@@ -46,4 +46,12 @@ func New() *Protecter {
 		OnFail:     DefaultOnFail,
 	}
 	return p
+}
+
+var ForbiddenProtecter = New()
+var DefaultProtecter = ForbiddenProtecter
+
+var NotWorkingProtecter = &Protecter{
+	Identifier: identifier.FixedIdentifier("notworking"),
+	OnFail:     DefaultOnFail,
 }
