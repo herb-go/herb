@@ -42,7 +42,7 @@ func ConvertType(t string) (string, error) {
 		return "float64", nil
 	case "DATETIME", "TIMESTAMP":
 		return "time.Time", nil
-	case "CHAR", "VARCHAR", "TINYTEXT", "TEXT", "MEDIUMTEXT", "LONGTEXT":
+	case "CHAR", "VARCHAR", "TINYTEXT", "TEXT", "MEDIUMTEXT", "LONGTEXT", "DECIMAL":
 		return "string", nil
 	case "BINARY", "VARBINARY", "TINYBLOB", "BLOB", "MEDIUMBLOB", "LONGBLOB":
 		return "[]byte", nil
