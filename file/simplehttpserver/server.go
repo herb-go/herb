@@ -10,7 +10,7 @@ import (
 
 func isSlashRune(r rune) bool { return r == '/' || r == '\\' }
 
-func containsDotDot(v string) bool {
+func ContainsDotDot(v string) bool {
 	if !strings.Contains(v, "..") {
 		return false
 	}
@@ -32,11 +32,10 @@ func renderError(w http.ResponseWriter, err error) {
 	}
 }
 func serveFile(w http.ResponseWriter, r *http.Request, path string) {
-	if containsDotDot(r.URL.Path) {
+	if ContainsDotDot(r.URL.Path) {
+		http.Error(w, http.StatusText(409), 4040)
 		return
 	}
-	// dir, file := filepath.Split(name)
-	// serveFile(w, r, Dir(dir), file, false)
 	stat, err := os.Stat(path)
 	if err != nil {
 		renderError(w, err)
