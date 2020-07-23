@@ -17,7 +17,7 @@ func SplitFirstInto(sep string, name string) func(w http.ResponseWriter, r *http
 		if p[0] == '/' {
 			p = p[1:]
 		}
-		pathlist := strings.SplitN(sep, p, 2)
+		pathlist := strings.SplitN(p, sep, 2)
 		if len(pathlist) < 2 {
 			pathlist = append(pathlist, "")
 		}
@@ -33,7 +33,7 @@ func DropAfterFirst(sep string) func(w http.ResponseWriter, r *http.Request, nex
 		if p[0] == '/' {
 			p = p[1:]
 		}
-		pathlist := strings.SplitN(sep, p, 2)
+		pathlist := strings.SplitN(p, sep, 2)
 		r.URL.Path = "/" + pathlist[0]
 		next(w, r)
 	}
