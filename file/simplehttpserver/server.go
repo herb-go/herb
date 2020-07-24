@@ -31,7 +31,7 @@ func renderError(w http.ResponseWriter, err error) {
 		panic(err)
 	}
 }
-func Download(w http.ResponseWriter, r *http.Request, path string) {
+func Download(w http.ResponseWriter, r *http.Request, path string, name string) {
 	if ContainsDotDot(r.URL.Path) {
 		http.Error(w, http.StatusText(400), 400)
 		return
@@ -51,14 +51,16 @@ func Download(w http.ResponseWriter, r *http.Request, path string) {
 		return
 	}
 	defer file.Close()
-	name := filepath.Base(path)
+	if name == "" {
+		name = filepath.Base(path)
+	}
 	http.ServeContent(w, r, name, stat.ModTime(), file)
 }
 
 //ServeFile serve given file as http resopnse.
 func ServeFile(path string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		Download(w, r, path)
+		Download(w, r, path, "")
 	}
 }
 
@@ -79,6 +81,6 @@ func ServeFolder(root string) http.HandlerFunc {
 				file = path.Join(file, "index.html")
 			}
 		}
-		Download(w, r, file)
+		Download(w, r, file, "")
 	}
 }
