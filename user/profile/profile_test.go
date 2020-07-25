@@ -53,5 +53,10 @@ func TestProfile(t *testing.T) {
 	if len(filtered.Data()) != 3 || filtered.Load("name") != p.Load("name") || filtered.Load("email") != p.Load("email") || filtered.Load("newfield") == p.Load("newfield") {
 		t.Fatal(filtered)
 	}
-
+	pnew := NewProfile().With("name", "namenew")
+	pnew2 := NewProfile().With("name", "namenew2")
+	p.Chain(pnew, pnew2)
+	if len(p.Data()) != 6 || len(p.Filter("name").Data()) != 4 {
+		t.Fatal(p)
+	}
 }

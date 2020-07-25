@@ -59,6 +59,13 @@ Fields:
 	return &result
 }
 
+func (p *Profile) Chain(profiles ...*Profile) *Profile {
+	for k := range profiles {
+		p.WithFields(profiles[k].Data()...)
+	}
+	return p
+}
+
 // NewProfile create mew profile
 func NewProfile() *Profile {
 	return &Profile{}
