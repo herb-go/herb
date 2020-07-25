@@ -1,6 +1,9 @@
 package profile
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestProfile(t *testing.T) {
 	p := NewProfile()
@@ -57,6 +60,9 @@ func TestProfile(t *testing.T) {
 	pnew2 := NewProfile().With("name", "namenew2")
 	p.Chain(pnew, pnew2)
 	if len(p.Data()) != 6 || len(p.Filter("name").Data()) != 4 {
+		t.Fatal(p)
+	}
+	if strings.Join(p.LoadAllByName("name"), ",") != "test,test2,namenew,namenew2" {
 		t.Fatal(p)
 	}
 }

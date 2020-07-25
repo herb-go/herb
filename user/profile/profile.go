@@ -65,6 +65,15 @@ func (p *Profile) Chain(profiles ...*Profile) *Profile {
 	}
 	return p
 }
+func (p *Profile) LoadAllByName(name string) []string {
+	result := []string{}
+	for _, v := range *p {
+		if v.Name == name {
+			result = append(result, v.Value)
+		}
+	}
+	return result
+}
 
 // NewProfile create mew profile
 func NewProfile() *Profile {
