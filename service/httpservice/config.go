@@ -14,6 +14,8 @@ import (
 type Config struct {
 	service.ListenerConfig
 	service.TLSConfig
+	//Http server disabled
+	Disabled bool
 	//BaseURL http scheme and host."http://127.0.0.1:8000" for example.
 	BaseURL string
 	//ReadTimeoutInSecond http conn read time out.
