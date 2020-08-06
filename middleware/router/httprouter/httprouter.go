@@ -10,7 +10,8 @@ import (
 
 //Router router main struct.
 type Router struct {
-	router *httprouter.Router
+	router   *httprouter.Router
+	notfound http.Handler
 }
 
 //New create new router.
@@ -89,6 +90,11 @@ func (r *Router) PATCH(path string) *middleware.App {
 //DELETE return app which will response to DELETE method and path.
 func (r *Router) DELETE(path string) *middleware.App {
 	return r.Handle("DELETE", path)
+}
+
+//SetNotFoundHandler set not found handler
+func (r *Router) SetNotFoundHandler(h http.Handler) {
+	r.router.NotFound = h
 }
 
 //ALL return app which will response to all method and path.

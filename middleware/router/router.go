@@ -19,6 +19,8 @@ type Router interface {
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
 	//StripPrefix strip request prefix and server as a middleware app
 	StripPrefix(path string) *middleware.App
+	//SetNotFoundHandler set not found handler
+	SetNotFoundHandler(http.Handler)
 }
 
 //Param router param.

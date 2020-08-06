@@ -14,6 +14,7 @@ func testAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestRouter(t *testing.T) {
+	var _ router.Router = New()
 	router := New()
 	router.GET("/get").HandleFunc(testAction)
 	router.POST("/post").HandleFunc(testAction)
