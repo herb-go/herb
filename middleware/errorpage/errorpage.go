@@ -27,15 +27,19 @@ type ErrorPage struct {
 	ignoredStatus  map[int]bool
 }
 
-func (e *ErrorPage) disable(r *http.Request) {
+//MiddlewareDisable middleware which disable previous installed error page middleware
+func MiddlewareDisable(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	disable(r)
+	next(w, r)
+}
+func disable(r *http.Request) {
 	ctx := context.WithValue(r.Context(), contextNameDisable, true)
 	*r = *r.WithContext(ctx)
 }
 
 //MiddlewareDisable middleware which disable previous installed error page middleware
 func (e *ErrorPage) MiddlewareDisable(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	e.disable(r)
-	next(w, r)
+	MiddlewareDisable(w, r, next)
 }
 
 //ServeMiddleware serve as middleware
@@ -44,7 +48,7 @@ func (e *ErrorPage) ServeMiddleware(w http.ResponseWriter, r *http.Request, next
 	next(ctx.NewWriter(), r)
 	if ctx.matched != nil {
 		ctx.matched(w, r, ctx.statusCode)
-		e.disable(r)
+		disable(r)
 	}
 }
 func (e *ErrorPage) getStatusHandler(status int) func(w http.ResponseWriter, r *http.Request, status int) {
