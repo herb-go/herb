@@ -3,6 +3,8 @@ package status
 //Status user status type
 type Status int
 
+var StatusUnkown = Status(0)
+
 //StatusNormal user status normal
 var StatusNormal = Status(1)
 
