@@ -12,27 +12,27 @@ func TestStatus(t *testing.T) {
 	if label != "" || err != nil {
 		t.Fatal()
 	}
-	ok, err = NoramlOrBannedService.IsAvailable(StatusNormal)
+	ok, err = NormalOrBannedService.IsAvailable(StatusNormal)
 	if ok != true || err != nil {
 		t.Fatal()
 	}
-	label, err = NoramlOrBannedService.Label(StatusNormal)
+	label, err = NormalOrBannedService.Label(StatusNormal)
 	if label != StatusLabelNormal || err != nil {
 		t.Fatal()
 	}
-	ok, err = NoramlOrBannedService.IsAvailable(StatusBanned)
+	ok, err = NormalOrBannedService.IsAvailable(StatusBanned)
 	if ok != false || err != nil {
 		t.Fatal()
 	}
-	label, err = NoramlOrBannedService.Label(StatusBanned)
+	label, err = NormalOrBannedService.Label(StatusBanned)
 	if label != StatusLabelBanned || err != nil {
 		t.Fatal()
 	}
-	ok, err = NoramlOrBannedService.IsAvailable(999)
+	ok, err = NormalOrBannedService.IsAvailable(999)
 	if ok != false || err != nil {
 		t.Fatal()
 	}
-	label, err = NoramlOrBannedService.Label(999)
+	label, err = NormalOrBannedService.Label(999)
 	if label != "" || err != nil {
 		t.Fatal()
 	}

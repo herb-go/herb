@@ -52,8 +52,8 @@ func NewService() *PlainService {
 	}
 }
 
-//NoramlOrBannedService service only contains status normal and banned.
-var NoramlOrBannedService = &PlainService{
+//NormalOrBannedService service only contains status normal and banned.
+var NormalOrBannedService = &PlainService{
 	AvailableStatuses: map[Status]bool{StatusNormal: true},
 	StatusLabels:      map[Status]string{StatusNormal: StatusLabelNormal, StatusBanned: StatusLabelBanned},
 }
