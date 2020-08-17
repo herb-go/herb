@@ -38,6 +38,11 @@ func (a *Accounts) Exists(account *Account) bool {
 	return false
 }
 
+//Data return account data
+func (a *Accounts) Data() []*Account {
+	return []*Account(*a)
+}
+
 //Bind add account to accountlist.
 //Return any error if raised.
 //If account exists in account list,error ErrAccountBindingExists will be raised.
