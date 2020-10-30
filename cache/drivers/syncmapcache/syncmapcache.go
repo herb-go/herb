@@ -24,6 +24,7 @@ type entry struct {
 //Cache The gocache cache Driver.
 type Cache struct {
 	cache.DriverUtil
+	locker          sync.RWMutex
 	datamapPointer  unsafe.Pointer
 	Size            int64
 	used            int64
@@ -246,9 +247,8 @@ func (c *Cache) Del(key string) error {
 //Return int data value and any error raised.
 func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int64, error) {
 	var v int64
-	locker, _ := c.Util().Locker(key)
-	locker.Lock()
-	defer locker.Unlock()
+	c.locker.Lock()
+	defer c.locker.Unlock()
 
 	data, found := c.get(key)
 	if found == false {
@@ -267,9 +267,8 @@ func (c *Cache) IncrCounter(key string, increment int64, ttl time.Duration) (int
 //SetCounter Set int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return any error raised.
 func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
-	locker, _ := c.Util().Locker(key)
-	locker.Lock()
-	defer locker.Unlock()
+	c.locker.Lock()
+	defer c.locker.Unlock()
 	bytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(bytes, uint64(v))
 	c.set(key, bytes, ttl)
@@ -280,9 +279,8 @@ func (c *Cache) SetCounter(key string, v int64, ttl time.Duration) error {
 //Return int data value and any error raised.
 func (c *Cache) GetCounter(key string) (int64, error) {
 	var v int64
-	locker, _ := c.Util().Locker(key)
-	locker.Lock()
-	defer locker.Unlock()
+	c.locker.Lock()
+	defer c.locker.Unlock()
 	var err error
 	bs, found := c.get(key)
 	if found == false {
@@ -296,18 +294,16 @@ func (c *Cache) GetCounter(key string) (int64, error) {
 //DelCounter Delete int val in cache by given key.Count cache and data cache are in two independent namespace.
 //Return any error raisegrd.
 func (c *Cache) DelCounter(key string) error {
-	locker, _ := c.Util().Locker(key)
-	locker.Lock()
-	defer locker.Unlock()
+	c.locker.Lock()
+	defer c.locker.Unlock()
 	c.delete(key)
 	return nil
 }
 
 //Expire set cache value expire duration by given key and ttl
 func (c *Cache) Expire(key string, ttl time.Duration) error {
-	locker, _ := c.Util().Locker(key)
-	locker.Lock()
-	defer locker.Unlock()
+	c.locker.Lock()
+	defer c.locker.Unlock()
 
 	bs, found := c.get(key)
 	if found == false {
