@@ -59,6 +59,14 @@ func (v *Validator) AddPlainError(field string, msg string) {
 	}
 	v.errors = append(v.Errors(), &f)
 }
+func (v *Validator) AddRawError(field string, label string, msg string) {
+	f := FieldError{
+		Field: field,
+		Label: label,
+		Msg:   msg,
+	}
+	v.errors = append(v.Errors(), &f)
+}
 
 //GetFieldLabel get label by given label name.
 //Return field name itself if not found in field labels of model.
