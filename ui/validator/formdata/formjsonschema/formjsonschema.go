@@ -1,7 +1,6 @@
 package formjsonschema
 
 import (
-	"github.com/herb-go/herb/ui"
 	"github.com/herb-go/gojsonschema"
 	"github.com/herb-go/herb/ui/validator/formdata"
 )
@@ -53,12 +52,12 @@ func (r *Result) MessageData() map[string]string {
 }
 
 func (s *Schema) Validate(f formdata.RequestValidator, data []byte) error {
-	rs, err := s.ValidateJSON(data)
-	if err != nil {
-		return err
-	}
-	for k := range rs {
-		f.AddError(ui.Replace())
-	}
+	// rs, err := s.ValidateJSON(data)
+	// if err != nil {
+	// 	return err
+	// }
+	// for k := range rs {
+	// 	f.AddError(ui.Replace())
+	// }
 	return nil
 }
