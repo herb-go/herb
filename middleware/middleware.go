@@ -20,34 +20,23 @@ func ServeHTTP(app HandlerSlice, w http.ResponseWriter, r *http.Request) {
 
 // ServeMiddleware : Serve  app as middleware.
 func ServeMiddleware(app HandlerSlice, w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	handlers := app.Handlers()
-	s := serveWorker{
-		handlers: handlers,
-		final:    next,
-		current:  0,
-	}
-	s.Next(w, r)
+	composeHandler(app.Handlers()...)(w, r, next)
 }
 
-// serveWorker : Runner of middlewares.
-type serveWorker struct {
-	handlers []func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
-	final    http.HandlerFunc
-	current  int
-}
-
-// Next : Current middlewares running step.
-func (s *serveWorker) Next(w http.ResponseWriter, r *http.Request) {
-	if s.current == len(s.handlers) {
-		s.final(w, r)
-	} else {
-		current := s.current
-		s.current = s.current + 1
-		handler := s.handlers[current]
-		if handler == nil {
-			handler = voidMiddleware
+func composeHandler(series ...func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		if len(series) == 0 {
+			next(w, r)
+			return
 		}
-		handler(w, r, s.Next)
+		h := series[0]
+		if h == nil {
+			composeHandler(series[1:]...)(w, r, next)
+			return
+		}
+		series[0](w, r, func(w http.ResponseWriter, r *http.Request) {
+			composeHandler(series[1:]...)(w, r, next)
+		})
 	}
 }
 
