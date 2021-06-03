@@ -3,6 +3,8 @@ package router
 import (
 	"context"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/herb-go/herb/middleware"
 )
@@ -74,4 +76,15 @@ func GetParams(r *http.Request) *Params {
 		*r = *r.WithContext(ctx)
 	}
 	return params
+}
+
+func NewStripPrefixMiddleware(prefix string) func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		r2 := new(http.Request)
+		*r2 = *r
+		r2.URL = new(url.URL)
+		*r2.URL = *r.URL
+		r2.URL.Path = strings.TrimPrefix(r.URL.Path, prefix)
+		next(w, r2)
+	}
 }
