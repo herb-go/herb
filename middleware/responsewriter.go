@@ -24,9 +24,6 @@ func (w *WrappedWriter) Functions() *WriterFunctions {
 }
 
 func (w *WrappedWriter) Write(b []byte) (int, error) {
-	// if w.headerWritten == false {
-	// 	w.WriteHeader(200)
-	// }
 	return w.functions.WriteFunc(b)
 }
 
