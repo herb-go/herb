@@ -135,16 +135,16 @@ func MustError(w http.ResponseWriter, status int) int {
 	return result
 }
 
-//JSONResponse create a json response with give data and status code
-func JSONResponse(data interface{}, status int) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+//JSONHandler create a json handler with give data and status code
+func JSONHandler(data interface{}, status int) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		MustJSON(w, data, status)
-	}
+	})
 }
 
-//HTMLResponse create a html response with give data and status code
-func HTMLResponse(data string, status int) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+//HTMLHandler create a html handler with give data and status code
+func HTMLHandler(data string, status int) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		MustWriteHTML(w, []byte(data), status)
-	}
+	})
 }
