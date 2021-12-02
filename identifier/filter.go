@@ -33,6 +33,19 @@ type PlainFilter struct {
 func (f *PlainFilter) ServeMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	ServeFilter(f, w, r, next)
 }
+
+func (f *PlainFilter) MergeIdentifier(i Identifier) *PlainFilter {
+	f.Identifier = i
+	return f
+}
+func (f *PlainFilter) MergeIDVerifier(i IDVerifier) *PlainFilter {
+	f.IDVerifier = i
+	return f
+}
+func (f *PlainFilter) MergeHandler(h http.Handler) *PlainFilter {
+	f.Handler = h
+	return f
+}
 func NewFilter() *PlainFilter {
 	return &PlainFilter{}
 }
