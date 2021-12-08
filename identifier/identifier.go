@@ -18,6 +18,18 @@ func (f IDFunc) IdentifyRequest(r *http.Request) (string, error) {
 	return f(r)
 }
 
+//FixedIdentifier
+type FixedIdentifier string
+
+//NopIdentifier fixed identifier ""
+var NopIdentifier = FixedIdentifier("")
+
+//IdentifyRequest identify http request
+//return identification and any error if rasied.
+func (i FixedIdentifier) IdentifyRequest(r *http.Request) (string, error) {
+	return string(i), nil
+}
+
 type IDVerifier interface {
 	VerifyID(id string) (bool, error)
 }

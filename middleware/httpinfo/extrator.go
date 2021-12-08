@@ -41,6 +41,16 @@ func (f *ExtractorField) LoadInfo(r *http.Request) ([]byte, bool, error) {
 	}
 	return info, true, nil
 }
+func (f *ExtractorField) IdentifyRequest(r *http.Request) (string, error) {
+	data, ok, err := f.LoadInfo(r)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", nil
+	}
+	return string(data), nil
+}
 
 func NewExtractorField() *ExtractorField {
 	return &ExtractorField{}
