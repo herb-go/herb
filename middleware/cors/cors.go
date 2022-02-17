@@ -2,6 +2,7 @@ package cors
 
 import (
 	"net/http"
+	"path"
 	"strings"
 )
 
@@ -24,7 +25,8 @@ func DefaultOriginValidator(c *CORS, r *http.Request) (string, error) {
 		return "", nil
 	}
 	for k := range c.Origins {
-		if c.Origins[k] == "*" || c.Origins[k] == origin {
+		ok, err := path.Match(c.Origins[k], origin)
+		if err == nil && ok {
 			return origin, nil
 		}
 	}
